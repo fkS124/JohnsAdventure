@@ -1,0 +1,74 @@
+{
+    "frames": 
+    {
+        "playbutton.png": 
+        {
+            "frame": {"x": 8, "y":0, "w":193, "h":67}
+        },
+
+        "playbutton_hover.png":
+        {
+            "frame": {"x": 205, "y":0, "w":193, "h":67}
+        },
+
+        "about_button.png":
+        {
+            "frame": {"x": 401, "y":0, "w":193, "h":67}
+        },
+
+        "about_button_hover.png": 
+        { 
+            "frame": {"x": 598, "y":0, "w":193, "h":67}
+        },
+
+        "quit_button.png": 
+        {
+            "frame": {"x": 8, "y":71, "w":193, "h":67}
+        },
+
+        "quit_button_hover.png":
+        { 
+            "frame": {"x": 205, "y":71, "w":193, "h":67}
+        },
+
+        "catalog_button.png":
+        { 
+            "frame": {"x": 8, "y":146, "w":450, "h":228}
+        },
+
+        "mouse_cursor.png":
+        {
+            "frame": {"x": 541, "y":291, "w":14, "h":22}
+        },
+
+        "heart.png":
+        {
+            "frame": {"x": 471, "y":286, "w":32, "h":28}
+        },
+
+        "menu_button.png":
+        {
+            "frame": {"x": 401, "y":73, "w":193, "h":65}
+        },
+
+        "menu_button_hover.png":
+        {
+            "frame": {"x": 598, "y":73, "w":193, "h":65}
+        },
+
+        "interface_button.png":
+        {
+            "frame": {"x": 814, "y":3, "w":950, "h":258}
+        },
+
+        "stairs":
+        {
+            "frame": {"x": 2, "y":1, "w":52, "h":48}
+        },
+
+        "carpet":
+        {
+            "frame": {"x": 57, "y":1, "w":135, "h":51}
+        }
+    }
+}
