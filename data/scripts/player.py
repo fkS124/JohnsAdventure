@@ -9,10 +9,10 @@ class Player(pygame.sprite.Sprite):
         self.y = y
         self.pos = [self.x, self.y]  # Player's position
         self.screen = screen
-        self.speed = 4  # Player's speed
+        self.speed = 6  # Player's speed
         self.paused = False  # if player has paused the game
         self.click = False  # when Player clicks
-        self.Interactable = False # Player's interaction with the environment
+        self.Interactable = False  # Player's interaction with the environment
         self.InteractPoint = 0
         # Movement
         self.Right = False
@@ -20,8 +20,7 @@ class Player(pygame.sprite.Sprite):
         self.Up = False
         self.Down = False
         self.Player = pygame.image.load('player_beta.png').convert()
-        self.PlayerRect = self.Player.get_rect()
-        self.PlayerRect.center = (self.x, self.y)
+        self.PlayerRect = self.Player.get_rect(center=(self.x, self.y))
 
     def update(self):
         self.controls()
@@ -35,7 +34,7 @@ class Player(pygame.sprite.Sprite):
             self.x -= self.speed
         elif self.Right:
             self.x += self.speed
-        self.pos = [self.x, self.y]  # Update player's pos
+        self.pos = [self.x, self.y]  # DEBUGGING FOR WORLD POSITION
         self.screen.blit(self.InfoText, (self.PlayerRect[0] - 80, self.PlayerRect[1] - 30))
         return self.screen.blit(self.Player, self.PlayerRect)
 
