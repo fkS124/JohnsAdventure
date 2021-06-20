@@ -5,7 +5,7 @@ from pygame import mixer
 import json
 
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
-DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED)  # pg.NOFRAME for linux :penguin:
+DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED | pg.NOFRAME)  # pg.NOFRAME for linux :penguin:
 
 # Data
 from .backend import *
@@ -36,46 +36,66 @@ class Interface(object):
         self.sound = pg.mixer.Sound('data/sound/letter_sound.wav')
         self.sound.set_volume(0.2)
         
-        # Something to shut the reference errors :/
-        self.text_display = ''      
+        # Text and surfaces
+        self.text_display = self.text_display2 = self.text_display3 = self.text_display4 = '' 
         self.text_surface = self.font.render(self.text_display, True, (0,0,0))
-
+        self.text_surface2 = self.font.render(self.text_display2, True, (0,0,0))
+        self.text_surface3 = self.font.render(self.text_display3, True, (0,0,0))
+        self.text_surface4 = self.font.render(self.text_display3, True, (0,0,0))
+    
     def draw(self, path, dt):  
         '''
         Features to add:
            1. If text is too large make a new line
-           2. Implement tiny sound that plays on each letter (done)  
+           2. Implement tiny sound that plays on each letter (done)
+
+           Extra: If I want to reset the text I do 
+           
+           if self.current_text_index >= len(text): If its reaches the end
+                self.current_text_index = 0
+
         '''
         text = self.data[path]['text']
         self.timer += dt # Speed of text/delta_time
         if self.timer > 0.030:
                 self.current_text_index += 1 # Next letter
                 if self.current_text_index < len(text):
-                    self.sound.play() # Play Sound
                     if text[self.current_text_index] == ' ': # If there is a space
                         self.current_text_index += 1 
+                    else:
+                        self.sound.play() # Play Sound
 
-                #if self.current_text_index >= len(text): # Resets the text
-                #    self.current_text_index = 0 
-                self.timer = 0 # Reset timer
-                self.text_display = text[:self.current_text_index]
+                # Sentences length
+                if len(self.text_display) < 44 : # 44 is the max letters
+                    self.text_display = text[:self.current_text_index]
+                elif len(self.text_display2) < 44: # 88 (44*2)
+                    self.text_display2 = text[44:self.current_text_index]
+                elif len(self.text_display3) < 44: # 132
+                    self.text_display3 = text[88:self.current_text_index]
+                elif len(self.text_display4) < 44:
+                    self.text_display4 = text[132:self.current_text_index]
+
                 self.text_surface = self.font.render(self.text_display, True, (0,0,0))
+                self.text_surface2 = self.font.render(self.text_display2, True, (0,0,0))
+                self.text_surface3 = self.font.render(self.text_display3, True, (0,0,0))
+                self.text_surface4 = self.font.render(self.text_display4, True, (0,0,0))
+                self.timer = 0 # Reset timer
+
+
         DISPLAY.blit(self.text_surface, (get_screen_w // 2 - 420, get_screen_h // 2 + 110)) # Blit text
+        DISPLAY.blit(self.text_surface2, (get_screen_w // 2 - 420, get_screen_h // 2 + 140)) 
+        DISPLAY.blit(self.text_surface3, (get_screen_w // 2 - 420, get_screen_h // 2 + 170)) 
+        DISPLAY.blit(self.text_surface4, (get_screen_w // 2 - 420, get_screen_h // 2 + 200)) 
 
     def update(self):
-        DISPLAY.blit(self.icon, (get_screen_w // 2 - 460, get_screen_h // 2 + 80))
-        
-
-        
-
+        return DISPLAY.blit(self.icon, (get_screen_w // 2 - 460, get_screen_h // 2 + 80))
 
       
 class stairs(pg.sprite.Sprite):
     def __init__(self, x, y):
         self.image = Objects.parse_sprite('stairs').convert()
         self.scaledImg = pg.transform.scale(self.image, (self.image.get_width() * 3, self.image.get_height() * 3))
-        self.x, self.y = x, y
-        self.interact_value = 0
+        self.x, self.y, self.interact_value = x, y, 0
 
     def update(self, player_rect):
         self.rect = self.scaledImg.get_rect(topleft=(self.x - scroll[0], self.y - scroll[1]))
@@ -84,7 +104,6 @@ class stairs(pg.sprite.Sprite):
         else:
             Player.isInteracting = False
         DISPLAY.blit(self.scaledImg, self.rect)
-
 
 # Classes
 class MainMenu(object):
@@ -96,7 +115,7 @@ class MainMenu(object):
         self.background_l2 = pg.image.load('data/ui/mainmenutile.png')
         self.animationCounter = 0  # Important for background animation
         self.font = pygame.font.Font("data/database/pixelfont.ttf", 14)
-        self.GameStart = False
+        self.GameStart = False # The game loop
         # ------------- Music Playlist -------------
         self.pb, self.qb, self.mm = 0, 0, 0  # 3 counters for each button for the music sounds
         self.music = [mixer.Sound("data/sound/forest_theme_part1.flac"), mixer.Sound("data/sound/Select_UI.wav")]
@@ -145,6 +164,8 @@ class MainMenu(object):
                 elif self.quitButtonRect.collidepoint(pg.mouse.get_pos()):
                     pg.quit(), sys.exit()
             if event.type == pygame.KEYDOWN:
+                if event.key == pg.K_ESCAPE:
+                    pg.quit(), sys.exit()
                 if event.key == pg.K_F12:
                     pg.display.toggle_fullscreen()
 
@@ -203,13 +224,15 @@ class Game:
                     self.menupl += 1
                 DISPLAY.blit(self.MenuIcon[1], self.MenuIconRect)
                 if Player.click:
-                    self.PlayerRoom, self.Menu, self.menu.GameStart = False, True, False
+                    self.PlayerRoom, self.Menu, self.menu.GameStart, Player.paused = False, True, False, False
             else:
                 self.menupl = 0
                 DISPLAY.blit(self.MenuIcon[0], self.MenuIconRect)
             if Player.click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
                 pygame.quit(), sys.exit()
             DISPLAY.blit(mouse_icon, (pygame.mouse.get_pos()))  # Display the mouse cursor
+        else:
+            Player.speed = 6 # Player can move again
 
     def update(self):
         global scroll

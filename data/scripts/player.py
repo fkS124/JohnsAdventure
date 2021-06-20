@@ -5,9 +5,8 @@ font = pygame.font.Font("data/database/pixelfont.ttf", 16)
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, screen):
-        self.x = x
-        self.y = y
-        self.pos = [self.x, self.y]  # Player's position
+        self.x, self.y = x, y
+        self.pos = [self.x, self.y]  # Player's position (debugging)
         self.screen = screen
         self.speed = 6  # Player's speed
         self.paused = False  # if player has paused the game
@@ -53,8 +52,11 @@ class Player(pygame.sprite.Sprite):
                         self.InteractPoint += 1
                     else:
                         self.InteractPoint = 0
-                if event.key == pygame.K_ESCAPE:
-                    self.paused = True
+                if event.key == pygame.K_ESCAPE: # Toggle Pause screen
+                    if self.paused:
+                        self.paused = False
+                    else:
+                        self.paused = True
                 if event.key == pygame.K_d:
                     self.Right = True
                 if event.key == pygame.K_a:
