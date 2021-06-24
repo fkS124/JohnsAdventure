@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame, sys, random, math
 pygame.font.init()
 font = pygame.font.Font("data/database/pixelfont.ttf", 16)
 
@@ -39,6 +39,8 @@ class Player(pygame.sprite.Sprite):
 
     def controls(self):
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(), sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 self.click = True
             else:
@@ -76,5 +78,70 @@ class Player(pygame.sprite.Sprite):
                     self.Down = False
                 if event.key == pygame.K_w:
                     self.Up = False
-            if event.type == pygame.K_ESCAPE:  # Exit
-                pygame.quit(), sys.exit()
+
+
+class Mau(object): # LOOK AT HIM GOOOOO
+    def __init__(self, x , y):
+        self.x, self.y = x, y
+        self.image = [pygame.image.load('data/sprites/mau/mau1.png').convert_alpha(), pygame.image.load('data/sprites/mau/mau2.png').convert_alpha(), pygame.image.load('data/sprites/mau/mau1.png').convert_alpha()]
+        self.ScaledImg = [pygame.transform.scale(image, (image.get_width() * 2, image.get_height()* 2 )) for image in self.image]
+        self.Rect = self.ScaledImg[0].get_rect()
+        self.Left = self.Right = self.Up = self.down = False   
+        self.animation_counter = 0
+        # Τριγονομετρία :'(
+        self.dx = self.dy = self.distance = 0
+        # New pos
+        self.mx = self.my = 0
+        self.cooldown = 0
+        self.switchConter = 0
+    
+
+    ''' Reference
+    cos = -1  Left (dx)
+    sin = -1 (dy) Up
+    syn = 1 (dy) down
+    cos = 1 (dx) Right 
+    _
+    '''
+    def move(self, scroll):
+        # Update rect
+        self.Rect = self.ScaledImg[0].get_rect(topleft=(self.x - scroll[0], self.y - scroll[1]))
+
+        # Calculations
+        if self.cooldown > 100:
+            self.mx, self.my = random.randint(int(self.x) - 50, int(self.x) + 50), random.randint(int(self.y) - 50, int(self.y + 50))
+            radians = math.atan2(self.my - self.x, self.my - self.y)
+            self.distance = int(math.hypot(self.mx - self.x, self.my - self.y))
+            self.dx = math.cos(radians)
+            self.dy = math.sin(radians)
+            self.cooldown = 0
+        else:
+            self.switchConter = 0
+            self.cooldown += 1
+            self.mx = self.my = 0   
+        # Moving Mau
+        if self.distance:
+            self.distance -= 1
+            self.x += self.dx * 1.25
+            self.y += self.dy * 1.25
+
+        self.active()
+
+    def active(self):
+        self.animation_counter += 1
+        if self.mx != 0:
+            if self.dx < 0:
+                while self.switchConter < 1:
+                    print('Mau is moving left')
+                    self.ScaledImg = [pygame.transform.flip(image, True, False) for image in self.ScaledImg]
+                    self.switchConter = 1
+            if self.dx > 0:
+                while self.switchConter < 1:
+                    print('Mau is moving Right')  
+                    self.ScaledImg = [pygame.transform.flip(image, False, False) for image in self.ScaledImg]
+                    self.switchConter = 1  
+    def update(self, screen, scroll):
+        if self.animation_counter >= 52: self.animation_counter = 0 # Reset Animation
+        self.move(scroll)
+        # pygame.draw.rect(DISPLAY, (124,252,0), self.Characters[1].Rect, 1)# Mau hitbox
+        screen.blit(self.ScaledImg[self.animation_counter // 18], self.Rect)

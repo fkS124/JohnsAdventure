@@ -5,57 +5,48 @@ from pygame import mixer
 import json
 
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
-DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED | pg.NOFRAME)  # pg.NOFRAME for linux :penguin:
-
+DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED)  # pg.NOFRAME for linux :penguin:
+#pygame.display.toggle_fullscreen()
 # Data
 from .backend import *
-from .player import Player
+from .player import *
 
 
 # INITIALIZE
 
-pygame.display.toggle_fullscreen()
+
 framerate = pygame.time.Clock()
 Objects = UI_Spritesheet('data/objects_spritesheet.png')
 UIspriteSheet = UI_Spritesheet('data/ui/UI_spritesheet.png')
+NPCS = UI_Spritesheet('data/npc_spritesheet.png')
 get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
 mouse_icon = UIspriteSheet.parse_sprite('mouse_cursor.png').convert()  # Game's exclusive mouse icon!
 scroll = [0, 0]  # player "camera"
-Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY)
 
+
+'''
+    Note: If I want to reset the text I do         
+    if self.current_text_index >= len(text): If its reaches the end
+        self.current_text_index = 0
+'''
 class Interface(object): 
     def __init__(self):
         self.font = pg.font.Font("data/database/pixelfont.ttf", 24)
         self.icon = UIspriteSheet.parse_sprite('interface_button.png').convert()
-        self.timer = 0
-        self.current_text_index = 0
-        with open('data/database/language.json') as f:
-            self.data = json.load(f)
-        f.close()
+        self.current_text_index = self.timer = 0
+        self.text_pos = (get_screen_w // 2 - 420, get_screen_h // 2 + 110) # Position of the first sentence
 
+        with open('data/database/language.json') as f: self.data = json.load(f) # Read/Save Json Data
+        f.close() # Close File  
+        
         self.sound = pg.mixer.Sound('data/sound/letter_sound.wav')
         self.sound.set_volume(0.2)
-        
-        # Text and surfaces
-        self.text_display = self.text_display2 = self.text_display3 = self.text_display4 = '' 
-        self.text_surface = self.font.render(self.text_display, True, (0,0,0))
-        self.text_surface2 = self.font.render(self.text_display2, True, (0,0,0))
-        self.text_surface3 = self.font.render(self.text_display3, True, (0,0,0))
-        self.text_surface4 = self.font.render(self.text_display3, True, (0,0,0))
+
+        self.text_display = ['' for i in range(4)] # Create 4 empty text renders
+        self.text_surfaces = [self.font.render(self.text_display[i], True, (0,0,0)) for i in range(4)] # font render each of them
     
-    def draw(self, path, dt):  
-        '''
-        Features to add:
-           1. If text is too large make a new line
-           2. Implement tiny sound that plays on each letter (done)
-
-           Extra: If I want to reset the text I do 
-           
-           if self.current_text_index >= len(text): If its reaches the end
-                self.current_text_index = 0
-
-        '''
-        text = self.data[path]['text']
+    def draw(self, path, dt):    
+        text = self.data[path]['text'] # Import from Json the AI/UI 's text
         self.timer += dt # Speed of text/delta_time
         if self.timer > 0.030:
                 self.current_text_index += 1 # Next letter
@@ -64,30 +55,19 @@ class Interface(object):
                         self.current_text_index += 1 
                     else:
                         self.sound.play() # Play Sound
-
-                # Sentences length
-                if len(self.text_display) < 44 : # 44 is the max letters
-                    self.text_display = text[:self.current_text_index]
-                elif len(self.text_display2) < 44: # 88 (44*2)
-                    self.text_display2 = text[44:self.current_text_index]
-                elif len(self.text_display3) < 44: # 132
-                    self.text_display3 = text[88:self.current_text_index]
-                elif len(self.text_display4) < 44:
-                    self.text_display4 = text[132:self.current_text_index]
-
-                self.text_surface = self.font.render(self.text_display, True, (0,0,0))
-                self.text_surface2 = self.font.render(self.text_display2, True, (0,0,0))
-                self.text_surface3 = self.font.render(self.text_display3, True, (0,0,0))
-                self.text_surface4 = self.font.render(self.text_display4, True, (0,0,0))
+                
+                # --- UPDATE CONTENT --- (in one line yee B) )
+                self.text_display = [text[44 * i : min(self.current_text_index, 44 * (i + 1))] for i in range(4)] # Update letters strings
+                self.text_surfaces = [self.font.render(text, True, (0,0,0)) for text in self.text_display]  # Transform them into a surface
+                        
+                # --- End of if statement
                 self.timer = 0 # Reset timer
+        
+        # Blit the text
+        for i, surface in enumerate(self.text_surfaces):
+            DISPLAY.blit(surface, (self.text_pos[0], self.text_pos[1] + i * 30))
 
-
-        DISPLAY.blit(self.text_surface, (get_screen_w // 2 - 420, get_screen_h // 2 + 110)) # Blit text
-        DISPLAY.blit(self.text_surface2, (get_screen_w // 2 - 420, get_screen_h // 2 + 140)) 
-        DISPLAY.blit(self.text_surface3, (get_screen_w // 2 - 420, get_screen_h // 2 + 170)) 
-        DISPLAY.blit(self.text_surface4, (get_screen_w // 2 - 420, get_screen_h // 2 + 200)) 
-
-    def update(self):
+    def update(self): # Draws the UI not the text
         return DISPLAY.blit(self.icon, (get_screen_w // 2 - 460, get_screen_h // 2 + 80))
 
       
@@ -173,7 +153,7 @@ class MainMenu(object):
     def update(self):  # 26/3 == int(8.6)
         self.quitButtonRect.center = (get_screen_w // 2 - 7, get_screen_h // 2 + 174)  # button position
         while self.mm < 1:
-            pygame.mouse.set_visible(False)  # Turn off mouse's visibility
+            #pygame.mouse.set_visible(False)  # Turn off mouse's visibility
             self.music[0].play()
             self.mm += 1
         if self.animationCounter >= 104: self.animationCounter = 0
@@ -197,23 +177,27 @@ class Game:
             pygame.image.load('data/sprites/world/Johns_room.png').convert(),  # 0 John's Room
             pygame.image.load('data/sprites/world/kitchen.png').convert(),  # 1 Kitchen Room
         ]
+
+        self.Characters = [
+            Player(get_screen_w // 2, get_screen_h // 2, DISPLAY), # 0 John
+            Mau(300,550) # 1 Mau
+        ]
         # Worlds
         self.Menu = True
         self.PlayerRoom, self.Kitchen, self.Route1 = False, False, False
         # Interface
         self.Interface = Interface()  # not working yet
         # ---------- Menu Icon -------
-        self.MenuIcon = [UIspriteSheet.parse_sprite('menu_button.png').convert(),
-                         UIspriteSheet.parse_sprite('menu_button_hover.png').convert()]
+        self.MenuIcon = [UIspriteSheet.parse_sprite('menu_button.png').convert(), UIspriteSheet.parse_sprite('menu_button_hover.png').convert()]
         self.MenuIconRect = self.MenuIcon[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 174))
         self.menupl = 0
         # ---------- Catalogs -------
         self.text_counter = 0
 
     def pause(self):
-        if Player.paused:
+        if self.Characters[0].paused:
             pygame.mouse.set_visible(False)  # Hide actual cursor
-            Player.speed = 0  # Aha now you can't move >:)))
+            self.Characters[0].speed = 0  # Aha now you can't move >:)))
             DISPLAY.blit(self.black_screen, (0, 0))
             self.menu.QuitButton()
             self.menu.quitButtonRect.center = (get_screen_w // 2 - 7, get_screen_h // 2 + 241)  # Change its position
@@ -223,16 +207,16 @@ class Game:
                     self.menu.music[1].play()
                     self.menupl += 1
                 DISPLAY.blit(self.MenuIcon[1], self.MenuIconRect)
-                if Player.click:
-                    self.PlayerRoom, self.Menu, self.menu.GameStart, Player.paused = False, True, False, False
+                if self.Characters[0].click:
+                    self.PlayerRoom, self.Menu, self.menu.GameStart,self.Characters[0].paused = False, True, False, False
             else:
                 self.menupl = 0
                 DISPLAY.blit(self.MenuIcon[0], self.MenuIconRect)
-            if Player.click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
+            if self.Characters[0].click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
                 pygame.quit(), sys.exit()
             DISPLAY.blit(mouse_icon, (pygame.mouse.get_pos()))  # Display the mouse cursor
         else:
-            Player.speed = 6 # Player can move again
+            self.Characters[0].speed = 6 # Player can move again
 
     def update(self):
         global scroll
@@ -246,34 +230,36 @@ class Game:
                     self.Menu, self.PlayerRoom, self.world = False, True, self.worlds[0]
             else:
                 pygame.draw.rect(DISPLAY, (0, 0, 0), pygame.Rect(0, 0, get_screen_w * 4, get_screen_h * 4))
-                scroll[0] += (Player.x - scroll[0] - get_screen_w // 2)  # Player's X Camera
-                scroll[1] += (Player.y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
+                scroll[0] += (self.Characters[0].x - scroll[0] - get_screen_w // 2)  # Player's X Camera
+                scroll[1] += (self.Characters[0].y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
                 # ANYTHING ELSE GOES BELOW            
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # John's room layer 0
                 # ---LAYER 1---
-                if self.PlayerRoom: self.stairs.update(Player.PlayerRect)  # Draw the stairs
+                if self.PlayerRoom: self.stairs.update(self.Characters[0].PlayerRect), self.Characters[1].update(DISPLAY, scroll)  # Draw the stairs
                 # ---LAYER 2---
-                Player.update()  # Draw player
+                self.Characters[0].update()  # Draw player
                 # ---Collisions---
                 if self.PlayerRoom:
                     # ------ Collisions (shrinked) ------
-                    if Player.x > get_screen_w - 40:
-                        Player.x = get_screen_w - 40  # Right walls
-                    elif Player.x < (get_screen_w - get_screen_w) + 40:
-                        Player.x = get_screen_w - get_screen_w + 40  # Left walls
-                    if Player.y > get_screen_h - 40:
-                        Player.y = get_screen_h - 40  # Down walls
-                    elif Player.y < (get_screen_h - get_screen_h) + 150:
-                        Player.y = (get_screen_h - get_screen_h) + 150  # Up walls
-                    if Player.x <= 266:  Player.x = 266  # Bed
-                    if Player.x < 626 and Player.y <= 290: Player.y = 290  # Desk bottom
-                    if Player.x >= 626 and Player.x < 631 and Player.y < 290: Player.x = 631  # Desk right
-                    if Player.x >= 1111 and Player.y > 310: Player.x = 1111  # Computer
-                    if Player.x > 1111 and Player.y > 305 and Player.y < 310: Player.y = 305
-                    # pygame.draw.rect(DISPLAY, (124,252,0), Player.PlayerRect, 1)
-                    pygame.draw.rect(DISPLAY, (124, 252, 0), self.stairs.rect, 1)
-                    if self.stairs.rect.colliderect(Player.PlayerRect):
-                        if Player.Interactable:
+                    for character in self.Characters:
+                        if character.x > get_screen_w - 40:
+                            character.x = get_screen_w - 40  # Right walls
+                        elif character.x < (get_screen_w - get_screen_w) + 40:
+                            character.x = get_screen_w - get_screen_w + 40  # Left walls
+                        if character.y > get_screen_h - 40:
+                            character.y = get_screen_h - 40  # Down walls
+                        elif character.y < (get_screen_h - get_screen_h) + 150:
+                            character.y = (get_screen_h - get_screen_h) + 150  # Up walls
+                        if character.x <= 266:  character.x = 266  # Bed
+                        if character.x < 626 and character.y <= 290: character.y = 290  # Desk bottom
+                        if character.x >= 626 and character.x < 631 and character.y < 290: character.x = 631  # Desk right
+                        if character.x >= 1111 and character.y > 310: character.x = 1111  # Computer
+                        if character.x > 1111 and character.y > 305 and character.y < 310: character.y = 305
+
+
+                   
+                    if self.stairs.rect.colliderect(self.Characters[0].PlayerRect):
+                        if self.Characters[0].Interactable:
                             self.Interface.update() # Draw catalog
                             self.Interface.draw('stairs', dt) # Draw text
                             # if Player.InteractPoint == 2:
