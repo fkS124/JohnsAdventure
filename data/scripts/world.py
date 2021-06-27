@@ -104,8 +104,7 @@ class MainMenu(object):
         self.playButton = [UIspriteSheet.parse_sprite('playbutton.png'), UIspriteSheet.parse_sprite('playbutton_hover.png')]
         self.playButtonRect = self.playButton[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 107))
         # ------------ Quit Button UI  -------------
-        self.quitButton = [UIspriteSheet.parse_sprite('quit_button.png'),
-                           UIspriteSheet.parse_sprite('quit_button_hover.png')]
+        self.quitButton = [UIspriteSheet.parse_sprite('quit_button.png'), UIspriteSheet.parse_sprite('quit_button_hover.png')]
         self.quitButtonRect = self.quitButton[0].get_rect()
 
     # ------------ UI Interface  -------------
@@ -180,7 +179,7 @@ class Game:
 
         self.Characters = [
             Player(get_screen_w // 2, get_screen_h // 2, DISPLAY), # 0 John
-            Mau(300,550) # 1 Mau
+            Mau(350,350) # 1 Mau
         ]
         # Worlds
         self.Menu = True
@@ -230,17 +229,44 @@ class Game:
                     self.Menu, self.PlayerRoom, self.world = False, True, self.worlds[0]
             else:
                 pygame.draw.rect(DISPLAY, (0, 0, 0), pygame.Rect(0, 0, get_screen_w * 4, get_screen_h * 4))
+
+                # Device the below with a number do add "smoothness"
                 scroll[0] += (self.Characters[0].x - scroll[0] - get_screen_w // 2)  # Player's X Camera
                 scroll[1] += (self.Characters[0].y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
                 # ANYTHING ELSE GOES BELOW            
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # John's room layer 0
                 # ---LAYER 1---
-                if self.PlayerRoom: self.stairs.update(self.Characters[0].PlayerRect), self.Characters[1].update(DISPLAY, scroll)  # Draw the stairs
+                if self.PlayerRoom: self.stairs.update(self.Characters[0].Rect), self.Characters[1].update(DISPLAY, scroll)  # Draw the stairs
                 # ---LAYER 2---
                 self.Characters[0].update()  # Draw player
                 # ---Collisions---
                 if self.PlayerRoom:
-                    # ------ Collisions (shrinked) ------
+                    
+                    # Check for collision
+                    #print(self.Characters[0].Rect)
+                    #print(self.Characters[0].x, self.Characters[0].y
+                    if self.Characters[0].Up or self.Characters[0].Down or self.Characters[0].Left or self.Characters[0].Right:
+                        if self.Characters[0].Rect.colliderect(self.Characters[1].Rect):
+                            # Top border
+                            if abs(self.Characters[1].Rect.top - self.Characters[0].Rect.bottom) < 10:
+                                    print('Top Collision')
+                                    self.Characters[0].Rect.bottom = self.Characters[1].Rect.top
+                            # Bottom Border
+                            if abs(self.Characters[1].Rect.bottom - self.Characters[0].Rect.top) < 10:
+                                    print('Bottom Collision')
+                            
+                            # Right Border
+                            if abs(self.Characters[1].Rect.left - self.Characters[0].Rect.right) < 10:
+                                    print('Left Collision')
+                            # Left Border
+                            if abs(self.Characters[1].Rect.right - self.Characters[0].Rect.left) < 10:
+                                    print('Right Collision')
+                   
+
+
+                    #if self.Characters[0].Rect.top <= self.Characters[1].Rect.
+
+                    # ------ Coordinate collisions (borders) ------
                     for character in self.Characters:
                         if character.x > get_screen_w - 40:
                             character.x = get_screen_w - 40  # Right walls
@@ -258,7 +284,7 @@ class Game:
 
 
                    
-                    if self.stairs.rect.colliderect(self.Characters[0].PlayerRect):
+                    if self.stairs.rect.colliderect(self.Characters[0].Rect):
                         if self.Characters[0].Interactable:
                             self.Interface.update() # Draw catalog
                             self.Interface.draw('stairs', dt) # Draw text
