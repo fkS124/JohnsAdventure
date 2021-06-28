@@ -24,6 +24,10 @@ mouse_icon = UIspriteSheet.parse_sprite('mouse_cursor.png').convert()  # Game's 
 scroll = [0, 0]  # player "camera"
 
 
+def Global_Collisions(collision_tolerance):
+    pass
+
+
 '''
     Note: If I want to reset the text I do         
     if self.current_text_index >= len(text): If its reaches the end
@@ -177,9 +181,10 @@ class Game:
             pygame.image.load('data/sprites/world/kitchen.png').convert(),  # 1 Kitchen Room
         ]
 
+        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY) # The player
+
         self.Characters = [
-            Player(get_screen_w // 2, get_screen_h // 2, DISPLAY), # 0 John
-            Mau(350,350) # 1 Mau
+            Mau(450,450) # 0 Mau
         ]
         # Worlds
         self.Menu = True
@@ -194,28 +199,26 @@ class Game:
         self.text_counter = 0
 
     def pause(self):
-        if self.Characters[0].paused:
+        if self.Player.paused:
             pygame.mouse.set_visible(False)  # Hide actual cursor
-            self.Characters[0].speed = 0  # Aha now you can't move >:)))
             DISPLAY.blit(self.black_screen, (0, 0))
             self.menu.QuitButton()
             self.menu.quitButtonRect.center = (get_screen_w // 2 - 7, get_screen_h // 2 + 241)  # Change its position
-            isTouchingMenu = self.MenuIconRect.collidepoint(pygame.mouse.get_pos())
-            if isTouchingMenu:
+
+            if self.MenuIconRect.collidepoint(pygame.mouse.get_pos()):
                 while self.menupl < 1:
                     self.menu.music[1].play()
                     self.menupl += 1
                 DISPLAY.blit(self.MenuIcon[1], self.MenuIconRect)
-                if self.Characters[0].click:
-                    self.PlayerRoom, self.Menu, self.menu.GameStart,self.Characters[0].paused = False, True, False, False
+                if self.Player.click:
+                    self.PlayerRoom, self.Menu, self.menu.GameStart,self.Player.paused = False, True, False, False
             else:
                 self.menupl = 0
                 DISPLAY.blit(self.MenuIcon[0], self.MenuIconRect)
-            if self.Characters[0].click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
+
+            if self.Player.click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
                 pygame.quit(), sys.exit()
             DISPLAY.blit(mouse_icon, (pygame.mouse.get_pos()))  # Display the mouse cursor
-        else:
-            self.Characters[0].speed = 6 # Player can move again
 
     def update(self):
         global scroll
@@ -231,103 +234,93 @@ class Game:
                 pygame.draw.rect(DISPLAY, (0, 0, 0), pygame.Rect(0, 0, get_screen_w * 4, get_screen_h * 4))
 
                 # Device the below with a number do add "smoothness"
-                scroll[0] += (self.Characters[0].x - scroll[0] - get_screen_w // 2)  # Player's X Camera
-                scroll[1] += (self.Characters[0].y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
+                scroll[0] += (self.Player.x - scroll[0] - get_screen_w // 2)  # Player's X Camera
+                scroll[1] += (self.Player.y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
                 # ANYTHING ELSE GOES BELOW            
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # John's room layer 0
                 # ---LAYER 1---
-                if self.PlayerRoom: self.stairs.update(self.Characters[0].Rect), self.Characters[1].update(DISPLAY, scroll)  # Draw the stairs
+                if self.PlayerRoom: 
+                   self.stairs.update(self.Player.Rect) # Draw stairs
+                   self.Characters[0].update(DISPLAY, scroll) # Mau
                 # ---LAYER 2---
-                self.Characters[0].update()  # Draw player
+                self.Player.update()  # Draw player
                 # ---Collisions---
                 if self.PlayerRoom:
-                    
-                    # Check for collision
-                    #print(self.Characters[0].Rect)
-                    #print(self.Characters[0].x, self.Characters[0].y
-                    if self.Characters[0].Up or self.Characters[0].Down or self.Characters[0].Left or self.Characters[0].Right:
-                        if self.Characters[0].Rect.colliderect(self.Characters[1].Rect):
-                            # Top border
-                            if abs(self.Characters[1].Rect.top - self.Characters[0].Rect.bottom) < 10:
-                                    print('Top Collision')
-                                    self.Characters[0].Rect.bottom = self.Characters[1].Rect.top
-                            # Bottom Border
-                            if abs(self.Characters[1].Rect.bottom - self.Characters[0].Rect.top) < 10:
-                                    print('Bottom Collision')
+                                  
+                        # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντότητων / Global Collision system for all entities
+                        
+                       
+                        # Up / Down Borders                                                                                                       (and he is not going to the opposite side)
+                        top = abs(self.Characters[0].Rect.top - self.Player.Rect.bottom) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Up
+                        bottom = abs(self.Characters[0].Rect.bottom - self.Player.Rect.top) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Down
+                        # Left / Right borders
+                        left = abs(self.Characters[0].Rect.right - self.Player.Rect.left) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Right
+                        right = abs(self.Characters[0].Rect.left - self.Player.Rect.right) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Left
+
+                        # Player is touching the top or bottom
+                        if top or bottom: 
+                            self.Player.speedY = 0
+                        else:
+                            self.Player.speedY = 6
+
+                            # Player is touching the left or right
+                        if left or right:
+                            self.Player.speedX = 0
+                        else:
+                            self.Player.speedX = 6                            
+                   
+                        '''
+
+                                if self.Player.Down:
+                                    if abs(self.Characters[0].Rect.top - self.Player.Rect.bottom) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Up:
+                                        self.Player.speedY = 0
+                                    else:
+                                        self.Player.speedY = 6
+
+                                if self.Player.Up:
+                                    if abs(self.Characters[0].Rect.bottom - self.Player.Rect.top) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Down:
+                                        self.Player.speedY = 0
+                                    else:
+                                        self.Player.speedY = 6
+
+                                if self.Player.Right:
+                                    if :
+                                        self.Player.speedX = 0
+                                    else:
+                                        self.Player.speedX = 6
+                        
+                                if self.Player.Left:
+                                    if abs(self.Characters[0].Rect.right - self.Player.Rect.left) < 10 and self.Player.Rect.colliderect(self.Characters[0].Rect) and not self.Player.Right:
+                                        self.Player.speedX = 0
+                                    else:
+                                        self.Player.speedX = 6
                             
-                            # Right Border
-                            if abs(self.Characters[1].Rect.left - self.Characters[0].Rect.right) < 10:
-                                    print('Left Collision')
-                            # Left Border
-                            if abs(self.Characters[1].Rect.right - self.Characters[0].Rect.left) < 10:
-                                    print('Right Collision')
+                            # ------ Coordinate collisions (borders) ------
+                            for character in self.Characters:
+                                if character.x > get_screen_w - 40:
+                                    character.x = get_screen_w - 40  # Right walls
+                                elif character.x < (get_screen_w - get_screen_w) + 40:
+                                    character.x = get_screen_w - get_screen_w + 40  # Left walls
+                                if character.y > get_screen_h - 40:
+                                    character.y = get_screen_h - 40  # Down walls
+                                elif character.y < (get_screen_h - get_screen_h) + 150:
+                                    character.y = (get_screen_h - get_screen_h) + 150  # Up walls
+                                if character.x <= 266:  character.x = 266  # Bed
+                                if character.x < 626 and character.y <= 290: character.y = 290  # Desk bottom
+                                if character.x >= 626 and character.x < 631 and character.y < 290: character.x = 631  # Desk right
+                                if character.x >= 1111 and character.y > 310: character.x = 1111  # Computer
+                                if character.x > 1111 and character.y > 305 and character.y < 310: character.y = 305
                    
+                            if self.stairs.rect.colliderect(self.Characters[0].Rect):
+                                if self.Characters[0].Interactable:
+                                    self.Interface.update() # Draw catalog
+                                    self.Interface.draw('stairs', dt) # Draw text
+                                    # if Player.InteractPoint == 2:
+                                    #    self.PlayerRoom, self.Kitchen, self.world_value = False, True, 1
+                                    #    self.world = self.worlds[1]   
 
+                         '''
 
-                    #if self.Characters[0].Rect.top <= self.Characters[1].Rect.
-
-                    # ------ Coordinate collisions (borders) ------
-                    for character in self.Characters:
-                        if character.x > get_screen_w - 40:
-                            character.x = get_screen_w - 40  # Right walls
-                        elif character.x < (get_screen_w - get_screen_w) + 40:
-                            character.x = get_screen_w - get_screen_w + 40  # Left walls
-                        if character.y > get_screen_h - 40:
-                            character.y = get_screen_h - 40  # Down walls
-                        elif character.y < (get_screen_h - get_screen_h) + 150:
-                            character.y = (get_screen_h - get_screen_h) + 150  # Up walls
-                        if character.x <= 266:  character.x = 266  # Bed
-                        if character.x < 626 and character.y <= 290: character.y = 290  # Desk bottom
-                        if character.x >= 626 and character.x < 631 and character.y < 290: character.x = 631  # Desk right
-                        if character.x >= 1111 and character.y > 310: character.x = 1111  # Computer
-                        if character.x > 1111 and character.y > 305 and character.y < 310: character.y = 305
-
-
-                   
-                    if self.stairs.rect.colliderect(self.Characters[0].Rect):
-                        if self.Characters[0].Interactable:
-                            self.Interface.update() # Draw catalog
-                            self.Interface.draw('stairs', dt) # Draw text
-                            # if Player.InteractPoint == 2:
-                            #    self.PlayerRoom, self.Kitchen, self.world_value = False, True, 1
-                            #    self.world = self.worlds[1]
-
-                ''' THIS PART WORKS BUT I'LL DISABLED IT UNTIL JULY + I GOT FEATURES TO ADD FIRST 
-                # Kitchen
-                elif self.Kitchen:
-                    # Kitchen collisions
-                    if Player.y < 40:
-                        if Player.x < 500:
-                            Player.y = 40
-                        elif Player.x >= 500 and Player.x < 505:
-                            Player.x = 505
-                    # Table collisions
-                    if Player.y < 590:
-                        if Player.y >= 585:
-                            if Player.x < 280:  # Bottom
-                                Player.y = 590
-                        if Player.y > 205:
-                            if Player.y < 210 and Player.x < 280:  # Top
-                                Player.y = 205
-                            elif Player.x > 280 and Player.x < 285:
-                                Player.x = 285  # Right
-                    # Interface 
-                    if Player.x > 1160 and Player.y < 80:
-                        if Player.interactable:  # John's Room
-                            if Player.interact_value < 2:
-                                self.Interface.update('Go to your room?')
-                            else:
-                                self.world, self.Kitchen, self.PlayerRoom = self.worlds[0], False, True
-                    # Outdoors
-                    if Player.x > 450 and Player.x < 700 and Player.y > 550:
-                        if Player.interactable:  # Outside
-                            if Player.interact_value < 2:
-                                self.Interface.update('Go to outside?')
-                            else:
-                                self.world, self.Kitchen, self.Route1 = self.worlds[2], False, True
-                elif self.Route1:
-                    pass
-                '''
                 # Global stuff that all worlds share        
                 self.pause()  # Pause menu
             # General Function         

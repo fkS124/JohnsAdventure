@@ -6,12 +6,12 @@ pygame.font.init()
 font = pygame.font.Font("data/database/pixelfont.ttf", 16)
 
 
-class Player(object):
+class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, screen):
         self.x, self.y = x, y
         self.pos = [self.x, self.y]  # Player's position (debugging)
         self.screen = screen
-        self.speed = 6  # Player's speed
+        self.speedX = self.speedY = 6 # Player's speed
         self.paused = False  # if player has paused the game
         self.click = False  # when Player clicks
         self.Interactable = False  # Player's interaction with the environment
@@ -26,13 +26,14 @@ class Player(object):
         self.InfoText = font.render(f'Position:{self.pos}', True, (255, 255, 255))
         # Movement
         if self.Up:
-            self.y -= self.speed
+            self.y -= self.speedY
         elif self.Down:
-            self.y += self.speed
+            self.y += self.speedY
         if self.Left:
-            self.x -= self.speed
+            self.x -= self.speedX
         elif self.Right:
-            self.x += self.speed
+            self.x += self.speedX
+
         self.pos = [self.x, self.y]  # DEBUGGING FOR WORLD POSITION
         self.screen.blit(self.InfoText, (self.Rect[0] - 80, self.Rect[1] - 30))
         return self.screen.blit(self.Player, self.Rect)
@@ -47,7 +48,6 @@ class Player(object):
             if event.type == pygame.KEYDOWN:
                 self.Interactable = False # If player clicks any button the interaction will stop
                 if event.key == pygame.K_SPACE:
-                    #print(self.InteractPoint)
                     self.Interactable = True
                     if self.InteractPoint != 2:
                         self.InteractPoint += 1
@@ -56,8 +56,10 @@ class Player(object):
                 if event.key == pygame.K_ESCAPE: # Toggle Pause screen
                     if self.paused:
                         self.paused = False
+                        self.speedX = self.speedY = 6 
                     else:
                         self.paused = True
+                        self.speedX = self.speedY = 0
                 if event.key == pygame.K_d:
                     self.Right = True
                 if event.key == pygame.K_a:
@@ -101,7 +103,7 @@ class Mau(object): # LOOK AT HIM GOOOOO
 
     def move(self, scroll):
         # Update rect
-        self.Rect = self.image[0].get_rect(topleft=(self.x - scroll[0], self.y - scroll[1]))
+        self.Rect = self.image[0].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))
 
         '''
         # Calculations
