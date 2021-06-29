@@ -21,12 +21,9 @@ NPCS = UI_Spritesheet('data/npc_spritesheet.png')
 get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
 mouse_icon = UIspriteSheet.parse_sprite('mouse_cursor.png').convert()  # Game's exclusive mouse icon!
 scroll = [0, 0]  # player "camera"
+dt = 0 # Delta time :D
 
-'''
-    Note: If I want to reset the text I do         
-    if self.current_text_index >= len(text): If its reaches the end
-        self.current_text_index = 0
-'''
+
 class Interface(object): 
     def __init__(self):
         self.font = pg.font.Font("data/database/pixelfont.ttf", 24)
@@ -45,7 +42,8 @@ class Interface(object):
     def reset(self):
         self.current_text_index = -2
     
-    def draw(self, path, dt, interact_point):    
+    def draw(self, path, interact_point):   
+        global dt
         text = self.data[path]['text'] # Import from Json the AI/UI 's text
         self.timer += dt # Speed of text/delta_time
 
@@ -54,7 +52,7 @@ class Interface(object):
                 print(len(text))
                 if self.current_text_index < len(text):
                     self.current_text_index += 1 
-                    if not(text[self.current_text_index] == ' '):                  
+                    if not (text[self.current_text_index] == ' '):                  
                         self.sound.play()  # Play sound only if there isn't a space
                 
                 # --- UPDATE CONTENT --- (in one line yee B) )
@@ -75,17 +73,19 @@ class Interface(object):
       
 class stairs(pg.sprite.Sprite):
     def __init__(self, x, y):
-        self.image = Objects.parse_sprite('stairs').convert()
-        self.scaledImg = pg.transform.scale(self.image, (self.image.get_width() * 3, self.image.get_height() * 3))
+        self.image = double_size(Objects.parse_sprite('stairs'))
         self.x, self.y, self.interact_value = x, y, 0
 
-    def update(self, player_rect):
-        self.rect = self.scaledImg.get_rect(topleft=(self.x - scroll[0], self.y - scroll[1]))
-        if self.rect.colliderect(player_rect):
-            Player.isInteracting = True
-        else:
-            Player.isInteracting = False
-        DISPLAY.blit(self.scaledImg, self.rect)
+
+    def update(self, player, interface):
+        self.rect = self.image.get_rect(topleft=(self.x - scroll[0], self.y - scroll[1]))
+        if self.rect.colliderect(player.Rect):
+            if player.Interactable:
+                interface.update(), interface.draw('stairs', player.InteractPoint)
+            else:
+                interface.reset()
+
+        DISPLAY.blit(self.image, self.rect)
 
 # Classes
 class MainMenu(object):
@@ -167,16 +167,16 @@ class MainMenu(object):
 
 class Game:
     def __init__(self):
-        self.menu = MainMenu()
-        self.world_value = 0
-        self.black_screen = pygame.image.load('data/ui/black_overlay.png')
+        self.menu = MainMenu()       
+        self.black_screen = load('data/ui/black_overlay.png')
         # Objects
         self.stairs = stairs(get_screen_w // 2 + 350, 160)  # X, Y
         # World images
+        self.world_value = 0
         self.world = ''  # Current world
         self.worlds = [
-            pygame.image.load('data/sprites/world/Johns_room.png').convert(),  # 0 John's Room
-            pygame.image.load('data/sprites/world/kitchen.png').convert(),  # 1 Kitchen Room
+            load('data/sprites/world/Johns_room.png'),  # 0 John's Room
+            load('data/sprites/world/kitchen.png'),  # 1 Kitchen Room
         ]
 
         self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY) # The player
@@ -186,15 +186,14 @@ class Game:
         ]
         # Worlds
         self.Menu = True
-        self.PlayerRoom, self.Kitchen, self.Route1 = False, False, False
+        self.PlayerRoom = self.Kitchen = self.Forest = False
         # Interface
         self.Interface = Interface()  # not working yet
         # ---------- Menu Icon -------
         self.MenuIcon = [UIspriteSheet.parse_sprite('menu_button.png').convert(), UIspriteSheet.parse_sprite('menu_button_hover.png').convert()]
         self.MenuIconRect = self.MenuIcon[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 174))
         self.menupl = 0
-        # ---------- Catalogs -------
-        self.text_counter = 0
+        
 
     def pause(self):
         if self.Player.paused:
@@ -218,6 +217,17 @@ class Game:
             if self.Player.click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
                 pygame.quit(), sys.exit()
             DISPLAY.blit(mouse_icon, (pygame.mouse.get_pos()))  # Display the mouse cursor
+
+    def room_borders(self): # Borders of each room
+        if self.Player.x > get_screen_w - 40:
+            self.Player.x = get_screen_w - 40  # Right walls
+        elif self.Player.x < (get_screen_w - get_screen_w) + 40:
+            self.Player.x = get_screen_w - get_screen_w + 40  # Left walls
+        if self.Player.y > get_screen_h - 40:
+            self.Player.y = get_screen_h - 40  # Down walls
+        elif self.Player.y < (get_screen_h - get_screen_h) + 150:
+            self.Player.y = (get_screen_h - get_screen_h) + 150  # Up walls
+
     
     def npc_collisions(self, collision_tolerance = 10):
          # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Entities (UNDER MANAGEMENT)
@@ -243,7 +253,7 @@ class Game:
                         self.Player.x = self.Player.x + self.Player.speedX
 
     def update(self):
-        global scroll
+        global scroll, dt
         
         while True:
             dt = framerate.tick(35) / 1000 # DELTA TIME VERY IMPORTANT
@@ -262,28 +272,26 @@ class Game:
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # John's room layer 0
                 # ---LAYER 1---
                 if self.PlayerRoom: 
-                   self.stairs.update(self.Player.Rect) # Draw stairs
-                   self.Characters[0].update(DISPLAY, scroll, self.Interface, self.Player, dt) # Mau
+                   self.Characters[0].update(DISPLAY, scroll, self.Interface, self.Player) # Mau
+                   self.stairs.update(self.Player, self.Interface) # Draw stairs
+                   
                 # ---LAYER 2---
                 self.Player.update()  # Draw player
                 # ---Collisions---
-                if self.PlayerRoom:
-                         
-                    
-                        pygame.draw.rect(DISPLAY, (124,252,0), (300 - scroll[0], 450 - scroll[1],768,128), 1)
-                        if self.Player.x > get_screen_w - 40:
-                           self.Player.x = get_screen_w - 40  # Right walls
-                        elif self.Player.x < (get_screen_w - get_screen_w) + 40:
-                           self.Player.x = get_screen_w - get_screen_w + 40  # Left walls
-                        if self.Player.y > get_screen_h - 40:
-                            self.Player.y = get_screen_h - 40  # Down walls
-                        elif self.Player.y < (get_screen_h - get_screen_h) + 150:
-                            self.Player.y = (get_screen_h - get_screen_h) + 150  # Up walls
-                        if self.Player.x <= 266:  self.Player.x = 266  # Bed
-                        if self.Player.x < 626 and self.Player.y <= 290: self.Player.y = 290  # Desk bottom
-                        if self.Player.x >= 626 and self.Player.x < 631 and self.Player.y < 290: self.Player.x = 631  # Desk right
-                        if self.Player.x >= 1111 and self.Player.y > 310: self.Player.x = 1111  # Computer
-                        if self.Player.x > 1111 and self.Player.y > 305 and self.Player.y < 310: self.Player.y = 305
+                if self.PlayerRoom:                       
+                    self.room_borders()
+
+                    if self.Player.x <= 266:  self.Player.x = 266  # Bed
+                    if self.Player.x < 626 and self.Player.y <= 290: self.Player.y = 290  # Desk bottom
+                    if self.Player.x >= 626 and self.Player.x < 631 and self.Player.y < 290: self.Player.x = 631  # Desk right
+                    if self.Player.x >= 1111 and self.Player.y > 310: self.Player.x = 1111  # Computer
+                    if self.Player.x > 1111 and self.Player.y > 305 and self.Player.y < 310: self.Player.y = 305
+
+                    # End of John's Room
+                    if self.Player.Rect.colliderect(self.stairs.rect) and self.Player.InteractPoint == 2:
+                        self.PlayerRoom, self.world, self.Kitchen = False, self.worlds[1], True
+                elif self.Kitchen:
+                    self.room_borders()
 
 
                 # Global stuff that all worlds share      

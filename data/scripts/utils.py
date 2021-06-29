@@ -23,5 +23,7 @@ def double_size(img):
 def flip_vertical(img):
     return pygame.transform.flip(img, True, False)
 
-def clamp(value, minimum, maximum):
-    return max(minimum, min(value, maximum))
+
+@lru_cache(1000)
+def smooth_scale(surface, n: int):
+    return pygame.transform.smoothscale(surface, (surface.get_width() * n, surface.get_height() * n))

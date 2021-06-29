@@ -44,11 +44,16 @@ class Player(object):
             # Features
             self.speedX = self.speedY = 6 if not(self.paused) else 0
            
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE: 
-                self.Interactable = True
-                if self.InteractPoint < 2:
-                    self.InteractPoint += 1
-                else:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE: 
+                    self.Interactable = True
+                    if self.InteractPoint < 2:
+                        self.InteractPoint += 1
+                    else:
+                        self.InteractPoint = 0
+               # if event.key == pygame.K
+             
+            if self.Up or self.Down or self.Right or self.Left:
                     self.InteractPoint = 0
                     self.Interactable = False
 
@@ -59,54 +64,46 @@ class Player(object):
 
 class Mau(object): # LOOK AT HIM GOOOOO
     def __init__(self, x , y):
+        # Position
         self.x, self.y = x, y
+        self.Right = True # If False he goes left        
+        self.animation_counter = self.cooldown = 0
+        self.speed = 1.25
+        self.Idle = self.is_talking = False # Conditions
+        # Animation & Rects (Check out pygame.transform.smoothscale @fks)
         self.image = [double_size(load(f'data/sprites/mau/mau{i}.png', alpha = True)) for i in range(1, 4)]
         self.reverse_image = [flip_vertical(self.image[i]) for i in range(3)]
-        self.interact_animation = []
-        self.flipped_interaction = []
+        self.interact_rect = pygame.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height()) 
+        self.interact_animation = []             
         for i in range(3):
             if i % 2 == 0:
                 self.interact_animation.append(double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True)))
-                self.flipped_interaction.append(flip_vertical(double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True))))
             else:
-                self.interact_animation.append(self.image[0])
-                self.flipped_interaction.append(self.reverse_image[0])
+                self.interact_animation.append(double_size(load(f'data/sprites/mau/idle_mau.png', alpha = True)))   
+        # Do the same but flip them
+        self.flipped_interaction = [flip_vertical(frame) for frame in self.interact_animation]
 
-
-        self.Right = True # If False he goes left
-        self.interact_rect = pygame.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height())  
-        self.animation_counter = self.cooldown = 0
-        self.speed = 1.25
-        self.Idle = False
-        self.is_talking = False
-
-    def update(self, screen, scroll, interface, player, dt):
+    def update(self, screen, scroll, interface, player):
         # Update rect
-        self.Rect = self.image[0].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))
-        
+        self.Rect = self.image[0].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))       
         if self.animation_counter >= 36: self.animation_counter = 0 # Reset Animation
         self.animation_counter += 1 # Run animation       
-        
-        #pygame.draw.rect(screen, (124,252,0), self.Rect, 1)# Mau hitbox
-        pygame.draw.rect(screen, (255,0,0), self.interact_rect, 1)
 
+        # Collision with the player
         if player.Rect.colliderect(self.interact_rect):
-            self.speed = 0 
-            self.Idle = True
-            if player.Interactable:
-                self.Idle = False
-                interface.update()
-                interface.draw('mau', dt, player.InteractPoint)
-                self.is_talking = True
+            # Turn Idle animation and stop him from moving
+            self.Idle, self.speed = True, 0
+            if player.Interactable: # If Player presses Space
+                self.Idle, self.is_talking = False, True
+                interface.update() # UI
+                interface.draw('mau', player.InteractPoint) # Text
             else:       
                 self.Idle = True
                 interface.reset()
         else:
-            self.is_talking = False
-            self.Idle = False
-            self.speed = 1.25
-
-       
+            self.Idle = self.is_talking = False # Stop animation
+            self.speed = 1.25 # Put his speed back
+     
         # Movement mechanism
         if not(self.x < 1024 and self.Right):
             self.Right = False
@@ -125,7 +122,7 @@ class Mau(object): # LOOK AT HIM GOOOOO
                 self.x += self.speed
         else:
             self.interact_rect.midright = (self.x - 15 - scroll[0], self.y - scroll[1])
-            if self.Idle:
+            if self.Idle: # Idle Animation
                 screen.blit(self.flipped_interaction[1] , self.Rect)
             elif self.is_talking:
                 screen.blit(self.flipped_interaction[self.animation_counter // 18] , self.Rect)
