@@ -2,6 +2,7 @@
   "ExpandedNodes": [
     "",
     "\\data",
+    "\\data\\database",
     "\\data\\scripts"
   ],
   "SelectedNode": "\\data\\scripts\\player.py",
