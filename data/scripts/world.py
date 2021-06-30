@@ -22,6 +22,13 @@ get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
 mouse_icon = UIspriteSheet.parse_sprite('mouse_cursor.png').convert()  # Game's exclusive mouse icon!
 scroll = [0, 0]  # player "camera"
 dt = 0 # Delta time :D
+paused_sound = False
+
+def play(sound): # Play's sound once
+    global paused_sound
+    if not paused_sound: 
+        sound.play()
+        paused_sound = True
 
 
 class Interface(object): 
@@ -91,15 +98,10 @@ class stairs(pg.sprite.Sprite):
 class MainMenu(object):
     def __init__(self):
         # ------------ Background and Animation  -------------
-        self.background_l1 = [pg.image.load('data/ui/mainmenubackground1.png').convert(),
-                              pg.image.load('data/ui/mainmenubackground2.png').convert(),
-                              pg.image.load('data/ui/mainmenubackground1.png').convert()]
-        self.background_l2 = pg.image.load('data/ui/mainmenutile.png')
+        self.background_l1, self.background_l2 = [load(f'data/ui/mainmenubackground{i}.png') for i in range(1,3)], load('data/ui/mainmenutile.png', True)
         self.animationCounter = 0  # Important for background animation
-        self.font = pygame.font.Font("data/database/pixelfont.ttf", 14)
         self.GameStart = False # The game loop
         # ------------- Music Playlist -------------
-        self.pb, self.qb, self.mm = 0, 0, 0  # 3 counters for each button for the music sounds
         self.music = [mixer.Sound("data/sound/forest_theme_part1.flac"), mixer.Sound("data/sound/Select_UI.wav")]
         for music in self.music:  music.set_volume(0.2)
         # ------------ Play Button UI  -------------
@@ -107,64 +109,48 @@ class MainMenu(object):
         self.playButtonRect = self.playButton[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 107))
         # ------------ Quit Button UI  -------------
         self.quitButton = [UIspriteSheet.parse_sprite('quit_button.png'), UIspriteSheet.parse_sprite('quit_button_hover.png')]
-        self.quitButtonRect = self.quitButton[0].get_rect()
+        self.quitButtonRect =  self.quitButton[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 174))
+        self.mouse, self.event = 0, None # Mouse Coordinates and event for keys
+
+    def run_animation(self):
+        if self.animationCounter >= 26: self.animationCounter = 0 # Reset's Animation
+        self.animationCounter += 1 # Update Animation
 
     # ------------ UI Interface  -------------
-    def PlayButton(self):
-        if self.playButtonRect.collidepoint(pg.mouse.get_pos()):
-            while self.pb < 1:  # Plays sound once
-                self.music[1].play()
-                self.pb += 1
-            DISPLAY.blit(self.playButton[1], self.playButtonRect)
+    def hover_sound(self):
+        global paused_sound      
+        # Sound
+        if self.playButtonRect.collidepoint(self.mouse) or self.quitButtonRect.collidepoint(self.mouse):
+            play(self.music[1]) # Play Hover sound
         else:
-            self.pb = 0  # Reset sound counter
-            DISPLAY.blit(self.playButton[0], self.playButtonRect)
+            paused_sound = False
 
-    def Buttons(self):  # BLITING THE GUI, but in a more organized way
-        self.buttonFunction(), self.PlayButton(), self.QuitButton()
-
-    def QuitButton(self):  # Imagine closing the game of the year. smh 
-        if self.quitButtonRect.collidepoint(pg.mouse.get_pos()):
-            while self.qb < 1:
-                self.music[1].play()
-                self.qb += 1
+        # Buttons
+        if self.quitButtonRect.collidepoint(self.mouse):
+            if self.event.type == pg.MOUSEBUTTONDOWN:  pg.quit(), sys.exit() 
             DISPLAY.blit(self.quitButton[1], self.quitButtonRect)
         else:
-            self.qb = 0
-            DISPLAY.blit(self.quitButton[0], self.quitButtonRect)
+            DISPLAY.blit(self.quitButton[0], self.quitButtonRect)  
 
-    # ------------  Mechanism  -------------
-    def buttonFunction(self):  # The gears between the interface and user input
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit(), sys.exit()
-            if event.type == pg.MOUSEBUTTONDOWN:  # Mouse
-                if self.playButtonRect.collidepoint(pg.mouse.get_pos()):
-                    self.music[0].stop()
-                    self.GameStart = True
-                elif self.quitButtonRect.collidepoint(pg.mouse.get_pos()):
-                    pg.quit(), sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pg.K_ESCAPE:
-                    pg.quit(), sys.exit()
-                if event.key == pg.K_F12:
-                    pg.display.toggle_fullscreen()
+        if self.playButtonRect.collidepoint(self.mouse):
+            if self.event.type == pg.MOUSEBUTTONDOWN: self.GameStart = True
+            DISPLAY.blit(self.playButton[1], self.playButtonRect)
+        else:
+            DISPLAY.blit(self.playButton[0], self.playButtonRect)
 
     # ------------ Real time changing -------------
-    def update(self):  # 26/3 == int(8.6)
-        self.quitButtonRect.center = (get_screen_w // 2 - 7, get_screen_h // 2 + 174)  # button position
-        while self.mm < 1:
-            #pygame.mouse.set_visible(False)  # Turn off mouse's visibility
-            self.music[0].play()
-            self.mm += 1
-        if self.animationCounter >= 104: self.animationCounter = 0
-        self.animationCounter += 1
-        DISPLAY.blit(self.background_l1[self.animationCounter // 36], (0, 0))
-        DISPLAY.blit(self.background_l2, (0, 0))
-        self.Buttons()  # Display buttons (and function)
-        DISPLAY.blit(mouse_icon, (pg.mouse.get_pos()))  # Display our mouse!
-
-
+    def update(self):  
+        self.mouse = pg.mouse.get_pos()     
+        self.run_animation() # Animation Frames       
+        # ------------ BLITS ------------- 
+        DISPLAY.blit(mouse_icon, (self.mouse))  
+        DISPLAY.blit(self.background_l1[self.animationCounter // 14], (0, 0)), DISPLAY.blit(self.background_l2, (0, 0)), self.hover_sound()
+             
+        for event in pg.event.get():
+            self.event = event
+            if event.type == pg.QUIT or event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE: pg.quit(), sys.exit()                       
+            if event.type == pygame.KEYDOWN and event.key == pg.K_F12: pg.display.toggle_fullscreen()
+                               
 class Game:
     def __init__(self):
         self.menu = MainMenu()       
@@ -180,7 +166,6 @@ class Game:
         ]
 
         self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY) # The player
-
         self.Characters = [
             Mau(350,530) # 0 Mau
         ]
