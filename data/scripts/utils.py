@@ -14,6 +14,11 @@ def load(path, alpha = None):
     if alpha:
         return pygame.image.load(path).convert_alpha()
     return pygame.image.load(path).convert()
+
+@lru_cache(1000)
+def scale(img, n):
+    return pygame.transform.scale(img, (img.get_width() * n, img.get_height() * n))
+
    
 @lru_cache(1000)
 def double_size(img):
@@ -22,8 +27,3 @@ def double_size(img):
 @lru_cache(1000)
 def flip_vertical(img):
     return pygame.transform.flip(img, True, False)
-
-
-@lru_cache(1000)
-def smooth_scale(surface, n: int):
-    return pygame.transform.smoothscale(surface, (surface.get_width() * n, surface.get_height() * n))

@@ -51,14 +51,19 @@ class Player(object):
                         self.InteractPoint += 1
                     else:
                         self.InteractPoint = 0
-               # if event.key == pygame.K
-             
+            
+            # Resets interaction
             if self.Up or self.Down or self.Right or self.Left:
                     self.InteractPoint = 0
                     self.Interactable = False
 
             if keys[pygame.K_F12]: pygame.display.toggle_fullscreen()
-            if keys[pygame.K_ESCAPE]: self.paused = True            
+            if keys[pygame.K_ESCAPE]: 
+                if self.paused:
+                    self.paused = False
+                else:
+                    self.paused = True
+            
             if event.type == pygame.MOUSEBUTTONDOWN: self.click = True             
             else: self.click = False
 
@@ -89,10 +94,13 @@ class Mau(object): # LOOK AT HIM GOOOOO
         if self.animation_counter >= 36: self.animation_counter = 0 # Reset Animation
         self.animation_counter += 1 # Run animation       
 
+        # Change his speed based on these conditions
+        self.speed = 0 if player.paused or player.Rect.colliderect(self.interact_rect) else 1.25
+
         # Collision with the player
         if player.Rect.colliderect(self.interact_rect):
-            # Turn Idle animation and stop him from moving
-            self.Idle, self.speed = True, 0
+            # Turn Idle animation
+            self.Idle = True
             if player.Interactable: # If Player presses Space
                 self.Idle, self.is_talking = False, True
                 interface.update() # UI
@@ -102,7 +110,6 @@ class Mau(object): # LOOK AT HIM GOOOOO
                 interface.reset()
         else:
             self.Idle = self.is_talking = False # Stop animation
-            self.speed = 1.25 # Put his speed back
      
         # Movement mechanism
         if not(self.x < 1024 and self.Right):

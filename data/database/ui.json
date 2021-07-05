@@ -1,36 +1,10 @@
 {
     "frames": 
     {
-        "playbutton.png": 
-        {
-            "frame": {"x": 8, "y":0, "w":193, "h":67}
-        },
-
-        "playbutton_hover.png":
-        {
-            "frame": {"x": 205, "y":0, "w":193, "h":67}
-        },
-
-        "about_button.png":
-        {
-            "frame": {"x": 401, "y":0, "w":193, "h":67}
-        },
-
-        "about_button_hover.png": 
-        { 
-            "frame": {"x": 598, "y":0, "w":193, "h":67}
-        },
-
-        "quit_button.png": 
-        {
-            "frame": {"x": 8, "y":71, "w":193, "h":67}
-        },
-
-        "quit_button_hover.png":
-        { 
-            "frame": {"x": 205, "y":71, "w":193, "h":67}
-        },
-
+        "button.png": {"frame": {"x": 0, "y":0, "w":56, "h":12}},
+        
+        "button_hover.png": {"frame": {"x": 57, "y":0, "w":56, "h":12}},
+        
         "catalog_button.png":
         { 
             "frame": {"x": 8, "y":146, "w":450, "h":228}
@@ -44,16 +18,6 @@
         "heart.png":
         {
             "frame": {"x": 471, "y":286, "w":32, "h":28}
-        },
-
-        "menu_button.png":
-        {
-            "frame": {"x": 401, "y":73, "w":193, "h":65}
-        },
-
-        "menu_button_hover.png":
-        {
-            "frame": {"x": 598, "y":73, "w":193, "h":65}
         },
 
         "interface_button.png":

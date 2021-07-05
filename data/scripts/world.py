@@ -5,8 +5,12 @@ from pygame import mixer
 import json
 
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
-DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED)  # pg.NOFRAME for linux :penguin:
-#pygame.display.toggle_fullscreen()
+
+
+DISPLAY = pg.display.set_mode((1280, 720))
+#  Uncomment the below when you stop debugging
+#DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED)  # pg.NOFRAME for linux :penguin:
+#pg.display.toggle_fullscreen()
 # Data
 from .backend import *
 from .player import *
@@ -24,11 +28,13 @@ scroll = [0, 0]  # player "camera"
 dt = 0 # Delta time :D
 paused_sound = False
 
+# Fonts
+blacksword = pg.font.Font("data/database/Blacksword.otf", 113) # I use this only for the logo
+
 def play(sound): # Play's sound once
     global paused_sound
     if not paused_sound: 
-        sound.play()
-        paused_sound = True
+        sound.play(); paused_sound = True
 
 
 class Interface(object): 
@@ -56,7 +62,7 @@ class Interface(object):
 
         if self.timer > 0.030:
                 self.current_text_index += 1 # Next letter
-                print(len(text))
+ 
                 if self.current_text_index < len(text):
                     self.current_text_index += 1 
                     if not (text[self.current_text_index] == ' '):                  
@@ -69,8 +75,7 @@ class Interface(object):
                 # --- End of if statement
                 self.timer = 0 # Reset timer
                                                     
-        # Blit the text
-       
+        # Blit the text     
         for i, surface in enumerate(self.text_surfaces):
             DISPLAY.blit(surface, (self.text_pos[0], self.text_pos[1] + i * 30))          
 
@@ -98,144 +103,120 @@ class stairs(pg.sprite.Sprite):
 class MainMenu(object):
     def __init__(self):
         # ------------ Background and Animation  -------------
-        self.background_l1, self.background_l2 = [load(f'data/ui/mainmenubackground{i}.png') for i in range(1,3)], load('data/ui/mainmenutile.png', True)
-        self.animationCounter = 0  # Important for background animation
-        self.GameStart = False # The game loop
+        self.background = pg.transform.scale(load('data/ui/background.png'), (1280,720))
+        self.mouse, self.event = 0, None # Mouse Coordinates and event for keys
+        self.logo_text_outline = blacksword.render("John's Adventure", True, (0,0,0))
+        self.logo_text = blacksword.render("John's Adventure", True, (255,255,255))
+
         # ------------- Music Playlist -------------
+        self.button_font = pg.font.Font("data/database/pixelfont.ttf", 34)
         self.music = [mixer.Sound("data/sound/forest_theme_part1.flac"), mixer.Sound("data/sound/Select_UI.wav")]
         for music in self.music:  music.set_volume(0.2)
-        # ------------ Play Button UI  -------------
-        self.playButton = [UIspriteSheet.parse_sprite('playbutton.png'), UIspriteSheet.parse_sprite('playbutton_hover.png')]
-        self.playButtonRect = self.playButton[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 107))
-        # ------------ Quit Button UI  -------------
-        self.quitButton = [UIspriteSheet.parse_sprite('quit_button.png'), UIspriteSheet.parse_sprite('quit_button_hover.png')]
-        self.quitButtonRect =  self.quitButton[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 174))
-        self.mouse, self.event = 0, None # Mouse Coordinates and event for keys
 
-    def run_animation(self):
-        if self.animationCounter >= 26: self.animationCounter = 0 # Reset's Animation
-        self.animationCounter += 1 # Update Animation
+        # --------- GUI ----------
+        self.buttons = [ 
+            [
+               scale(UIspriteSheet.parse_sprite('button.png'), 4),
+               scale(UIspriteSheet.parse_sprite('button_hover.png'), 4)
+            ]
+            for i in range(2) # Create two buttons
+        ]
 
-    # ------------ UI Interface  -------------
-    def hover_sound(self):
-        global paused_sound      
-        # Sound
-        if self.playButtonRect.collidepoint(self.mouse) or self.quitButtonRect.collidepoint(self.mouse):
-            play(self.music[1]) # Play Hover sound
-        else:
-            paused_sound = False
+        # Gui Text
+        self.gui_text = [self.button_font.render("Play", True, (255,255,255)), self.button_font.render("Quit", True, (255,255,255))]
 
-        # Buttons
-        if self.quitButtonRect.collidepoint(self.mouse):
-            if self.event.type == pg.MOUSEBUTTONDOWN:  pg.quit(), sys.exit() 
-            DISPLAY.blit(self.quitButton[1], self.quitButtonRect)
-        else:
-            DISPLAY.blit(self.quitButton[0], self.quitButtonRect)  
-
-        if self.playButtonRect.collidepoint(self.mouse):
-            if self.event.type == pg.MOUSEBUTTONDOWN: self.GameStart = True
-            DISPLAY.blit(self.playButton[1], self.playButtonRect)
-        else:
-            DISPLAY.blit(self.playButton[0], self.playButtonRect)
+    def gui(self): # BLOATWARE!!!!111
+        for i, button in enumerate(self.buttons):
+            # Take the rect of the first image of the sublist
+            button_rect = button[0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 75 * (i + 1) )  ))
+            if button_rect.collidepoint(self.mouse):
+                DISPLAY.blit(button[1], button_rect) # Show hovered image
+            else:             
+                DISPLAY.blit(button[0], button_rect) # Show normal image
+            # Im doing //4 here cause I want to sum the X of the button with the half width of the text (Which results in centered text)
+            DISPLAY.blit(self.gui_text[i], (button_rect[0] + button[0].get_width()//4, button_rect[1]))
 
     # ------------ Real time changing -------------
     def update(self):  
-        self.mouse = pg.mouse.get_pos()     
-        self.run_animation() # Animation Frames       
+        global paused_sound
+        self.mouse = pg.mouse.get_pos()           
         # ------------ BLITS ------------- 
         DISPLAY.blit(mouse_icon, (self.mouse))  
-        DISPLAY.blit(self.background_l1[self.animationCounter // 14], (0, 0)), DISPLAY.blit(self.background_l2, (0, 0)), self.hover_sound()
-             
+        DISPLAY.blit(self.background,(0,0))
+        DISPLAY.blit(self.logo_text_outline, (get_screen_w//6+20, get_screen_h//2 - 190))
+        DISPLAY.blit(self.logo_text, (get_screen_w//6+20, get_screen_h//2 - 188))
+        self.gui()
         for event in pg.event.get():
             self.event = event
-            if event.type == pg.QUIT or event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE: pg.quit(), sys.exit()                       
+            if event.type == pg.QUIT: pg.quit(), sys.exit()                       
             if event.type == pygame.KEYDOWN and event.key == pg.K_F12: pg.display.toggle_fullscreen()
                                
 class Game:
     def __init__(self):
         self.menu = MainMenu()       
-        self.black_screen = load('data/ui/black_overlay.png')
+        self.black_screen = load('data/ui/black_overlay.png', True)
         # Objects
         self.stairs = stairs(get_screen_w // 2 + 350, 160)  # X, Y
-        # World images
-        self.world_value = 0
-        self.world = ''  # Current world
+        # World images            
         self.worlds = [
             load('data/sprites/world/Johns_room.png'),  # 0 John's Room
             load('data/sprites/world/kitchen.png'),  # 1 Kitchen Room
         ]
+        self.world = self.worlds[0]  # Current world
 
         self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY) # The player
         self.Characters = [
             Mau(350,530) # 0 Mau
         ]
         # Worlds
-        self.Menu = True
-        self.PlayerRoom = self.Kitchen = self.Forest = False
+        self.Menu = True # If False , the game starts
+        self.PlayerRoom = True  # First world
+        self.Kitchen = self.Forest = False
         # Interface
         self.Interface = Interface()  # not working yet
-        # ---------- Menu Icon -------
-        self.MenuIcon = [UIspriteSheet.parse_sprite('menu_button.png').convert(), UIspriteSheet.parse_sprite('menu_button_hover.png').convert()]
-        self.MenuIconRect = self.MenuIcon[0].get_rect(center=(get_screen_w // 2 - 7, get_screen_h // 2 + 174))
-        self.menupl = 0
-        
 
-    def pause(self):
+
+    def pause(self, mouse):
         if self.Player.paused:
             pygame.mouse.set_visible(False)  # Hide actual cursor
             DISPLAY.blit(self.black_screen, (0, 0))
             for character in self.Characters: character.speed = 0 # Stop characters from moving
-            self.menu.QuitButton()
-            self.menu.quitButtonRect.center = (get_screen_w // 2 - 7, get_screen_h // 2 + 241)  # Change its position
-
-            if self.MenuIconRect.collidepoint(pygame.mouse.get_pos()):
-                while self.menupl < 1:
-                    self.menu.music[1].play()
-                    self.menupl += 1
-                DISPLAY.blit(self.MenuIcon[1], self.MenuIconRect)
-                if self.Player.click:
-                    self.PlayerRoom, self.Menu, self.menu.GameStart,self.Player.paused = False, True, False, False
-            else:
-                self.menupl = 0
-                DISPLAY.blit(self.MenuIcon[0], self.MenuIconRect)
-
-            if self.Player.click and self.menu.quitButtonRect.collidepoint(pygame.mouse.get_pos()):
-                pygame.quit(), sys.exit()
-            DISPLAY.blit(mouse_icon, (pygame.mouse.get_pos()))  # Display the mouse cursor
-
-    def room_borders(self): # Borders of each room
-        if self.Player.x > get_screen_w - 40:
-            self.Player.x = get_screen_w - 40  # Right walls
-        elif self.Player.x < (get_screen_w - get_screen_w) + 40:
-            self.Player.x = get_screen_w - get_screen_w + 40  # Left walls
-        if self.Player.y > get_screen_h - 40:
-            self.Player.y = get_screen_h - 40  # Down walls
-        elif self.Player.y < (get_screen_h - get_screen_h) + 150:
-            self.Player.y = (get_screen_h - get_screen_h) + 150  # Up walls
-
+            DISPLAY.blit(mouse_icon, mouse)  # Display the mouse cursor
+            # -----v TEMPORARY v-----
+            DISPLAY.blit(self.Interface.font.render("(GAME UNDER CONSTRUCTION)", True, (255,255,255)), (get_screen_w//2 - 220, get_screen_h//2 - 140))
+            DISPLAY.blit(blacksword.render("Paused", True, (255,255,255)), (get_screen_w//2 - 190, get_screen_h//2 - 120))
+            DISPLAY.blit(self.Interface.font.render("PRESS ESQ TO UNPAUSE", True, (255,255,255)), (get_screen_w//2 - 190, get_screen_h//2 + 100))
+            DISPLAY.blit(self.Interface.font.render("THINGS ARE GOING TO BE CHANGED IN THE FUTURE", True, (255,255,255)), (256, get_screen_h//2 + 140))
     
-    def npc_collisions(self, collision_tolerance = 10):
-         # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Entities (UNDER MANAGEMENT)
+    # Wall collisions when player enters a room
+    def room_borders(self): 
+        # Up
+        if self.Player.y < (get_screen_h - get_screen_h) + 150: self.Player.y = (get_screen_h - get_screen_h) + 150
+        # Down
+        elif self.Player.y > get_screen_h - 40: self.Player.y = get_screen_h - 40 
+        # Left
+        if self.Player.x < (get_screen_w - get_screen_w) + 40: self.Player.x = get_screen_w - get_screen_w + 40 
+        # Right
+        elif self.Player.x > get_screen_w - 40: self.Player.x = get_screen_w - 40  
+       
 
+    # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Entities (UNDER MANAGEMENT)
+    def npc_collisions(self, collision_tolerance = 10):   
          for character in self.Characters:
              if self.Player.Rect.colliderect(character.Rect):
-                 character.speed = 0
-
-                 if self.Player.Down: # Clunky
-                    if abs(character.Rect.top - self.Player.Rect.bottom) < collision_tolerance:
-                        self.Player.y = self.Player.y - self.Player.speedY
-  
-                 if self.Player.Up: 
+                 # Up / Down borders
+                 if self.Player.Up or self.Player.Down: 
                     if abs(character.Rect.bottom - self.Player.Rect.top) < collision_tolerance:
                         self.Player.y = self.Player.y + self.Player.speedY
-
-                 if self.Player.Right:  # Clunky
-                    if abs(character.Rect.left - self.Player.Rect.right) < collision_tolerance:
-                        self.Player.x = self.Player.x - self.Player.speedX
-                        
-                 if self.Player.Left: 
+                    elif abs(character.Rect.top - self.Player.Rect.bottom) < collision_tolerance:
+                        self.Player.y = self.Player.y - self.Player.speedY # Clunky
+                 # Left / Right borders
+                 if self.Player.Left or self.Player.Right: 
                     if abs(character.Rect.right - self.Player.Rect.left) < collision_tolerance:
                         self.Player.x = self.Player.x + self.Player.speedX
+                    elif abs(character.Rect.left - self.Player.Rect.right) < collision_tolerance:
+                        self.Player.x = self.Player.x - self.Player.speedX # Clunky
+
 
     def update(self):
         global scroll, dt
@@ -244,25 +225,34 @@ class Game:
             dt = framerate.tick(35) / 1000 # DELTA TIME VERY IMPORTANT
             DISPLAY.fill((0, 0, 0))
             if self.Menu:
-                self.menu.update()
-                if self.menu.GameStart:
-                    self.Menu, self.PlayerRoom, self.world = False, True, self.worlds[0]
-            else:
-                pygame.draw.rect(DISPLAY, (0, 0, 0), pygame.Rect(0, 0, get_screen_w * 4, get_screen_h * 4))
+                self.menu.update() # Show Menu Screen  
 
-                # Device the below with a number do add "smoothness"
-                scroll[0] += (self.Player.x - scroll[0] - get_screen_w // 2)  # Player's X Camera
+                # Position of the buttons
+                menu_rect = self.menu.buttons[0][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 75)))
+                quit_rect = self.menu.buttons[1][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 150)))
+
+                if self.menu.event.type == pygame.MOUSEBUTTONDOWN:
+                    if menu_rect.collidepoint(pg.mouse.get_pos()):
+                        self.Menu = False
+                    elif quit_rect.collidepoint(pg.mouse.get_pos()):
+                        pg.quit(), sys.exit()
+
+            else: # The game
+               
+                #pygame.draw.rect(DISPLAY, (0, 0, 0), pygame.Rect(0, 0, get_screen_w * 4, get_screen_h * 4))
+                scroll[0] += (self.Player.x - scroll[0] - get_screen_w // 2)  # Player's X Camera  (divide scroll to gain smoothness)
                 scroll[1] += (self.Player.y - scroll[1] - get_screen_h // 2)  # Player's Y Camera
                 # ANYTHING ELSE GOES BELOW            
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # John's room layer 0
                 # ---LAYER 1---
-                if self.PlayerRoom: 
+                if self.PlayerRoom:                  
                    self.Characters[0].update(DISPLAY, scroll, self.Interface, self.Player) # Mau
                    self.stairs.update(self.Player, self.Interface) # Draw stairs
                    
                 # ---LAYER 2---
                 self.Player.update()  # Draw player
-                # ---Collisions---
+
+                # --- WORLD ---
                 if self.PlayerRoom:                       
                     self.room_borders()
 
@@ -278,12 +268,11 @@ class Game:
                 elif self.Kitchen:
                     self.room_borders()
 
-
-                # Global stuff that all worlds share      
+                # Global stuff that all worlds share
                 self.npc_collisions()
-                self.pause()  # Pause menu
+                self.pause(pg.mouse.get_pos())  # Pause menu
             # General Function         
-            pygame.display.update()
+            pg.display.update()
 
 
 
