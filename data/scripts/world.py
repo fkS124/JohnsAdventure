@@ -119,21 +119,23 @@ class MainMenu(object):
                scale(UIspriteSheet.parse_sprite('button.png'), 4),
                scale(UIspriteSheet.parse_sprite('button_hover.png'), 4)
             ]
-            for i in range(2) # Create two buttons
+            for i in range(2) # Create two buttons (make it 3 if im going to add settings)
         ]
 
         # Gui Text
         self.gui_text = [self.button_font.render("Play", True, (255,255,255)), self.button_font.render("Quit", True, (255,255,255))]
 
     def gui(self): # BLOATWARE!!!!111
+        global paused_sound
         for i, button in enumerate(self.buttons):
             # Take the rect of the first image of the sublist
             button_rect = button[0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 75 * (i + 1) )  ))
             if button_rect.collidepoint(self.mouse):
                 DISPLAY.blit(button[1], button_rect) # Show hovered image
-            else:             
+                play(self.music[1]) # Plays sound once
+            else:    
                 DISPLAY.blit(button[0], button_rect) # Show normal image
-            # Im doing //4 here cause I want to sum the X of the button with the half width of the text (Which results in centered text)
+            # The below results in a centered text
             DISPLAY.blit(self.gui_text[i], (button_rect[0] + button[0].get_width()//4, button_rect[1]))
 
     # ------------ Real time changing -------------
@@ -141,11 +143,16 @@ class MainMenu(object):
         global paused_sound
         self.mouse = pg.mouse.get_pos()           
         # ------------ BLITS ------------- 
-        DISPLAY.blit(mouse_icon, (self.mouse))  
-        DISPLAY.blit(self.background,(0,0))
+        DISPLAY.blit(mouse_icon, (self.mouse)), DISPLAY.blit(self.background,(0,0)), self.gui()
         DISPLAY.blit(self.logo_text_outline, (get_screen_w//6+20, get_screen_h//2 - 190))
         DISPLAY.blit(self.logo_text, (get_screen_w//6+20, get_screen_h//2 - 188))
-        self.gui()
+        
+        menu_rect = self.buttons[0][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 75)))
+        quit_rect = self.buttons[1][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 150)))  
+
+        if not(menu_rect.collidepoint(pg.mouse.get_pos()) or quit_rect.collidepoint(pg.mouse.get_pos())):
+            paused_sound = False
+
         for event in pg.event.get():
             self.event = event
             if event.type == pg.QUIT: pg.quit(), sys.exit()                       
@@ -173,7 +180,7 @@ class Game:
         self.PlayerRoom = True  # First world
         self.Kitchen = self.Forest = False
         # Interface
-        self.Interface = Interface()  # not working yet
+        self.Interface = Interface()
 
 
     def pause(self, mouse):
