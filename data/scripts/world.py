@@ -164,11 +164,11 @@ class Game:
         self.black_screen = load('data/ui/black_overlay.png', True)
         # Objects
         self.stairs = stairs(get_screen_w // 2 + 350, 160)  # X, Y
-        # World images            
+        # World images 
         self.worlds = [
             load('data/sprites/world/Johns_room.png'),  # 0 John's Room
-            load('data/sprites/world/kitchen.png'),  # 1 Kitchen Room
-        ]
+            pg.transform.scale(load('data/sprites/world/kitchen.png'), (1280,720))  # 1 Kitchen Room
+           ]
         self.world = self.worlds[0]  # Current world
 
         self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY) # The player
