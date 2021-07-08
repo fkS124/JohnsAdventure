@@ -1,7 +1,7 @@
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Marios325346/JohnsAdventure.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Marios325346/JohnsAdventure/context:python)
+
 # JohnsAdventure
 Hi and welcome to the Open Source of John's Adventure! ⚔🛡🏹
-
-[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/Marios325346/JohnsAdventure.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/Marios325346/JohnsAdventure/context:python)
 
 My goal is to remake the existing https://gamejolt.com/games/johns_adventure/556539 and give a new experience to our players!
 Including more fighting! more gameplay! more story! and many more 👀
