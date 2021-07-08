@@ -1,7 +1,7 @@
 # JohnsAdventure
 Hi and welcome to the Open Source of John's Adventure! ⚔🛡🏹
 
-|LGTMGradePython| https://img.shields.io/badge/Python-Code%20quality-Green
+|LGTMGradePython https://img.shields.io/badge/Python-Code%20quality-Green |
 
 My goal is to remake the existing https://gamejolt.com/games/johns_adventure/556539 and give a new experience to our players!
 Including more fighting! more gameplay! more story! and many more 👀
