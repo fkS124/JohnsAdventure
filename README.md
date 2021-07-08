@@ -1,3 +1,6 @@
+|LGTMGradePython| image:: https://img.shields.io/lgtm/grade/python/g/pygame/pygame.svg?logo=lgtm&logoWidth=18
+   :target: https://lgtm.com/projects/g/pygame/pygame/context:python
+   
 # JohnsAdventure
 Hi and welcome to the Open Source of John's Adventure! ⚔🛡🏹
 
