@@ -1,9 +1,32 @@
 {
+  "computer": {
+    "text": "you have a new mail:                        'Welcome to John's Adventure'               @Anonymous User"
+  },
+
+  "desk": {
+    "text": "I hope my sister finished her homework.. "
+  },
   "stairs": {
     "text": "Go downstairs? "
+  },
+  "stairs_up": {
+    "text": "Go upstairs? "
+  },
+
+  "kitchen": {
+    "text": "Wonder what we will eat today.."
+  },
+
+  "sink": {
+    "text": "Plates are looking clean."
   },
 
   "mau": {
     "text": "Meow Meow Meow."
+  },
+
+  "kitchen_stairs": {
+    "text": "Go upstairs? "
   }
+
 }

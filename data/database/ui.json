@@ -22,7 +22,7 @@
 
         "interface_button.png":
         {
-            "frame": {"x": 814, "y":3, "w":950, "h":258}
+            "frame": {"x": 114, "y":0, "w":122, "h":30}
         },
 
         "stairs":

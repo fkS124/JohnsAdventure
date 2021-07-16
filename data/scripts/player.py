@@ -1,76 +1,84 @@
-import pygame, sys, random, math
+import pygame as p
+import sys, math
 from .utils import *
-
-
-pygame.font.init()
-font = pygame.font.Font("data/database/pixelfont.ttf", 16)
-
+p.font.init()
+font = p.font.Font("data/database/pixelfont.ttf", 16)
+debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player(object):
-    def __init__(self, x, y, screen):
-        self.x, self.y, self.screen, self.InteractPoint = x, y, screen, 0 # Init + interact_point
+    def __init__(self, x, y, screen, debug, interface):
+        self.x, self.y = p.Vector2(x,y)
+        self.screen, self.InteractPoint, self.Interface = screen, 0, interface
         self.Player = load('player_beta.png')
         self.Rect = self.Player.get_rect(center=(self.x, self.y))
         self.speedX = self.speedY = 6 # Player's speed       
         self.paused = self.click = self.Interactable = False #  Features       
-        self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement                  
+        self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
+        self.debug = debug # Debugging
+        self.interact_text = ''
+        self.is_interacting = False
+        self.position = p.Vector2(x,y)
 
     def update(self):
         self.controls()
+        ''' Movement '''
         if self.Up:  self.y -= self.speedY                       
-        elif self.Down: self.y += self.speedY
-                       
+        elif self.Down: self.y += self.speedY                   
         if self.Left:  self.x -= self.speedX          
-        elif self.Right: self.x += self.speedX             
-          
-        # Debugging
-        self.screen.blit(font.render(f'Position:{[self.x, self.y]}', True, (255, 255, 255)), (self.Rect[0] - 80, self.Rect[1] - 30))
-        return self.screen.blit(self.Player, self.Rect)
-
-    def controls(self):
+        elif self.Right: self.x += self.speedX      
         
-        for event in pygame.event.get():
-            keys = pygame.key.get_pressed() # Keys
+        if self.Interactable and self.is_interacting:
+            self.Interface.draw(self.interact_text)
 
-            if event.type == pygame.QUIT:
-                pygame.quit(), sys.exit()   
-            
-            # Movement 
-            self.Up = bool(keys[pygame.K_w])
-            self.Down = bool(keys[pygame.K_s])
-            self.Left = bool(keys[pygame.K_a])
-            self.Right = bool(keys[pygame.K_d])
+        ''' Draw Player '''
+        self.screen.blit(self.Player, self.Rect)
+         
+        ''' Debug Mode '''
+        if self.debug:          
+            i = 1
+            for name, value in self.__dict__.items():
+               self.position = p.Vector2(self.x,self.y) # update it
+               text = debug_font.render(f"{name}={value}", True, (255,255,255))
+               self.screen.blit(text, (20, 0 + 15 * i))
+               i+=1
 
-            # Features
-            self.speedX = self.speedY = 6 if not(self.paused) else 0
-           
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE: 
-                    self.Interactable = True
-                    if self.InteractPoint < 2:
-                        self.InteractPoint += 1
-                    else:
-                        self.InteractPoint = 0
-            
-            # Resets interaction
-            if self.Up or self.Down or self.Right or self.Left:
-                    self.InteractPoint = 0
-                    self.Interactable = False
 
-            if keys[pygame.K_F12]: pygame.display.toggle_fullscreen()
-            if keys[pygame.K_ESCAPE]: 
-                if self.paused:
-                    self.paused = False
-                else:
-                    self.paused = True
-            
-            if event.type == pygame.MOUSEBUTTONDOWN: self.click = True             
-            else: self.click = False
+    def controls(self):  
+        for event in p.event.get():
+            keys = p.key.get_pressed() # Keys pressed
+            if event.type == p.QUIT: p.quit(), sys.exit()
+            self.Up, self.Down, self.Left, self.Right = bool(keys[p.K_w]), bool(keys[p.K_s]), bool(keys[p.K_a]), bool(keys[p.K_d])          
+            self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
+                        
+            # ----- Keybinds -----         
+            if event.type == p.KEYDOWN:
+                ''' Toggle Fullscreen '''
+                if event.key == p.K_F12:  p.display.toggle_fullscreen()
 
-class Mau(object): # LOOK AT HIM GOOOOO
-    def __init__(self, x , y):
-        # Position
-        self.x, self.y = x, y
+                ''' Interaction '''
+                if event.key == p.K_SPACE: 
+                    self.Interactable = True 
+                    self.InteractPoint += 1 
+
+                # Reset Interaction
+                if self.Up or self.Down or self.Right or self.Left or self.InteractPoint == 3: 
+                    self.InteractPoint, self.Interactable = 0, False
+                    self.is_interacting = False
+                    self.Interface.reset();                 
+
+                '''Pause the game'''
+                if event.key == p.K_ESCAPE:
+                      if self.paused: self.paused = False                
+                      else: self.paused = True   
+            # ----- Mouse -----                       
+            if event.type == p.MOUSEBUTTONDOWN: 
+                self.click = True             
+            else: 
+                self.click = False
+
+class Mau(object):
+    def __init__(self, x , y):  
+        self.x, self.y = p.Vector2(x, y) # Position
         self.Right = True # If False he goes left        
         self.animation_counter = self.cooldown = 0
         self.speed = 1.25
@@ -78,44 +86,30 @@ class Mau(object): # LOOK AT HIM GOOOOO
         # Animation & Rects (Check out pygame.transform.smoothscale @fks)
         self.image = [double_size(load(f'data/sprites/mau/mau{i}.png', alpha = True)) for i in range(1, 4)]
         self.reverse_image = [flip_vertical(self.image[i]) for i in range(3)]
-        self.interact_rect = pygame.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height()) 
-        self.interact_animation = []             
-        for i in range(3):
-            if i % 2 == 0:
-                self.interact_animation.append(double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True)))
-            else:
-                self.interact_animation.append(double_size(load(f'data/sprites/mau/idle_mau.png', alpha = True)))   
-        # Do the same but flip them
-        self.flipped_interaction = [flip_vertical(frame) for frame in self.interact_animation]
+        self.interact_rect = p.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height()) 
+        self.interact_animation = [double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True))  if i % 2 == 0 else double_size(load(f'data/sprites/mau/idle_mau.png', alpha = True)) for i in range(3)]             
+        self.flipped_interaction = [flip_vertical(frame) for frame in self.interact_animation]  # Same list but flipped images
 
-    def update(self, screen, scroll, interface, player):
+    def update(self, screen, scroll, player):
         # Update rect
         self.Rect = self.image[0].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))       
         if self.animation_counter >= 36: self.animation_counter = 0 # Reset Animation
-        self.animation_counter += 1 # Run animation       
-
-        # Change his speed based on these conditions
-        self.speed = 0 if player.paused or player.Rect.colliderect(self.interact_rect) else 1.25
-
-        # Collision with the player
-        if player.Rect.colliderect(self.interact_rect):
-            # Turn Idle animation
-            self.Idle = True
-            if player.Interactable: # If Player presses Space
-                self.Idle, self.is_talking = False, True
-                interface.update() # UI
-                interface.draw('mau', player.InteractPoint) # Text
-            else:       
-                self.Idle = True
-                interface.reset()
-        else:
-            self.Idle = self.is_talking = False # Stop animation
-     
+        self.animation_counter += 1 # Run Animation
+        self.speed = 0 if player.paused or player.Rect.colliderect(self.interact_rect) else 1.25 # Change his speed based on these conditions
+        if player.Rect.colliderect(self.interact_rect): # Collision with the player       
+            self.Idle = True # Turn Idle animation upon collision  /  vvv If Player presses Space vvv
+            if player.Interactable: 
+                self.Idle, self.is_talking = False, True      
+        else: self.Idle = self.is_talking = False # Stop animation
+             
         # Movement mechanism
-        if not(self.x < 1024 and self.Right):
-            self.Right = False
-        if self.x < 350:
-            self.Right = True
+        if not(self.x < 768 and self.Right): self.Right = False
+        if self.x < 150: self.Right = True
+
+        # Text
+        if self.interact_rect.colliderect(player.Rect):
+            player.interact_text = 'mau'
+            player.is_interacting = True
 
         # Animation Mechanism
         if self.Right:
