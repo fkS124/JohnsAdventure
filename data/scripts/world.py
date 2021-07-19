@@ -75,32 +75,40 @@ class MainMenu(object):
         self.buttons = [[scale(UIspriteSheet.parse_sprite('button.png'), 4),scale(UIspriteSheet.parse_sprite('button_hover.png'), 4)] for i in range(3)]
         self.gui_text = [self.button_font.render("Play", True, (255,255,255)), self.button_font.render("Controls", True, (255,255,255)),self.button_font.render("Quit", True, (255,255,255))]
         
-        #with open('data/database/data.json') as f: print(f.readlines()) #self.data = json.load(f); f.close()
         # --------- DATA LOAD/SAVE -------
-        self.save = {
-            "controls": [pg.K_w, pg.K_s, pg.K_a, pg.K_d, pg.K_SPACE],
-            "inventory": []
-        }      
-        self.settings_bg = scale(UIspriteSheet.parse_sprite('catalog_button.png'),8)
+        self.save = self.get_data('data/database/data.json') # Get data from json
+        self.settings_bg = scale(UIspriteSheet.parse_sprite('catalog_button.png'), 11)
         self.show_settings = False
         self.change_key_index = None
         self.changing = False
         self.keybinds = [scale(UIspriteSheet.parse_sprite("keybind.png"),5) for i in range(len(self.save["controls"]))]
         self.settings_text = [font.render('Up', True, (0,0,0)), font.render('Down',True, (0,0,0)),font.render('Left',True, (0,0,0)),font.render('Right',True, (0,0,0)),font.render('Interact',True, (0,0,0))]
 
+        self.controls_error = self.blank_keys = False
+
+    def get_data(self, path):
+        with open(path, 'r') as f: return json.load(f)
+
+    def save_data(self):
+        with open('data/database/data.json', 'w+') as f: return json.dump(self.save, f)
+
     def update(self, mouse_p):  
-        DISPLAY.blit(self.background,(0,0)) # Background
-          
+        DISPLAY.blit(self.background,(0,0)) # Background          
         ''' Settings '''
         if self.show_settings:
-            DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))      
+            DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))  
+            
+            if self.controls_error: DISPLAY.blit(font.render("Please put another key!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
+            elif self.blank_keys: DISPLAY.blit(font.render("Please fill the keys!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
+
+            #  Key Button    
             for i, key in enumerate(self.keybinds):
-                rect = key.get_rect(center= pg.Vector2(get_screen_w //2,  get_screen_h //2 - 110 +  50 * i))
-                DISPLAY.blit(key, rect)
-                DISPLAY.blit(self.settings_text[i], (rect[0] - 180, rect[1] + 10))
+                rect = key.get_rect(center= pg.Vector2(get_screen_w //2,  get_screen_h //2 - 110 +  60 * i))
+                DISPLAY.blit(key, rect), DISPLAY.blit(self.settings_text[i], (rect[0] - 180, rect[1] + 10))
 
                 if rect.collidepoint(mouse_p) and self.event.type == MOUSEBUTTONDOWN and self.event.button == 1:  
                     self.changing = True
+                    self.controls_error = False
                     self.save['controls'][i] = '' # User Feedback that he is changing 
                     self.change_key_index = i # Save index
                 
@@ -116,8 +124,7 @@ class MainMenu(object):
         else:
 
             ''' Show again the buttons'''
-            for i, text in enumerate(self.logo): # Logo
-                DISPLAY.blit(text, (get_screen_w//6+20, get_screen_h//2 - 190 - (2 * i)))
+            for i, text in enumerate(self.logo):  DISPLAY.blit(text, (get_screen_w//6+20, get_screen_h//2 - 190 - (2 * i)))
 
             ''' Buttons '''
             for i, button in enumerate(self.buttons):     
@@ -139,12 +146,23 @@ class MainMenu(object):
             if event.type == pg.QUIT: pg.quit(), sys.exit()     
             if event.type == pg.KEYDOWN:
                 if self.changing:
-                    self.save['controls'][self.change_key_index] = event.key # Sets new key
-                    self.changing = False  # Change the button and close it
+                    if event.key not in self.save['controls']: # Check for Unique keys
+                        if event.key != pg.K_ESCAPE:
+                            self.save['controls'][self.change_key_index] = event.key # Sets new key       
+                            self.controls_error = self.changing = self.blank_keys = False # Change the button and close it       
+                        else:
+                            self.blank_keys = True
+                    else:
+                        self.controls_error = True                 
 
                 if self.show_settings and event.key == pg.K_ESCAPE:
-                    self.show_settings = False
-                    # This is where I'll save that data and put it into a json
+                    if '' in self.save['controls']: # If there are empty boxes
+                        self.blank_keys = True
+                    else: # Every box is filled
+                        self.blank_keys = False
+                        self.save_data() # Update Json File
+                        self.show_settings = False
+                    
                 if event.key == pg.K_F12: pg.display.toggle_fullscreen()
 class Game:
     def __init__(self):
