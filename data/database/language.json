@@ -27,6 +27,10 @@
 
   "kitchen_stairs": {
     "text": "Go upstairs? "
+  },
+
+  "cynthia": {
+    "text": "Good morning brother. Your master wants to  see you,  pick your sword from the chest    and go meet him"
   }
 
 }

@@ -1,6 +1,4 @@
-import json
-import pygame
-
+import json, pygame
 
 class UI_Spritesheet:
     def __init__(self, filename):

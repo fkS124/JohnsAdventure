@@ -1,23 +1,21 @@
 import pygame as p
-import sys, math
+import math
 from .utils import *
 p.font.init()
 font = p.font.Font("data/database/pixelfont.ttf", 16)
 debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player(object):
-    def __init__(self, x, y, screen, debug, interface):
-        self.x, self.y = p.Vector2(x,y)
+    def __init__(self, x, y, screen, debug, interface, data):
+        self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
         self.Player = load('player_beta.png')
         self.Rect = self.Player.get_rect(center=(self.x, self.y))
         self.speedX = self.speedY = 6 # Player's speed       
-        self.paused = self.click = self.Interactable = False #  Features       
+        self.paused = self.click = self.Interactable = self.is_interacting = False #  Features       
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
-        self.debug = debug # Debugging
-        self.interact_text = ''
-        self.is_interacting = False
-        self.position = p.Vector2(x,y)
+        self.debug, self.interact_text = debug, '' # Debugging and Interaction
+        self.data = data
 
     def update(self):
         self.controls()
@@ -27,6 +25,7 @@ class Player(object):
         if self.Left:  self.x -= self.speedX          
         elif self.Right: self.x += self.speedX      
         
+        # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
             self.Interface.draw(self.interact_text)
 
@@ -42,12 +41,11 @@ class Player(object):
                self.screen.blit(text, (20, 0 + 15 * i))
                i+=1
 
-
-    def controls(self):  
-        for event in p.event.get():
-            keys = p.key.get_pressed() # Keys pressed
-            if event.type == p.QUIT: p.quit(), sys.exit()
-            self.Up, self.Down, self.Left, self.Right = bool(keys[p.K_w]), bool(keys[p.K_s]), bool(keys[p.K_a]), bool(keys[p.K_d])          
+    def controls(self):       
+        for event in p.event.get():   
+            keys = p.key.get_pressed()
+            if event.type == p.QUIT: p.quit(); raise SystemExit
+            self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"][0]], keys[self.data["controls"][1]], keys[self.data["controls"][2]], keys[self.data["controls"][3]]          
             self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
                         
             # ----- Keybinds -----         
@@ -56,7 +54,7 @@ class Player(object):
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
 
                 ''' Interaction '''
-                if event.key == p.K_SPACE: 
+                if event.key == self.data["controls"][4]: 
                     self.Interactable = True 
                     self.InteractPoint += 1 
 
@@ -89,6 +87,7 @@ class Mau(object):
         self.interact_rect = p.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height()) 
         self.interact_animation = [double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True))  if i % 2 == 0 else double_size(load(f'data/sprites/mau/idle_mau.png', alpha = True)) for i in range(3)]             
         self.flipped_interaction = [flip_vertical(frame) for frame in self.interact_animation]  # Same list but flipped images
+        self.interact_text = 'mau'
 
     def update(self, screen, scroll, player):
         # Update rect
@@ -105,11 +104,6 @@ class Mau(object):
         # Movement mechanism
         if not(self.x < 768 and self.Right): self.Right = False
         if self.x < 150: self.Right = True
-
-        # Text
-        if self.interact_rect.colliderect(player.Rect):
-            player.interact_text = 'mau'
-            player.is_interacting = True
 
         # Animation Mechanism
         if self.Right:
@@ -130,4 +124,27 @@ class Mau(object):
             else: # Walking
                 screen.blit(self.reverse_image[self.animation_counter // 18], self.Rect)               
                 self.x -= self.speed
-            
+ 
+
+def get_sprite(spritesheet, x, y, w, h): # Gets NPC from spritesheet
+        sprite = pygame.Surface((w, h)).convert()
+        sprite.set_colorkey((255, 255, 255))
+        sprite.blit(spritesheet, (0, 0), (x, y, w, h))
+        return sprite
+
+
+class Cynthia(object): # The time has come
+    def __init__(self, x, y, sprite):
+        self.x, self.y = x, y
+        self.image = [scale(get_sprite(sprite, 2 + 26 * i, 1, 24, 42), 3) for i in range(3)]
+        self.Rect = self.image[0].get_rect() 
+        self.animation_counter = 0
+        self.interact_text = 'cynthia'
+        self.interact_rect = p.Rect(0,0,0,0)
+
+    def update(self, screen, scroll, player):  
+        self.interact_rect = p.Rect(self.x - scroll[0] - 30, self.y - scroll[1] + 64, 64,64)
+        self.Rect = self.image[self.animation_counter // 36].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))
+        if self.animation_counter >= 72: self.animation_counter = 0
+        self.animation_counter += 1
+        screen.blit(self.image[self.animation_counter // 36] , self.Rect)

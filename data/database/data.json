@@ -1,0 +1,9 @@
+{
+    "player":
+    {
+        "controls":  ["pg.K_w", "pg.K_s", "pg.K_a", "pg.K_d", "pg.K_SPACE"],
+        "coins": "",
+        "world": ""
+    }
+
+}
