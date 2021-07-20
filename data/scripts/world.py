@@ -167,51 +167,43 @@ class Game:
         self.o_index = 0 # Index for the sublists below
         self.objects = [
             [Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192)], # John's Room
-            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')), pg.Rect(0,0, 250,350), pg.Rect(0,0, 64, 256), pg.Rect(0,0, 860, 230), pg.Rect(0,0, 256, 200)] # Kitchen Room
+            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')), pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 860, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
-
-        self.object_p = [
-            [None, pg.Vector2(10,90), pg.Vector2(5,500), pg.Vector2(450, 40)], # John's Room
-            [None,pg.Vector2(20, 250), pg.Vector2(280,300), pg.Vector2(10,0), pg.Vector2(1020, 440)]
-        ] # pygame.Rect.x .y is stupid so im forced to use this bloated list
 
     # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Object&Entities
     def collision_system(self, index):
         for i, object in enumerate(self.objects[index]):
             collision = False # No collision
-            try: # OBJECT
-                object.topleft = (self.object_p[index][i].x - scroll[0], self.object_p[index][i].y - scroll[1])
-                collision = self.Player.Rect.colliderect(object)
-                top = abs(object.bottom - self.Player.Rect.top)
-                bottom = abs(object.top - self.Player.Rect.bottom)
-                left = abs(object.right - self.Player.Rect.left)
-                right = abs(object.left - self.Player.Rect.right)
-                if debug: pg.draw.rect(DISPLAY, (255,255,255), object, width = 1)
-            except: # NPC
-                object.topleft = (object.x - scroll[0], object.y - scroll[1])
-                collision = self.Player.Rect.colliderect(object.Rect)
-                top = abs(object.Rect.bottom - self.Player.Rect.top)
-                bottom = abs(object.Rect.top - self.Player.Rect.bottom)
-                left = abs(object.Rect.right - self.Player.Rect.left)
-                right = abs(object.Rect.left - self.Player.Rect.right)
-                if self.Player.Rect.colliderect(object.interact_rect):
-                   self.Player.is_interacting = True
-                   self.Player.interact_text = object.interact_text
+            object.topleft = (object.x - scroll[0], object.y - scroll[1])      
 
-                if debug: pg.draw.rect(DISPLAY, (255,255,255), object.Rect, width = 1)
+            t, b, l, r, is_rect = self.Player.Rect.top,  self.Player.Rect.bottom, self.Player.Rect.left, self.Player.Rect.right, bool(type(object) is pg.Rect)
+            collision =  self.Player.Rect.colliderect(object) if is_rect else self.Player.Rect.colliderect(object.Rect)
+            top = abs(object.bottom - t) if is_rect else abs(object.Rect.bottom - t)
+            bottom = abs(object.top - b) if is_rect else abs(object.Rect.top - b)
+            left = abs(object.right - l) if is_rect else abs(object.Rect.right - l)
+            right = abs(object.left - r) if is_rect else abs(object.Rect.left - r)
 
-            # Collision happen
-            if collision:
+            # Collision happens
+            if collision:                       
                 if self.Player.Up or self.Player.Down:  # Up / Down borders
                     if top < 10:
                         self.Player.y = self.Player.y + self.Player.speedY
                     elif bottom < 10:
-                        self.Player.y = self.Player.y - self.Player.speedY # Clunky
+                        self.Player.y = self.Player.y - self.Player.speedY # Clunky             
                 if self.Player.Left or self.Player.Right:  # Left / Right borders
                     if left < 10:
                         self.Player.x = self.Player.x + self.Player.speedX
                     elif right < 10:
                         self.Player.x = self.Player.x - self.Player.speedX # Clunky
+
+            try: # Temporary
+                if debug: pg.draw.rect(DISPLAY, (255,255,255), object, width = 1) 
+
+                if is_rect: print(object.interact_rect)
+                if self.Player.Rect.colliderect(object.interact_rect):
+                    print('sex')
+                    self.Player.is_interacting, self.Player.interact_text = True, object.interact_text  
+            except: pass
 
     def pause(self, mouse):
         if self.Player.paused:
