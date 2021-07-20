@@ -83,22 +83,24 @@ class MainMenu(object):
         self.keybinds = [scale(UIspriteSheet.parse_sprite("keybind.png"),5) for i in range(len(self.save["controls"]))]
         self.settings_text = [font.render('Up', True, (0,0,0)), font.render('Down',True, (0,0,0)),font.render('Left',True, (0,0,0)),font.render('Right',True, (0,0,0)),font.render('Interact',True, (0,0,0))]
 
-
     def get_data(self, path):
         with open(path, 'r') as f: return json.load(f)
 
     def save_data(self):
         with open('data/database/data.json', 'w+') as f: return json.dump(self.save, f)
 
-    def draw_txt(txt, pos):
-        pos = pos.center
-        return DISPLAY.blit(font.render(txt, True, (0,0,0), pos))
+    def draw_txt(self, txt, pos):
+        render = font.render(txt, True, (0, 0, 0))
+        rect = render.get_rect()
+        rect.centerx = get_screen_w // 2 - 7
+        rect.centery = pos.centery - 2
+        return DISPLAY.blit(render, rect)
 
     def update(self, mouse_p):  
         DISPLAY.blit(self.background,(0,0)) # Background          
         ''' Settings '''
         if self.show_settings:
-            DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))    
+            DISPLAY.blit(self.settings_bg, self.settings_bg.get_rect(center=(get_screen_w//2, get_screen_h//2)))    
             if self.controls_error: DISPLAY.blit(font.render("Please put another key!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
             elif self.blank_keys: DISPLAY.blit(font.render("Please fill the keys!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
 
@@ -116,8 +118,9 @@ class MainMenu(object):
                 # Checking the lenth of the key  
                 try:
                     bind = str(pg.key.name(self.save['controls'][i]))
-                    kb = self.draw_txt(bind, rect) #if len(bind) >= 5 else  draw_txt (DISPLAY, bind, rect)     
-                except: pass
+                    kb = self.draw_txt(bind, rect) #if len(bind) >= 5 else  draw_txt (DISPLAY, bind, rect)
+                except Exception as e:
+                    print(e) 
 
         else:
 
