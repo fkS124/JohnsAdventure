@@ -30,7 +30,6 @@ dt = framerate.tick(35) / 1000 # Delta time :D
 font = pg.font.Font("data/database/pixelfont.ttf", 24)
 blacksword = pg.font.Font("data/database/Blacksword.otf", 113) # I use this only for the logo
 
-
 class Interface(object):
     def __init__(self):
         self.icon = scale(UIspriteSheet.parse_sprite('interface_button.png').convert(), 8)
@@ -74,6 +73,7 @@ class MainMenu(object):
         for music in self.music:  music.set_volume(0.2)
         # --------- GUI ----------
         self.buttons = [[scale(UIspriteSheet.parse_sprite('button.png'), 4),scale(UIspriteSheet.parse_sprite('button_hover.png'), 4)] for i in range(3)]
+        self.btn_rect = [btn[0].get_rect(center= pg.Vector2(get_screen_w //2,  get_screen_h //2 + 50 + 60 * i)) for i,btn in enumerate(self.buttons)]
         self.gui_text = [self.button_font.render("Play", True, (255,255,255)), self.button_font.render("Controls", True, (255,255,255)),self.button_font.render("Quit", True, (255,255,255))]
 
         # --------- DATA LOAD/SAVE -------
@@ -101,8 +101,11 @@ class MainMenu(object):
         ''' Settings '''
         if self.show_settings:
             DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))
-            if self.controls_error: DISPLAY.blit(font.render("Please put another key!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
-            elif self.blank_keys: DISPLAY.blit(font.render("Please fill the keys!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
+
+            if self.controls_error: 
+                DISPLAY.blit(font.render("Please put another key!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
+            elif self.blank_keys: 
+                DISPLAY.blit(font.render("Please fill the keys!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
 
             #  Key Button    
             for i, key in enumerate(self.keybinds):
@@ -123,14 +126,13 @@ class MainMenu(object):
 
             ''' Buttons '''
             for i, button in enumerate(self.buttons):
-                rect = button[0].get_rect(topleft=((get_screen_w//2 - 115, get_screen_h//2 + 75 * (i + 1)))) # Rect of image in sublist
-                btn = DISPLAY.blit(button[1], rect) if rect.collidepoint(mouse_p) else DISPLAY.blit(button[0], rect)
-                txt = DISPLAY.blit(self.gui_text[i], (rect[0] + self.gui_text[0].get_width()//4, rect[1] + 5)) if i == 1 else  DISPLAY.blit(self.gui_text[i], (rect[0] + self.gui_text[0].get_width()//2 + 15, rect[1] + 5))
+                btn = DISPLAY.blit(button[1], self.btn_rect[i]) if self.btn_rect[i].collidepoint(mouse_p) else DISPLAY.blit(button[0], self.btn_rect[i])
+                txt = DISPLAY.blit(self.gui_text[i], (self.btn_rect[i][0] + self.gui_text[0].get_width()//4, self.btn_rect[i][1] + 5)) if i == 1 else  DISPLAY.blit(self.gui_text[i], (self.btn_rect[i][0] + self.gui_text[0].get_width()//2 + 15, self.btn_rect[i][1] + 5))
 
         ''' Controls '''
         for event in pg.event.get():
             self.event = event
-            if event.type == pg.MOUSEBUTTONDOWN and self.buttons[1][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 150))).collidepoint(mouse_p): self.show_settings = True
+            if event.type == pg.MOUSEBUTTONDOWN and self.btn_rect[1].collidepoint(mouse_p): self.show_settings = True
             if event.type == pg.QUIT: pg.quit(), sys.exit()
             if event.type == pg.KEYDOWN:
                 if self.changing:
@@ -198,14 +200,14 @@ class Game:
             if collision:                       
                 if self.Player.Up or self.Player.Down:  # Up / Down borders
                     if top < 10:
-                        self.Player.y = self.Player.y + self.Player.speedY
+                        self.Player.y += self.Player.speedY
                     elif bottom < 10:
-                        self.Player.y = self.Player.y - self.Player.speedY # Clunky             
+                        self.Player.y -= self.Player.speedY # Clunky             
                 if self.Player.Left or self.Player.Right:  # Left / Right borders
                     if left < 10:
-                        self.Player.x = self.Player.x + self.Player.speedX
+                        self.Player.x += self.Player.speedX
                     elif right < 10:
-                        self.Player.x = self.Player.x - self.Player.speedX # Clunky
+                        self.Player.x -= self.Player.speedX # Clunky
 
     def pause(self, mouse):
         if self.Player.paused:
@@ -226,48 +228,39 @@ class Game:
         elif self.Player.x > right - 40: self.Player.x = right - 40
 
     def update(self):
+        global scroll
         while True:
             dt, mouse_p = framerate.tick(35) / 1000, pg.mouse.get_pos() # Framerate Indepence and Mouse position
             DISPLAY.fill((0, 0, 0))
             if self.Menu:
                 self.menu.update(mouse_p) # Show Menu Screen
                 # Position of the buttons
-                menu_rect  = self.menu.buttons[0][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 75)))
-                quit_rect = self.menu.buttons[2][0].get_rect(center=((get_screen_w//2, get_screen_h//2 + 225)))
                 if self.menu.event.type == pg.MOUSEBUTTONDOWN and not self.menu.show_settings:
-                     if menu_rect.collidepoint(mouse_p):  self.Menu = False; self.PlayerRoom = True
-                     if quit_rect.collidepoint(mouse_p): pg.quit(), sys.exit()
+                     if self.menu.btn_rect[0].collidepoint(mouse_p):  self.Menu = False; self.PlayerRoom = True
+                     if self.menu.btn_rect[2].collidepoint(mouse_p): pg.quit(), sys.exit()
             else: # The game           
-                scroll[0] += (self.Player.x - scroll[0] - get_screen_w // 2)
-                scroll[1] += (self.Player.y - scroll[1] - get_screen_h // 2)
-
+                scroll += pg.Vector2(self.Player.x - scroll[0] - get_screen_w // 2, self.Player.y - scroll[1] - get_screen_h // 2)
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # World Background Image
                 ''' John's Room '''
                 if self.PlayerRoom:
                     self.objects[0][0].update(DISPLAY, scroll, self.Player), self.room_borders() # Mau
-                    if self.Player.y < 270:
-                        self.Player.is_interacting = True
-                        if self.Player.x >= 680 and self.Player.x <= 870:
-                             self.Player.interact_text = 'computer'
-                        elif self.Player.x >= 490 and self.Player.x < 650:
-                             self.Player.interact_text = 'desk'
+                    if self.Player.y < 270 and self.Player.x < 870:
+                       self.Player.interact_text, self.Player.is_interacting = 'computer' if 680 <= self.Player.x <= 870 else 'desk', True
+                        
                     # Stairs
-                    if self.Player.Rect.colliderect(pygame.Rect(get_screen_w // 2 + 334 - scroll[0], 150 - scroll[1], 195, 130)):
-                         self.Player.interact_text = 'stairs'
-                         self.Player.is_interacting = True
+                    if self.Player.Rect.colliderect(pygame.Rect(get_screen_w // 2 + 353 - scroll[0], 150 - scroll[1], 155, 130)):
+                         self.Player.interact_text, self.Player.is_interacting  = 'stairs', True
                          if self.Player.InteractPoint == 2:
-                             self.PlayerRoom, self.world, self.Kitchen, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], True, 1080, 250, False, 1
+                             self.PlayerRoom, self.world, self.Kitchen, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], True, 1120, 250, False, 1
                      # End of John's Room
                 elif self.Kitchen:
                     self.room_borders()
                     self.objects[1][0].update(DISPLAY, scroll, self.Player)
-                    if self.Player.y < 270 and self.Player.x >= 420 and self.Player.x <= 810:
-                        self.Player.is_interacting = True
-                        self.Player.interact_text = 'kitchen' if self.Player.x < 570 else 'sink'
+                    if self.Player.y < 270 and self.Player.x <= 810:
+                        self.Player.interact_text, self.Player.is_interacting = 'kitchen' if self.Player.x < 570 else 'sink', True
                     ''' Stairs '''
                     if self.Player.x >= 1005 and self.Player.y < 240 and self.Player.Interactable:
-                        self.Player.interact_text = 'stairs_up'
-                        self.Player.is_interacting = True
+                        self.Player.is_interacting , self.Player.interact_text = True, 'stairs_up'
                         if self.Player.InteractPoint == 2:
                             self.PlayerRoom, self.world, self.Kitchen, self.Player.x, self.Player.y, self.Player.is_interacting, self.o_index = True, self.worlds[0], False, 1080, 320, False, 0
                 # Global stuff that all worlds share
