@@ -115,12 +115,12 @@ class MainMenu(object):
                     self.save['controls'][i] = '' # User Feedback that he is changing 
                     self.change_key_index = i # Save index
                 
-                # Checking the lenth of the key  
-                try:
+                # Checking the lenth of the key 
+                if type(self.save["controls"][i]) == int: 
                     bind = str(pg.key.name(self.save['controls'][i]))
-                    kb = self.draw_txt(bind, rect) #if len(bind) >= 5 else  draw_txt (DISPLAY, bind, rect)
-                except Exception as e:
-                    print(e) 
+                else:
+                    bind = " "
+                kb = self.draw_txt(bind, rect) #if len(bind) >= 5 else  draw_txt (DISPLAY, bind, rect)
 
         else:
 
