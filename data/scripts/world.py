@@ -98,8 +98,7 @@ class MainMenu(object):
         DISPLAY.blit(self.background,(0,0)) # Background          
         ''' Settings '''
         if self.show_settings:
-            DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))  
-            
+            DISPLAY.blit(self.settings_bg, (get_screen_w //2 - self.settings_bg.get_width()//2, get_screen_h //2 - self.settings_bg.get_height()//2))    
             if self.controls_error: DISPLAY.blit(font.render("Please put another key!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
             elif self.blank_keys: DISPLAY.blit(font.render("Please fill the keys!", True, (0,0,0)), (get_screen_w //2 - 220, get_screen_h //2 - 200))
 
