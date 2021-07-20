@@ -78,19 +78,21 @@ class MainMenu(object):
         # --------- DATA LOAD/SAVE -------
         self.save = self.get_data('data/database/data.json') # Get data from json
         self.settings_bg = scale(UIspriteSheet.parse_sprite('catalog_button.png'), 11)
-        self.show_settings = False
-        self.change_key_index = None
-        self.changing = False
+        self.show_settings = self.changing = self.controls_error = self.blank_keys = False # blits gui, user clicks on a keybind button
+        self.change_key_index = None # The index of the key we're changing
         self.keybinds = [scale(UIspriteSheet.parse_sprite("keybind.png"),5) for i in range(len(self.save["controls"]))]
         self.settings_text = [font.render('Up', True, (0,0,0)), font.render('Down',True, (0,0,0)),font.render('Left',True, (0,0,0)),font.render('Right',True, (0,0,0)),font.render('Interact',True, (0,0,0))]
 
-        self.controls_error = self.blank_keys = False
 
     def get_data(self, path):
         with open(path, 'r') as f: return json.load(f)
 
     def save_data(self):
         with open('data/database/data.json', 'w+') as f: return json.dump(self.save, f)
+
+    def draw_txt(txt, pos):
+        pos = pos.center
+        return DISPLAY.blit(font.render(txt, True, (0,0,0), pos))
 
     def update(self, mouse_p):  
         DISPLAY.blit(self.background,(0,0)) # Background          
@@ -113,14 +115,11 @@ class MainMenu(object):
                     self.change_key_index = i # Save index
                 
                 # Checking the lenth of the key  
-                try:        
-                    if len(pg.key.name(self.save['controls'][i])) >= 5: # Its probably space/shift etc.
-                        DISPLAY.blit(font.render(f"{pg.key.name(self.save['controls'][i])}", True, (0,0,0)), (rect[0] + 8, rect[1] + 8)) 
-                    else: # its a number or numpad or alhabet letter
-                        DISPLAY.blit(font.render(f"{pg.key.name(self.save['controls'][i])}", True, (0,0,0)), (rect[0] + key.get_width()//2 - 18, rect[1] + 8))   
-                except:
-                    pass
-            
+                try:
+                    bind = str(pg.key.name(self.save['controls'][i]))
+                    kb = self.draw_txt(bind, rect) #if len(bind) >= 5 else  draw_txt (DISPLAY, bind, rect)     
+                except: pass
+
         else:
 
             ''' Show again the buttons'''
@@ -128,15 +127,9 @@ class MainMenu(object):
 
             ''' Buttons '''
             for i, button in enumerate(self.buttons):     
-                button_rect = button[0].get_rect(topleft=((get_screen_w//2 - 115, get_screen_h//2 + 75 * (i + 1)))) # Rect of image in sublist
-                if button_rect.collidepoint(mouse_p):
-                    DISPLAY.blit(button[1], button_rect) # Show hovered image
-                else:    
-                    DISPLAY.blit(button[0], button_rect) # Show normal image       
-                if i == 1: # settings is a big word
-                    DISPLAY.blit(self.gui_text[i], (button_rect[0] + self.gui_text[0].get_width()//4, button_rect[1] + 5))  
-                else:
-                    DISPLAY.blit(self.gui_text[i], (button_rect[0] + self.gui_text[0].get_width()//2 + 15, button_rect[1] + 5))
+                rect = button[0].get_rect(topleft=((get_screen_w//2 - 115, get_screen_h//2 + 75 * (i + 1)))) # Rect of image in sublist              
+                btn = DISPLAY.blit(button[1], rect) if rect.collidepoint(mouse_p) else DISPLAY.blit(button[0], rect)     
+                txt = DISPLAY.blit(self.gui_text[i], (rect[0] + self.gui_text[0].get_width()//4, rect[1] + 5)) if i == 1 else  DISPLAY.blit(self.gui_text[i], (rect[0] + self.gui_text[0].get_width()//2 + 15, rect[1] + 5))
 
         ''' Controls '''
         for event in pg.event.get():
