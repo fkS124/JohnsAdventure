@@ -170,19 +170,30 @@ class Game:
             [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')), pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 860, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
+        self.object_p = [
+            [None, pg.Vector2(10,90), pg.Vector2(5,500), pg.Vector2(450, 40)], # John's Room     
+            [None,pg.Vector2(20, 250), pg.Vector2(280,300), pg.Vector2(10,0), pg.Vector2(1020, 440)]    
+        ]   
+
     # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Object&Entities
     def collision_system(self, index):
         for i, object in enumerate(self.objects[index]):
-            collision = False # No collision
-            object.topleft = (object.x - scroll[0], object.y - scroll[1])      
+            collision = False # No collision      
+            object.topleft = (
+                self.object_p[index][i].x - scroll[0], self.object_p[index][i].y - scroll[1]) if type(object) == pygame.Rect \
+                else (object.x - scroll[0], object.y - scroll[1]
+            )  
 
             t, b, l, r, is_rect = self.Player.Rect.top,  self.Player.Rect.bottom, self.Player.Rect.left, self.Player.Rect.right, bool(type(object) is pg.Rect)
             collision =  self.Player.Rect.colliderect(object) if is_rect else self.Player.Rect.colliderect(object.Rect)
+            try:
+                if self.Player.Rect.colliderect(object.interact_rect): self.Player.is_interacting, self.Player.interact_text = True, object.interact_text 
+            except: pass
+
             top = abs(object.bottom - t) if is_rect else abs(object.Rect.bottom - t)
             bottom = abs(object.top - b) if is_rect else abs(object.Rect.top - b)
             left = abs(object.right - l) if is_rect else abs(object.Rect.right - l)
             right = abs(object.left - r) if is_rect else abs(object.Rect.left - r)
-
             # Collision happens
             if collision:                       
                 if self.Player.Up or self.Player.Down:  # Up / Down borders
@@ -195,15 +206,6 @@ class Game:
                         self.Player.x = self.Player.x + self.Player.speedX
                     elif right < 10:
                         self.Player.x = self.Player.x - self.Player.speedX # Clunky
-
-            try: # Temporary
-                if debug: pg.draw.rect(DISPLAY, (255,255,255), object, width = 1) 
-
-                if is_rect: print(object.interact_rect)
-                if self.Player.Rect.colliderect(object.interact_rect):
-                    print('sex')
-                    self.Player.is_interacting, self.Player.interact_text = True, object.interact_text  
-            except: pass
 
     def pause(self, mouse):
         if self.Player.paused:
@@ -235,9 +237,10 @@ class Game:
                 if self.menu.event.type == pg.MOUSEBUTTONDOWN and not self.menu.show_settings:
                      if menu_rect.collidepoint(mouse_p):  self.Menu = False; self.PlayerRoom = True
                      if quit_rect.collidepoint(mouse_p): pg.quit(), sys.exit()
-            else: # The game
+            else: # The game           
                 scroll[0] += (self.Player.x - scroll[0] - get_screen_w // 2)
                 scroll[1] += (self.Player.y - scroll[1] - get_screen_h // 2)
+
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # World Background Image
                 ''' John's Room '''
                 if self.PlayerRoom:
