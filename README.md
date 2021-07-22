@@ -7,5 +7,5 @@ Our goal is to remake the existing https://gamejolt.com/games/johns_adventure/55
 
 If you are a beta tester, welcome! ✌️
 
-The one and only Rule I demand for Developers:
+The one and only rule I demand for Developers:
 Follow the KISS principle (Keep It Simple Stupid)
