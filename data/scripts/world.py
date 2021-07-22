@@ -6,6 +6,7 @@ from pygame import mouse
 from pygame.constants import KEYDOWN, MOUSEBUTTONDOWN
 from .backend import *
 from .player import *
+from .inventory import *
 
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
 DISPLAY = pg.display.set_mode((1280, 720))
@@ -163,7 +164,7 @@ class Game:
         ]
         self.world = self.worlds[0]  # Current world      
         self.PlayerRoom = self.Kitchen = self.Forest = False  # Worlds   
-        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save) # The player
+        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save, UIspriteSheet) # The player
 
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below
@@ -175,7 +176,7 @@ class Game:
         self.object_p = [
             [None, pg.Vector2(10,90), pg.Vector2(5,500), pg.Vector2(450, 40)], # John's Room     
             [None,pg.Vector2(20, 250), pg.Vector2(280,300), pg.Vector2(10,0), pg.Vector2(1020, 440)]    
-        ]   
+        ]
 
     # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Object&Entities
     def collision_system(self, index):

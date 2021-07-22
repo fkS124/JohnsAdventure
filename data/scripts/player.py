@@ -1,12 +1,14 @@
 import pygame as p
 import math
 from .utils import *
+from .inventory import Inventory
+
 p.font.init()
 font = p.font.Font("data/database/pixelfont.ttf", 16)
 debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player(object):
-    def __init__(self, x, y, screen, debug, interface, data):
+    def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
         self.Player = load('player_beta.png')
@@ -17,13 +19,17 @@ class Player(object):
         self.debug, self.interact_text = debug, '' # Debugging and Interaction
         self.data = data
 
+
+        self.inventory = Inventory(self.screen, ui_sprite_sheet)
+
     def update(self):
         self.controls()
-        ''' Movement '''
-        if self.Up:  self.y -= self.speedY                       
-        elif self.Down: self.y += self.speedY                   
-        if self.Left:  self.x -= self.speedX          
-        elif self.Right: self.x += self.speedX      
+        if not self.inventory.show_menu:
+            ''' Movement '''
+            if self.Up:  self.y -= self.speedY                       
+            elif self.Down: self.y += self.speedY                   
+            if self.Left:  self.x -= self.speedX          
+            elif self.Right: self.x += self.speedX      
         
         # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
@@ -41,6 +47,8 @@ class Player(object):
                self.screen.blit(text, (20, 0 + 15 * i))
                i+=1
 
+        self.inventory.update()
+
     def controls(self):       
         for event in p.event.get():   
             keys = p.key.get_pressed()
@@ -52,6 +60,16 @@ class Player(object):
             if event.type == p.KEYDOWN:
                 ''' Toggle Fullscreen '''
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
+
+                if event.key == p.K_e:
+                    self.inventory.set_active()
+
+                if self.inventory.show_menu:
+                    if event.key == p.K_UP: # scroll up
+                        self.inventory.scroll_up()
+                    
+                    if event.key == p.K_DOWN: # scroll down
+                        self.inventory.scroll_down()
 
                 ''' Interaction '''
                 if event.key == self.data["controls"][4]: 
@@ -70,7 +88,17 @@ class Player(object):
                       else: self.paused = True   
             # ----- Mouse -----                       
             if event.type == p.MOUSEBUTTONDOWN: 
-                self.click = True             
+
+                if event.button == 1:
+                    self.inventory.handle_clicks(event.pos)
+                if event.button == 4:  # scroll up
+                    if self.inventory.im_rect.collidepoint(event.pos):  # check if the mouse is colliding with the rect
+                        self.inventory.scroll_up()
+                if event.button == 5:  # scroll down
+                    if self.inventory.im_rect.collidepoint(event.pos):
+                        self.inventory.scroll_down()
+                
+                self.click = True         
             else: 
                 self.click = False
 
