@@ -6,3 +6,6 @@ Hi and welcome to the Open Source of John's Adventure! ⚔🛡🏹
 Our goal is to remake the existing https://gamejolt.com/games/johns_adventure/556539 and give a new experience to our players! Including more fighting! more gameplay! more story! and many more 👀
 
 If you are a beta tester, welcome! ✌️
+
+The one and only Rule I demand for Developers:
+Follow the KISS principle (Keep It Simple Stupid)
