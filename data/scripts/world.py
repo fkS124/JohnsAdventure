@@ -1,4 +1,5 @@
 
+from data.scripts.items import Chest
 import sys, random, json
 import pygame as pg
 from pygame import mixer
@@ -44,21 +45,27 @@ class Interface(object):
     def reset(self): self.current_text_index  =  0  # Resets text
 
     def draw(self, path):
-        if path: # If string is not empty
-            DISPLAY.blit(self.icon, (155 , get_screen_h // 2 + 80)) # UI
+        if not path: # If string is not empty
+            return
+        DISPLAY.blit(self.icon, (155 , get_screen_h // 2 + 80)) # UI
+        
+        try: # I want something from the json file
             text = self.data[path]['text'] # Import from Json the AI/UI 's text
-            self.timer += dt # Speed of text/delta_time
-            if self.timer > 0.030:
-                    self.current_text_index += 1 # Next letter
-                    if self.current_text_index < len(text):
-                        self.current_text_index += 1
-                        if not (text[self.current_text_index] == ' '):  self.sound.play()  # if there isn't space
-                    # --- UPDATE CONTENT ---
-                    self.text_display = [text[44 * i : min(self.current_text_index, 44 * (i + 1))] for i in range(4)] # Update letters strings
-                    self.text_surfaces = [font.render(text, True, (0,0,0)) for text in self.text_display]  # Transform them into a surface
-                    self.timer = 0 # Reset timer /  End of if statement
-            for i, surface in enumerate(self.text_surfaces): # Blits the text
-                DISPLAY.blit(surface, (self.text_pos[0], self.text_pos[1] + i * 30))
+        except: # I make my own text
+            text = path
+
+        self.timer += dt # Speed of text/delta_time
+        if self.timer > 0.030:
+            self.current_text_index += 1 # Next letter
+            if self.current_text_index < len(text):
+                self.current_text_index += 1
+                if text[self.current_text_index] != ' ':  self.sound.play()  # if there isn't space
+            # --- UPDATE CONTENT ---
+            self.text_display = [text[44 * i : min(self.current_text_index, 44 * (i + 1))] for i in range(4)] # Update letters strings
+            self.text_surfaces = [font.render(text, True, (0,0,0)) for text in self.text_display]  # Transform them into a surface
+            self.timer = 0 # Reset timer /  End of if statement
+        for i, surface in enumerate(self.text_surfaces): # Blits the text
+            DISPLAY.blit(surface, (self.text_pos[0], self.text_pos[1] + i * 30))
 
 # Classes
 class MainMenu(object):
@@ -170,12 +177,12 @@ class Game:
         self.o_index = 0 # Index for the sublists below
         self.objects = [
             [Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192)], # John's Room
-            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')), pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 860, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
+            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')),Chest(load('data/items/chest.png', False),960,175),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
         self.object_p = [
             [None, pg.Vector2(10,90), pg.Vector2(5,500), pg.Vector2(450, 40)], # John's Room     
-            [None,pg.Vector2(20, 250), pg.Vector2(280,300), pg.Vector2(10,0), pg.Vector2(1020, 440)]    
+            [None, None,pg.Vector2(20, 250), pg.Vector2(280,300), pg.Vector2(10,0), pg.Vector2(1020, 440)]    
         ]
 
     # Αλγόριθμος Παγκόσμιας Σύγκρουσης Οντοτήτων / Player Collision System with Object&Entities
@@ -190,9 +197,9 @@ class Game:
             t, b, l, r, is_rect = self.Player.Rect.top,  self.Player.Rect.bottom, self.Player.Rect.left, self.Player.Rect.right, bool(type(object) is pg.Rect)
             collision =  self.Player.Rect.colliderect(object) if is_rect else self.Player.Rect.colliderect(object.Rect)
             try:
-                if self.Player.Rect.colliderect(object.interact_rect): self.Player.is_interacting, self.Player.interact_text = True, object.interact_text 
+                if self.Player.Rect.colliderect(object.interact_rect): self.Player.is_interacting, self.Player.interact_text = True, object.interact_text
+                draw = pg.draw.rect(DISPLAY, (255,255,255), object.Rect) if is_rect else  pg.draw.rect(DISPLAY, (255,255,255), object)
             except: pass
-
             top = abs(object.bottom - t) if is_rect else abs(object.Rect.bottom - t)
             bottom = abs(object.top - b) if is_rect else abs(object.Rect.top - b)
             left = abs(object.right - l) if is_rect else abs(object.Rect.right - l)
@@ -214,7 +221,6 @@ class Game:
         if self.Player.paused:
             surface = pygame.Surface((get_screen_w,get_screen_h), pygame.SRCALPHA)
             surface.fill((0,0,0)); surface.set_alpha(235); DISPLAY.blit(surface, (0,0)) # Draws black screen with opacity
-            for character in self.Characters: character.speed = 0 # Stop characters frog
             # -----v TEMPORARY v-----
             DISPLAY.blit(font.render("(GAME UNDER CONSTRUCTION)", True, (255,255,255)), (get_screen_w//2 - 220, get_screen_h//2 - 140))
             DISPLAY.blit(blacksword.render("Paused", True, (255,255,255)), (get_screen_w//2 - 190, get_screen_h//2 - 120))
@@ -233,6 +239,7 @@ class Game:
         while True:
             dt, mouse_p = framerate.tick(35) / 1000, pg.mouse.get_pos() # Framerate Indepence and Mouse position
             DISPLAY.fill((0, 0, 0))
+            print(self.Player.data["coins"])
             if self.Menu:
                 self.menu.update(mouse_p) # Show Menu Screen
                 # Position of the buttons
@@ -257,6 +264,7 @@ class Game:
                 elif self.Kitchen:
                     self.room_borders()
                     self.objects[1][0].update(DISPLAY, scroll, self.Player)
+                    self.objects[1][1].update(DISPLAY, scroll, self.Player, 0)
                     if self.Player.y < 270 and self.Player.x <= 810:
                         self.Player.interact_text, self.Player.is_interacting = 'kitchen' if self.Player.x < 570 else 'sink', True
                     ''' Stairs '''

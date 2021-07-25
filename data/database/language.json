@@ -31,6 +31,10 @@
 
   "cynthia": {
     "text": "Good morning brother. Your master wants to  see you,  pick your sword from the chest    and go meet him"
+  },
+
+  "chest": {
+    "text": "You found 30 coins and a Training Sword! "
   }
 
 }

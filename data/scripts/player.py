@@ -18,9 +18,7 @@ class Player(object):
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
         self.debug, self.interact_text = debug, '' # Debugging and Interaction
         self.data = data
-
-
-        self.inventory = Inventory(self.screen, ui_sprite_sheet)
+        self.inventory = Inventory(self.screen, ui_sprite_sheet, font)
 
     def update(self):
         self.controls()
@@ -70,6 +68,7 @@ class Player(object):
                     
                     if event.key == p.K_DOWN: # scroll down
                         self.inventory.scroll_down()
+                        self.srl_gap += 1
 
                 ''' Interaction '''
                 if event.key == self.data["controls"][4]: 
