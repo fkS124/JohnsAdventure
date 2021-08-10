@@ -26,11 +26,11 @@ else:
 framerate = pygame.time.Clock()
 UIspriteSheet = UI_Spritesheet('data/ui/UI_spritesheet.png')
 get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
-mouse_icon = UIspriteSheet.parse_sprite('mouse_cursor.png').convert()  # Game's exclusive mouse icon!
 scroll = [0, 0]  # player "camera"
 dt = framerate.tick(35) / 1000 # Delta time :D
 font = pg.font.Font("data/database/pixelfont.ttf", 24)
 blacksword = pg.font.Font("data/database/Blacksword.otf", 113) # I use this only for the logo
+pg.mouse.set_visible(False)
 
 class Interface(object):
     def __init__(self):
@@ -171,7 +171,7 @@ class Game:
         ]
         self.world = self.worlds[0]  # Current world      
         self.PlayerRoom = self.Kitchen = self.Forest = False  # Worlds   
-        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save, UIspriteSheet) # The player
+        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save, UIspriteSheet, load('data/sprites/john.png')) # The player
 
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below
@@ -246,6 +246,7 @@ class Game:
                 if self.menu.event.type == pg.MOUSEBUTTONDOWN and not self.menu.show_settings:
                      if self.menu.btn_rect[0].collidepoint(mouse_p):  self.Menu = False; self.PlayerRoom = True
                      if self.menu.btn_rect[2].collidepoint(mouse_p): pg.quit(), sys.exit()
+
             else: # The game           
                 scroll += pg.Vector2(self.Player.x - scroll[0] - get_screen_w // 2, self.Player.y - scroll[1] - get_screen_h // 2)
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # World Background Image

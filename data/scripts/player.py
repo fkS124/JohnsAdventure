@@ -1,5 +1,9 @@
+from types import prepare_class
+from typing import Tuple
 import pygame as p
 import math
+
+from pygame import mouse
 from .utils import *
 from .inventory import Inventory
 
@@ -8,11 +12,10 @@ font = p.font.Font("data/database/pixelfont.ttf", 16)
 debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player(object):
-    def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet):
+    def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet, p_sheet):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
-        self.Player = load('player_beta.png')
-        self.Rect = self.Player.get_rect(center=(self.x, self.y))
+        self.Rect = p.Rect(self.x - 27, self.y, 64, 64)
         self.speedX = self.speedY = 6 # Player's speed       
         self.paused = self.click = self.Interactable = self.is_interacting = False #  Features       
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
@@ -20,23 +23,76 @@ class Player(object):
         self.data = data
         self.inventory = Inventory(self.screen, ui_sprite_sheet, font)
 
+        # States
+        self.walking = False
+
+        # Animation
+        self.a_index = 0
+        self.walk_right: list = [scale(get_sprite(p_sheet, 27 * i, 0, 27,46), 3) for i in range(4)]
+        self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
+        self.walk_up: list = [scale(get_sprite(p_sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
+        self.walk_down: list = [scale(get_sprite(p_sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
+
+        self.crosshair = load('data/ui/crosshair.png', True)
+
+
+
     def update(self):
         self.controls()
         if not self.inventory.show_menu:
             ''' Movement '''
-            if self.Up:  self.y -= self.speedY                       
-            elif self.Down: self.y += self.speedY                   
-            if self.Left:  self.x -= self.speedX          
-            elif self.Right: self.x += self.speedX      
+            if self.Up: self.y -= self.speedY
+            elif self.Down: self.y += self.speedY    
+            if self.Left: self.x -= self.speedX    
+            elif self.Right: self.x += self.speedX 
+            ''' Animation '''
+            if self.a_index >= 27: self.a_index = 0
+            self.a_index += 1
+        else: # Player is looking at the inventory,therefore dont allow him to animate walking
+            self.a_index = 0 # Play only first frame
+            
+        ''' Animation '''
+        player_pos = self.Rect[0] - 5, self.Rect[1] - 80
+        p.draw.rect(self.screen, (255,255,255), self.Rect, width = 1)
+
+
+        # ? Mouse position
+        mouse_p = p.mouse.get_pos()
         
+        if mouse_p[0] > 550 and mouse_p[0] < 650:
+            if mouse_p[1] < self.Rect.y: # ? Up
+                if self.walking:
+                        self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
+                else:
+                    self.screen.blit(self.walk_up[0], player_pos)
+            else: # ? Down
+                if self.walking:
+                        self.screen.blit(self.walk_down[self.a_index // 7], player_pos) 
+                else:
+                    self.screen.blit(self.walk_down[0], player_pos)
+        else: # Left/Right
+            if mouse_p[0] <= self.Rect.x: # ? Left
+                if self.walking:
+                        self.screen.blit(self.walk_left[self.a_index // 7], player_pos) 
+                else:
+                    self.screen.blit(self.walk_left[0], player_pos)
+            else: # ? Right
+                if self.walking:
+                        self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
+                else:
+                    self.screen.blit(self.walk_right[0], player_pos)
+            
+                
+                
+            
+
+        if not self.Up and not self.Down and not self.Right and not self.Left:
+            self.walking = False
+      
         # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
             self.Interface.draw(self.interact_text)
-
-        ''' Draw Player '''
-        self.screen.blit(self.Player, self.Rect)
-         
-        ''' Debug Mode '''
+     
         if self.debug:          
             i = 1
             for name, value in self.__dict__.items():
@@ -45,13 +101,16 @@ class Player(object):
                self.screen.blit(text, (20, 0 + 15 * i))
                i+=1
 
+        self.screen.blit(self.crosshair, mouse_p) # Mouse Cursor
         self.inventory.update()
 
     def controls(self):       
         for event in p.event.get():   
             keys = p.key.get_pressed()
             if event.type == p.QUIT: p.quit(); raise SystemExit
-            self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"][0]], keys[self.data["controls"][1]], keys[self.data["controls"][2]], keys[self.data["controls"][3]]          
+
+            if not self.inventory.show_menu: # if player is looking at the inventory dont allow him to press keys besides Inventory
+                self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"][0]], keys[self.data["controls"][1]], keys[self.data["controls"][2]], keys[self.data["controls"][3]]      
             self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
                         
             # ----- Keybinds -----         
@@ -76,10 +135,11 @@ class Player(object):
                     self.InteractPoint += 1 
 
                 # Reset Interaction
-                if self.Up or self.Down or self.Right or self.Left or self.InteractPoint == 3: 
+                if self.Up or self.Down or self.Right or self.Left or self.InteractPoint == 3:
+                    self.walking = True                                
                     self.InteractPoint, self.Interactable = 0, False
                     self.is_interacting = False
-                    self.Interface.reset();                 
+                    self.Interface.reset()
 
                 '''Pause the game'''
                 if event.key == p.K_ESCAPE:
