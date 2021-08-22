@@ -171,7 +171,7 @@ class Game:
         ]
         self.world = self.worlds[0]  # Current world      
         self.PlayerRoom = self.Kitchen = self.Forest = False  # Worlds   
-        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save, UIspriteSheet, load('data/sprites/john.png')) # The player
+        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, Interface(), self.menu.save, UIspriteSheet) # The player
 
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below

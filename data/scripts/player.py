@@ -12,7 +12,7 @@ font = p.font.Font("data/database/pixelfont.ttf", 16)
 debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player(object):
-    def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet, p_sheet):
+    def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
         self.Rect = p.Rect(self.x - 27, self.y, 64, 64)
@@ -27,15 +27,15 @@ class Player(object):
         self.walking = False
 
         # Animation
+        self.sheet = load('data/sprites/john.png')
         self.a_index = 0
-        self.walk_right: list = [scale(get_sprite(p_sheet, 27 * i, 0, 27,46), 3) for i in range(4)]
+        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,46), 3) for i in range(4)]
         self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
-        self.walk_up: list = [scale(get_sprite(p_sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
-        self.walk_down: list = [scale(get_sprite(p_sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
+        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
+        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
 
-        self.crosshair = load('data/ui/crosshair.png', True)
-
-
+        '''  Combat System '''
+        self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
 
     def update(self):
         self.controls()
@@ -53,13 +53,19 @@ class Player(object):
             
         ''' Animation '''
         player_pos = self.Rect[0] - 5, self.Rect[1] - 80
-        p.draw.rect(self.screen, (255,255,255), self.Rect, width = 1)
-
 
         # ? Mouse position
         mouse_p = p.mouse.get_pos()
         
-        if mouse_p[0] > 550 and mouse_p[0] < 650:
+        # ! Noooo you can't make calculations for silly stuff , haha  trig go brrrrrrr
+        angle = math.atan2(mouse_p[0] - self.Rect.midbottom[0], mouse_p[1] - self.Rect.midbottom[1]) 
+        x, y = player_pos[0] - math.cos(angle), player_pos[1] - math.sin(angle) 
+        image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
+        ring_pos = (x - image.get_width()//2  + 40, y - image.get_height()//2  + 120)
+        self.screen.blit(image, ring_pos)
+        
+        # Player animation
+        if mouse_p[0] > 600 and mouse_p[0] < 650:
             if mouse_p[1] < self.Rect.y: # ? Up
                 if self.walking:
                         self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
@@ -169,17 +175,27 @@ class Mau(object):
         self.speed = 1.25
         self.Idle = self.is_talking = False # Conditions
         # Animation & Rects (Check out pygame.transform.smoothscale @fks)
-        self.image = [double_size(load(f'data/sprites/mau/mau{i}.png', alpha = True)) for i in range(1, 4)]
-        self.reverse_image = [flip_vertical(self.image[i]) for i in range(3)]
-        self.interact_rect = p.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height()) 
-        self.interact_animation = [double_size(load(f'data/sprites/mau/mau_interact.png', alpha = True))  if i % 2 == 0 else double_size(load(f'data/sprites/mau/idle_mau.png', alpha = True)) for i in range(3)]             
-        self.flipped_interaction = [flip_vertical(frame) for frame in self.interact_animation]  # Same list but flipped images
+        self.sheet = load('data/sprites/mau_sheet.png')
+        
+        
+        self.image, self.interact_animation = [], []
+        
+        self.reverse_image,self.flipped_interaction = [], []
+    
+        for i in range(6):
+            sprite = scale(get_sprite(self.sheet, 43 * i, 0, 43, 33), 2)
+            if i < 3:
+                self.image.append(sprite); self.reverse_image.append(flip_vertical(sprite))
+            else:
+                self.interact_animation.append(sprite); self.flipped_interaction.append(flip_vertical(sprite))
+
+        self.interact_rect = p.Rect(self.x, self.y, self.image[0].get_width()//2, self.image[0].get_height())       
         self.interact_text = 'mau'
 
     def update(self, screen, scroll, player):
         # Update rect
         self.Rect = self.image[0].get_rect(center=(self.x - scroll[0], self.y - scroll[1]))       
-        if self.animation_counter >= 36: self.animation_counter = 0 # Reset Animation
+        if self.animation_counter >= 26: self.animation_counter = 0 # Reset Animation
         self.animation_counter += 1 # Run Animation
         self.speed = 0 if player.paused or player.Rect.colliderect(self.interact_rect) else 1.25 # Change his speed based on these conditions
         if player.Rect.colliderect(self.interact_rect): # Collision with the player       
@@ -196,20 +212,20 @@ class Mau(object):
         if self.Right:
             self.interact_rect.midleft = (self.x + 15 - scroll[0], self.y - scroll[1])       
             if self.Idle:
-                screen.blit(self.interact_animation[1], self.Rect)
+                screen.blit(self.interact_animation[0], self.Rect)
             elif self.is_talking:
-                screen.blit(self.interact_animation[self.animation_counter // 18], self.Rect)
+                screen.blit(self.interact_animation[self.animation_counter // 9], self.Rect)
             else: # Walking
-                screen.blit(self.image[self.animation_counter // 18], self.Rect)              
+                screen.blit(self.image[self.animation_counter // 9], self.Rect)              
                 self.x += self.speed
         else:
             self.interact_rect.midright = (self.x - 15 - scroll[0], self.y - scroll[1])
             if self.Idle: # Idle Animation
-                screen.blit(self.flipped_interaction[1] , self.Rect)
+                screen.blit(self.flipped_interaction[0], self.Rect)
             elif self.is_talking:
-                screen.blit(self.flipped_interaction[self.animation_counter // 18] , self.Rect)
+                screen.blit(self.flipped_interaction[self.animation_counter // 9] , self.Rect)
             else: # Walking
-                screen.blit(self.reverse_image[self.animation_counter // 18], self.Rect)               
+                screen.blit(self.reverse_image[self.animation_counter // 9], self.Rect)               
                 self.x -= self.speed
  
 
