@@ -37,42 +37,42 @@ class Player(object):
 
         '''  Combat System '''
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
-        
         self.dash = False
-        self.dash_distance = 0 # Pixels
         self.dash_t = p.time.get_ticks()
-        self.dash_bar = 0 # Width of the dash bar
 
 
     def update(self):
         self.controls()
         if not self.inventory.show_menu:
             ''' Movement '''
-            if self.Up: self.y -= self.speedY
-            elif self.Down: self.y += self.speedY    
-            if self.Left: self.x -= self.speedX    
-            elif self.Right: self.x += self.speedX 
+            if self.Up: 
+                self.y -= self.speedY 
+                dash_vel = -15 
+            elif self.Down: 
+                self.y += self.speedY   
+                dash_vel = 15
+            
+            if self.Left: 
+                self.x -= self.speedX   
+                dash_vel = -15 if not self.Down else 15 # Diagonal
+            # Note: Add here a smoother diagonal dash if combat system demands it
+            elif self.Right: 
+                self.x += self.speedX 
+                dash_vel = 15 if not self.Up else -15 # Diagonal
             ''' Animation '''
             if self.a_index >= 27: self.a_index = 0
             self.a_index += 1
         else: # Player is looking at the inventory,therefore dont allow him to animate walking
             self.a_index = 0 # Play only first frame
-            
-        
-        if self.dash: 
-            if self.dash_distance < 20: # Dash limit
-               if self.Right:
-                  self.x += self.dash_distance
-               elif self.Left:
-                  self.x -= self.dash_distance
-               if self.Up:
-                  self.y -= self.dash_distance
-               elif self.Down:
-                  self.y += self.dash_distance
-               self.dash_distance += 2
-            else:
-                self.dash = False
-            
+
+        if self.dash:
+            if p.time.get_ticks() - self.dash_t > 150:
+                self.dash = False          
+            if self.Up or self.Down:
+                self.y += dash_vel
+            elif self.Left or self.Right:
+                self.x += dash_vel
+
         ''' Animation '''
         player_pos = self.Rect[0] - 5, self.Rect[1] - 80
         # ? Mouse position
@@ -108,7 +108,8 @@ class Player(object):
                         self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
                 else:
                     self.screen.blit(self.walk_right[0], player_pos)
-                     
+            
+        
 
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
@@ -128,11 +129,7 @@ class Player(object):
         self.screen.blit(self.crosshair, mouse_p) # Mouse Cursor
         self.inventory.update()
 
-        if p.time.get_ticks() - self.dash_t < 2000: # 2 second cooldown
-            self.dash_bar += 2
-            p.draw.rect(self.screen, (0,255,0), p.Rect(450, 550, self.dash_bar, 16))
-        else:
-            self.dash_bar = 0
+
 
     def controls(self):       
         for event in p.event.get():   
@@ -149,14 +146,12 @@ class Player(object):
                 ''' Toggle Fullscreen '''
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
                 
-                if event.key == p.K_LSHIFT:                          
-                    if p.time.get_ticks() - self.dash_t > 2000: # 2 second cooldown
-                        self.dash = True
-                        self.dash_distance = 0
-                        self.dash_t = p.time.get_ticks()
-                    else:
-                        self.dash_bar += 1
-
+                ''' Dash Ability'''
+                if event.key == p.K_LSHIFT:             
+                    if p.time.get_ticks() - self.dash_t > 1500: # 1.5 Second (not yet balanced)
+                        self.dash, self.dash_t = True, p.time.get_ticks()
+                        
+                ''' Inventory '''
                 if event.key == p.K_e:
                     self.inventory.set_active()
 
@@ -186,7 +181,6 @@ class Player(object):
                       else: self.paused = True   
             # ----- Mouse -----                       
             if event.type == p.MOUSEBUTTONDOWN: 
-
                 if event.button == 1:
                     self.inventory.handle_clicks(event.pos)
                 if event.button == 4:  # scroll up
@@ -194,8 +188,7 @@ class Player(object):
                         self.inventory.scroll_up()
                 if event.button == 5:  # scroll down
                     if self.inventory.im_rect.collidepoint(event.pos):
-                        self.inventory.scroll_down()
-                
+                        self.inventory.scroll_down()            
                 self.click = True         
             else: 
                 self.click = False
@@ -208,11 +201,8 @@ class Mau(object):
         self.speed = 1.25
         self.Idle = self.is_talking = False # Conditions
         # Animation & Rects (Check out pygame.transform.smoothscale @fks)
-        self.sheet = load('data/sprites/mau_sheet.png')
-        
-        
-        self.image, self.interact_animation = [], []
-        
+        self.sheet = load('data/sprites/mau_sheet.png')        
+        self.image, self.interact_animation = [], []       
         self.reverse_image,self.flipped_interaction = [], []
     
         for i in range(6):
