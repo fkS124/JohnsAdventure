@@ -4,6 +4,7 @@ import pygame as p
 import math
 
 from pygame import mouse
+from pygame.time import get_ticks
 from .utils import *
 from .inventory import Inventory
 
@@ -36,6 +37,10 @@ class Player(object):
 
         '''  Combat System '''
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
+        
+        self.dash = False
+        self.dash_t = p.time.get_ticks()
+        self.dash_s = 6 # Dash speed
 
     def update(self):
         self.controls()
@@ -50,6 +55,25 @@ class Player(object):
             self.a_index += 1
         else: # Player is looking at the inventory,therefore dont allow him to animate walking
             self.a_index = 0 # Play only first frame
+            
+        dt = p.time.Clock().tick(35) / 100
+            
+        
+        if self.dash:
+            print('dashing')
+               
+            distanceX, distanceY = self.x + 150 * -1, self.y + 150 * -1     
+            if self.Right:
+               
+               if self.x < distanceX:
+                   self.x += self.dash_s
+            
+            
+            
+            
+            
+            
+            
             
         ''' Animation '''
         player_pos = self.Rect[0] - 5, self.Rect[1] - 80
@@ -87,10 +111,7 @@ class Player(object):
                         self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
                 else:
                     self.screen.blit(self.walk_right[0], player_pos)
-            
-                
-                
-            
+                     
 
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
@@ -118,11 +139,16 @@ class Player(object):
             if not self.inventory.show_menu: # if player is looking at the inventory dont allow him to press keys besides Inventory
                 self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"][0]], keys[self.data["controls"][1]], keys[self.data["controls"][2]], keys[self.data["controls"][3]]      
             self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
+            
                         
             # ----- Keybinds -----         
             if event.type == p.KEYDOWN:
                 ''' Toggle Fullscreen '''
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
+                
+                if event.key == p.K_LSHIFT:
+                    print('start dashing')
+                    self.dash = True
 
                 if event.key == p.K_e:
                     self.inventory.set_active()

@@ -239,7 +239,7 @@ class Game:
         while True:
             dt, mouse_p = framerate.tick(35) / 1000, pg.mouse.get_pos() # Framerate Indepence and Mouse position
             DISPLAY.fill((0, 0, 0))
-            print(self.Player.data["coins"])
+            #print(self.Player.data["coins"])
             if self.Menu:
                 self.menu.update(mouse_p) # Show Menu Screen
                 # Position of the buttons
@@ -254,8 +254,7 @@ class Game:
                 if self.PlayerRoom:
                     self.objects[0][0].update(DISPLAY, scroll, self.Player), self.room_borders() # Mau
                     if self.Player.y < 270 and self.Player.x < 870:
-                       self.Player.interact_text, self.Player.is_interacting = 'computer' if 680 <= self.Player.x <= 870 else 'desk', True
-                        
+                       self.Player.interact_text, self.Player.is_interacting = 'computer' if 680 <= self.Player.x <= 870 else 'desk', True                  
                     # Stairs
                     if self.Player.Rect.colliderect(pygame.Rect(get_screen_w // 2 + 353 - scroll[0], 150 - scroll[1], 155, 130)):
                          self.Player.interact_text, self.Player.is_interacting  = 'stairs', True

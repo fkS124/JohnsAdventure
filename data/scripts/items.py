@@ -15,7 +15,6 @@ class Chest:
     def grab_item(self, index):
         weapons = [Weapons.TrainingSword()]
         coins = [30]
-
         return weapons[index], coins[index]
     
     def update(self, DISPLAY, scroll, player, index):
@@ -38,7 +37,6 @@ class Items:
     class NullItem:  # Reference Model
 
         def __init__(self):
-
             font = pg.font.Font("data/database/pixelfont.ttf", 24)
             self.text = font.render("NullItem", True, (0, 0, 0))
             self.image = pg.Surface((self.text.get_size()))
