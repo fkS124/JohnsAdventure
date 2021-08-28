@@ -39,8 +39,10 @@ class Player(object):
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
         
         self.dash = False
+        self.dash_distance = 0 # Pixels
         self.dash_t = p.time.get_ticks()
-        self.dash_s = 6 # Dash speed
+        self.dash_bar = 0 # Width of the dash bar
+
 
     def update(self):
         self.controls()
@@ -56,28 +58,23 @@ class Player(object):
         else: # Player is looking at the inventory,therefore dont allow him to animate walking
             self.a_index = 0 # Play only first frame
             
-        dt = p.time.Clock().tick(35) / 100
-            
         
-        if self.dash:
-            print('dashing')
-               
-            distanceX, distanceY = self.x + 150 * -1, self.y + 150 * -1     
-            if self.Right:
-               
-               if self.x < distanceX:
-                   self.x += self.dash_s
-            
-            
-            
-            
-            
-            
-            
+        if self.dash: 
+            if self.dash_distance < 20: # Dash limit
+               if self.Right:
+                  self.x += self.dash_distance
+               elif self.Left:
+                  self.x -= self.dash_distance
+               if self.Up:
+                  self.y -= self.dash_distance
+               elif self.Down:
+                  self.y += self.dash_distance
+               self.dash_distance += 2
+            else:
+                self.dash = False
             
         ''' Animation '''
         player_pos = self.Rect[0] - 5, self.Rect[1] - 80
-
         # ? Mouse position
         mouse_p = p.mouse.get_pos()
         
@@ -131,6 +128,12 @@ class Player(object):
         self.screen.blit(self.crosshair, mouse_p) # Mouse Cursor
         self.inventory.update()
 
+        if p.time.get_ticks() - self.dash_t < 2000: # 2 second cooldown
+            self.dash_bar += 2
+            p.draw.rect(self.screen, (0,255,0), p.Rect(450, 550, self.dash_bar, 16))
+        else:
+            self.dash_bar = 0
+
     def controls(self):       
         for event in p.event.get():   
             keys = p.key.get_pressed()
@@ -146,9 +149,13 @@ class Player(object):
                 ''' Toggle Fullscreen '''
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
                 
-                if event.key == p.K_LSHIFT:
-                    print('start dashing')
-                    self.dash = True
+                if event.key == p.K_LSHIFT:                          
+                    if p.time.get_ticks() - self.dash_t > 2000: # 2 second cooldown
+                        self.dash = True
+                        self.dash_distance = 0
+                        self.dash_t = p.time.get_ticks()
+                    else:
+                        self.dash_bar += 1
 
                 if event.key == p.K_e:
                     self.inventory.set_active()
