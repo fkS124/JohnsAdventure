@@ -38,7 +38,7 @@ class Inventory:
     def scroll_up(self):
         self.index_scroll -= 1 * (self.index_scroll > 0)
 
-    def update(self):
+    def update(self, parent_class):
         item_l = len(self.items) # Lenth of the items 
         self.screen.blit(self.button_inv, self.bi_rect) # blit the inventory button
        
@@ -58,7 +58,7 @@ class Inventory:
                     break
 
                 # display the item on the screen
-                item.update(self.inv_menu, (self.uii_rect.x+25, index*item.image.get_height()+12))
+                item.update(self.inv_menu, (self.uii_rect.x+25, index*item.image.get_height()+12), parent_class.damage)
 
             # showing a scroll bar
             #h = self.uii_rect.height / item_l

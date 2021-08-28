@@ -39,6 +39,7 @@ class Player(object):
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
         self.dash = False
         self.dash_t = p.time.get_ticks()
+        self.damage = 10
 
 
     def update(self):
@@ -126,8 +127,8 @@ class Player(object):
                self.screen.blit(text, (20, 0 + 15 * i))
                i+=1
 
-        self.screen.blit(self.crosshair, mouse_p) # Mouse Cursor
-        self.inventory.update()
+        self.screen.blit(self.crosshair, self.crosshair.get_rect(center=mouse_p)) # Mouse Cursor
+        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
 
 
 

@@ -30,7 +30,7 @@ scroll = [0, 0]  # player "camera"
 dt = framerate.tick(35) / 1000 # Delta time :D
 font = pg.font.Font("data/database/pixelfont.ttf", 24)
 blacksword = pg.font.Font("data/database/Blacksword.otf", 113) # I use this only for the logo
-pg.mouse.set_visible(False)
+pg.mouse.set_visible(True)
 
 class Interface(object):
     def __init__(self):
