@@ -1,3 +1,4 @@
+from data.scripts.backend import UI_Spritesheet
 from types import prepare_class
 from typing import Tuple
 import pygame as p
@@ -34,16 +35,33 @@ class Player(object):
         self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
         self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
         self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
-
+        
+        ''' Stats'''
+        self.health = 110
+        self.damage = 10
+        
+        ''' UI '''
+        self.health_box = scale(ui_sprite_sheet.parse_sprite('health'),5)
+        self.heart = scale(ui_sprite_sheet.parse_sprite('heart'), 4)
+        self.hp_box_rect = self.health_box.get_rect(topleft = (self.screen.get_width() - self.health_box.get_width() - 10, 20))
+        
         '''  Combat System '''
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
         self.dash = False
         self.dash_t = p.time.get_ticks()
-        self.damage = 10
+        
+    def health_bar(self):
+        p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
+        self.screen.blit(self.health_box, self.hp_box_rect)
+        self.screen.blit(self.heart, (self.hp_box_rect.x + 10 , self.hp_box_rect.y + 15))
+        
+        
+        
 
 
     def update(self):
         self.controls()
+        self.health_bar()    
         if not self.inventory.show_menu:
             ''' Movement '''
             if self.Up: 
@@ -87,7 +105,7 @@ class Player(object):
         self.screen.blit(image, ring_pos)
         
         # Player animation
-        if mouse_p[0] > 600 and mouse_p[0] < 650:
+        if mouse_p[0] > 550 and mouse_p[0] < 750:
             if mouse_p[1] < self.Rect.y: # ? Up
                 if self.walking:
                         self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 

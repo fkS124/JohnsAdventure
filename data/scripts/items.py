@@ -41,10 +41,10 @@ class Chest:
         backpack.append(weapon)
         
         if weapon is None:
-            self.popup_txt = f"You got {coins} from the chest"
+            self.popup_txt = f"You got {coins} coins from the chest"
         else:
             weapon_name = weapon.__class__.__name__
-            self.popup_txt += f' You got {coins} from the chest and a {weapon_name.replace("_", " ")}' 
+            self.popup_txt += f' You got {coins} coins from the chest and a {weapon_name.replace("_", " ")}' 
         
         self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
         self.delay_popup = pg.time.get_ticks()
