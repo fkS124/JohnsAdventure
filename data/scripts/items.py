@@ -8,16 +8,68 @@ from .utils import load, get_sprite
 class Chest:
     def __init__(self, x, y):
         self.x, self.y, self.sheet = x, y, load('data/items/chest.png')
-        self.img = [get_sprite(self.sheet,  0, 0, 74 * i, 90) for i in range(4)]
-        self.Rect = pg.Rect(0,0,0,0) # Empty rect that will be filled later
-        self.a = 0 # Animation counter
+        self.img = [get_sprite(self.sheet,  74*i, 0, 74, 90) for i in range(4)]
+        self.anim_counter = 0 # Animation counter
+        self.Rect = self.img[self.anim_counter].get_rect(topleft=(x,y))
+        self.delay = pg.time.get_ticks()
+        self.opened = False
+        self.interact_rect = pg.Rect(0, self.y, 148, 110)
+        self.interact_rect.centerx=self.x
+        self.animating_started = False
+        self.font = pg.font.Font(None, 40)
+
+        self.pu_font = pg.font.Font(None, 25)
+        self.popup_txt = ""
+        self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
+        self.delay_popup = 0
     
-    def update(self, screen, scroll, player, index):
-        self.Rect = self.img[self.a // 7].get_rect(topleft = (self.x - 74, self.y))
-        self.a += 1 # Run animation
-        if self.a >= 26: self.a = 0 # 0 resets it, so if I want the last frame you will put 26
+    def start_anim(self):
+        self.animating_started = True
+        self.delay = pg.time.get_ticks()
+
+        # ADD ITEMS RIGHT HERE
+
+        self.popup_txt = "You got some things from the chest"
+        self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
+        self.delay_popup = pg.time.get_ticks()
+
+    def end_anim(self):
+        self.opened = True
         
-        screen.blit(self.img[self.a // 7], self.Rect)
+
+    def update(self, screen, scroll, player, index):
+        cur_time = pg.time.get_ticks()  # get current time
+
+        # if the player interact with the chest, start the anim
+        if player.Interactable and self.interact_rect.colliderect(player.Rect) and not self.animating_started:
+            self.start_anim()
+        
+        # animate the opening of the chest
+        if not self.opened and self.animating_started:
+            if cur_time - self.delay > 100:
+                self.delay = cur_time
+                if self.anim_counter < len(self.img)-1:
+                    self.anim_counter += 1
+                else:
+                    self.end_anim()
+        
+        # managing the positions considering the scroll
+        self.Rect = self.img[self.anim_counter].get_rect(center=(self.x-scroll[0],self.y-scroll[1]))
+        self.interact_rect.centerx, self.interact_rect.y = self.x-scroll[0], self.y-scroll[1]
+        screen.blit(self.img[self.anim_counter], self.Rect)
+
+        # show the key to press in order to interact
+        if not self.opened and self.interact_rect.colliderect(player.Rect):
+            txt = self.font.render(pg.key.name(player.data["controls"][4]), True, (0, 0, 0))
+            rct = txt.get_rect(center=(self.x-scroll[0],self.y-scroll[1]-75))
+            pg.draw.rect(screen, (255, 255, 255), rct)
+            screen.blit(txt, rct) 
+
+        # show the popup saying what item you got from the chest
+        if self.animating_started and cur_time - self.delay_popup < 2000: # -> delay of 2 secs before it disapear
+            pu_rect = self.pu_render.get_rect(center=(player.Rect.centerx, player.Rect.y-100))
+            pg.draw.rect(screen, (255, 255, 255), pu_rect)
+            screen.blit(self.pu_render, pu_rect)
         
         #screen.blit(self.reverse_image[self.animation_counter // 9], self.Rect)     
                 
