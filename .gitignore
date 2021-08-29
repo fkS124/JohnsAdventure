@@ -8,3 +8,4 @@ data/scripts/__pycache__/player.cpython-39.pyc
 *.pyc
 data/scripts/__pycache__/player.cpython-39.pyc
 data/scripts/__pycache__/world.cpython-39.pyc
+*.pyc

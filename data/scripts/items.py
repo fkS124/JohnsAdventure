@@ -1,16 +1,43 @@
 import pygame as pg
+from pygame import display
 from pygame.event import post
+from .utils import load, get_sprite
+
 
 
 class Chest:
-    def __init__(self, img, x, y):
+    def __init__(self, x, y):
+        self.x, self.y, self.sheet = x, y, load('data/items/chest.png')
+        self.img = [get_sprite(self.sheet,  0, 0, 74 * i, 90) for i in range(4)]
+        self.Rect = pg.Rect(0,0,0,0) # Empty rect that will be filled later
+        self.a = 0 # Animation counter
+    
+    def update(self, screen, scroll, player, index):
+        self.Rect = self.img[self.a // 7].get_rect(topleft = (self.x - 74, self.y))
+        self.a += 1 # Run animation
+        if self.a >= 26: self.a = 0 # 0 resets it, so if I want the last frame you will put 26
+        
+        screen.blit(self.img[self.a // 7], self.Rect)
+        
+        #screen.blit(self.reverse_image[self.animation_counter // 9], self.Rect)     
+                
+        
+
+
+'''
+class Chest:
+    def __init__(self, x, y):
         self.x, self.y = x, y
-        self.surface = pg.Surface((img.get_size()))
-        self.surface.blit(img,(0,0))
-        self.Rect = self.surface.get_rect(center = pg.Vector2(x,y))
+        self.sheet = load('data/items/chest.png')
+        
+        self.img = [get_sprite(self.sheet,  0, 0, 74 * i, 90) for i in range(4)]
+        
+        self.Rect = self.img[0].get_rect(center = pg.Vector2(x,y))
         self.interact_rect = pg.Rect(self.x, self.y, 0,0)
         self.interact_text = ''
         self.opened = False
+        self.ac = 0 # Animation counter
+        print(self.img)
 
     def grab_item(self, index):
         weapons = [Weapons.TrainingSword()]
@@ -18,6 +45,10 @@ class Chest:
         return weapons[index], coins[index]
     
     def update(self, DISPLAY, scroll, player, index):
+        
+        if self.ac >= 26: self.ac = 0
+        self.ac += 1
+    
         if self.interact_rect.colliderect(player.Rect):
             item = self.grab_item(index)
             self.interact_text = f'You found {item[1]} coins and a {item[0].__class__.__name__} ! '
@@ -27,9 +58,9 @@ class Chest:
                 self.opened = not self.opened
             
         self.interact_rect = pg.Rect(self.x - scroll[0], self.y - scroll[1], 32, 64)
-        self.Rect = self.surface.get_rect(center = pg.Vector2(self.x - scroll[0], self.y - scroll[1]))
-        DISPLAY.blit(self.surface, self.Rect)
-
+        
+        DISPLAY.blit(self.img[self.ac // 7], self.Rect)
+'''
 
 class Items:
     """This class will contain all the objects"""

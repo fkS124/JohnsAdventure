@@ -27,3 +27,9 @@ def double_size(img):
 @lru_cache(1000)
 def flip_vertical(img):
     return pygame.transform.flip(img, True, False)
+
+def get_sprite(spritesheet, x, y, w, h): # Gets NPC from spritesheet
+        sprite = pygame.Surface((w, h)).convert()
+        sprite.set_colorkey((255, 255, 255))
+        sprite.blit(spritesheet, (0, 0), (x, y, w, h))
+        return sprite

@@ -5,7 +5,7 @@ import math
 
 from pygame import mouse
 from pygame.time import get_ticks
-from .utils import *
+from .utils import load, get_sprite, scale, flip_vertical
 from .inventory import Inventory
 
 p.font.init()
@@ -131,7 +131,6 @@ class Player(object):
         self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
 
 
-
     def controls(self):       
         for event in p.event.get():   
             keys = p.key.get_pressed()
@@ -253,11 +252,7 @@ class Mau(object):
                 self.x -= self.speed
  
 
-def get_sprite(spritesheet, x, y, w, h): # Gets NPC from spritesheet
-        sprite = pygame.Surface((w, h)).convert()
-        sprite.set_colorkey((255, 255, 255))
-        sprite.blit(spritesheet, (0, 0), (x, y, w, h))
-        return sprite
+
 
 
 class Cynthia(object): # The time has come
