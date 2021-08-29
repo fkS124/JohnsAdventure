@@ -1,12 +1,11 @@
 import pygame as pg
 from pygame import display
+from pygame.constants import WINDOWLEAVE
 from pygame.event import post
-from .utils import load, get_sprite
-
-
+from .utils import load, get_sprite, smooth_scale, scale
 
 class Chest:
-    def __init__(self, x, y):
+    def __init__(self, x, y, index):
         self.x, self.y, self.sheet = x, y, load('data/items/chest.png')
         self.img = [get_sprite(self.sheet,  74*i, 0, 74, 90) for i in range(4)]
         self.anim_counter = 0 # Animation counter
@@ -16,20 +15,37 @@ class Chest:
         self.interact_rect = pg.Rect(0, self.y, 148, 110)
         self.interact_rect.centerx=self.x
         self.animating_started = False
-        self.font = pg.font.Font(None, 40)
-
-        self.pu_font = pg.font.Font(None, 25)
+        self.font = pg.font.Font("data/database/pixelfont.ttf", 16)
+        self.pu_font = pg.font.Font("data/database/pixelfont.ttf", 16)
         self.popup_txt = ""
         self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
-        self.delay_popup = 0
+        self.delay_popup = 0      
+        self.UI_button = [ scale(get_sprite(load('data/ui/UI_spritesheet.png'), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
+        
+        self.reward_index = index # Index for the sublists below
+        self.rewards = [
+            [Weapons.Training_Sword(), 30] # Kitchen Chest
+        ] 
+        self.btn_a = 0
     
-    def start_anim(self):
+    def start_anim(self, backpack, wallet):
         self.animating_started = True
         self.delay = pg.time.get_ticks()
+        
+        # Items   
+        
+        coins = self.rewards[self.reward_index][1]
+        weapon = self.rewards[self.reward_index][0]
 
-        # ADD ITEMS RIGHT HERE
-
-        self.popup_txt = "You got some things from the chest"
+        wallet += coins
+        backpack.append(weapon)
+        
+        if weapon is None:
+            self.popup_txt = f"You got {coins} from the chest"
+        else:
+            weapon_name = weapon.__class__.__name__
+            self.popup_txt += f' You got {coins} from the chest and a {weapon_name.replace("_", " ")}' 
+        
         self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
         self.delay_popup = pg.time.get_ticks()
 
@@ -37,12 +53,12 @@ class Chest:
         self.opened = True
         
 
-    def update(self, screen, scroll, player, index):
+    def update(self, screen, scroll, player):
         cur_time = pg.time.get_ticks()  # get current time
 
         # if the player interact with the chest, start the anim
         if player.Interactable and self.interact_rect.colliderect(player.Rect) and not self.animating_started:
-            self.start_anim()
+            self.start_anim(player.inventory.items, player.data['coins'])
         
         # animate the opening of the chest
         if not self.opened and self.animating_started:
@@ -60,59 +76,20 @@ class Chest:
 
         # show the key to press in order to interact
         if not self.opened and self.interact_rect.colliderect(player.Rect):
-            txt = self.font.render(pg.key.name(player.data["controls"][4]), True, (0, 0, 0))
+            txt = self.font.render(pg.key.name(player.data["controls"][4]), True, (255, 255, 255))
             rct = txt.get_rect(center=(self.x-scroll[0],self.y-scroll[1]-75))
-            pg.draw.rect(screen, (255, 255, 255), rct)
-            screen.blit(txt, rct) 
+            
+            if self.btn_a >= 13: self.btn_a = 0
+            self.btn_a += 1
+            screen.blit(self.UI_button[self.btn_a // 7], (rct[0] - 7, rct[1])) # The UI behind the text
+            screen.blit(txt, rct) # Interact Key Text
 
         # show the popup saying what item you got from the chest
         if self.animating_started and cur_time - self.delay_popup < 2000: # -> delay of 2 secs before it disapear
             pu_rect = self.pu_render.get_rect(center=(player.Rect.centerx, player.Rect.y-100))
             pg.draw.rect(screen, (255, 255, 255), pu_rect)
             screen.blit(self.pu_render, pu_rect)
-        
-        #screen.blit(self.reverse_image[self.animation_counter // 9], self.Rect)     
                 
-        
-
-
-'''
-class Chest:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
-        self.sheet = load('data/items/chest.png')
-        
-        self.img = [get_sprite(self.sheet,  0, 0, 74 * i, 90) for i in range(4)]
-        
-        self.Rect = self.img[0].get_rect(center = pg.Vector2(x,y))
-        self.interact_rect = pg.Rect(self.x, self.y, 0,0)
-        self.interact_text = ''
-        self.opened = False
-        self.ac = 0 # Animation counter
-        print(self.img)
-
-    def grab_item(self, index):
-        weapons = [Weapons.TrainingSword()]
-        coins = [30]
-        return weapons[index], coins[index]
-    
-    def update(self, DISPLAY, scroll, player, index):
-        
-        if self.ac >= 26: self.ac = 0
-        self.ac += 1
-    
-        if self.interact_rect.colliderect(player.Rect):
-            item = self.grab_item(index)
-            self.interact_text = f'You found {item[1]} coins and a {item[0].__class__.__name__} ! '
-            if self.opened is False and player.InteractPoint == 2:              
-                player.inventory.items.append(item[0])
-                player.data["coins"] += item[1]
-                self.opened = not self.opened
-            
-        self.interact_rect = pg.Rect(self.x - scroll[0], self.y - scroll[1], 32, 64)
-        
-        DISPLAY.blit(self.img[self.ac // 7], self.Rect)
-'''
 
 class Items:
     """This class will contain all the objects"""
@@ -137,7 +114,7 @@ class Items:
 
 class Weapons:
 
-    class TrainingSword: # Reference Model
+    class Training_Sword: # Reference Model
 
         def __init__(self):
             

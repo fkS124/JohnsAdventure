@@ -177,7 +177,7 @@ class Game:
         self.o_index = 0 # Index for the sublists below
         self.objects = [
             [Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192)], # John's Room
-            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')),Chest(960,175),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
+            [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')),Chest(960,175, 0),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
         self.object_p = [
@@ -264,7 +264,7 @@ class Game:
                 elif self.Kitchen:
                     self.room_borders()
                     self.objects[1][0].update(DISPLAY, scroll, self.Player)
-                    self.objects[1][1].update(DISPLAY, scroll, self.Player, 0)
+                    self.objects[1][1].update(DISPLAY, scroll, self.Player)
                     if self.Player.y < 270 and self.Player.x <= 810:
                         self.Player.interact_text, self.Player.is_interacting = 'kitchen' if self.Player.x < 570 else 'sink', True
                     ''' Stairs '''
