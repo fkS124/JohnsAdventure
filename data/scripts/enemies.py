@@ -1,5 +1,7 @@
 import pygame as pg
 from .utils import *
+from .damage_popups import DamagePopUp
+from math import ceil
 
 
 class Enemy:
@@ -20,8 +22,12 @@ class Enemy:
 
             self.endurance = 5
 
+            self.damages_texts = []
+
         def deal_damage(self, value:int):
-            self.hp -= value - self.endurance
+            self.hp -= ceil(value - self.endurance)
+            # -> crit : dmg_type="crit" -> health ; dmg_type="health" ...
+            self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value-self.endurance), dmg_type="default")) 
             if self.hp <= 0:
                 self.attackable = False
                 self.hp = 0
@@ -30,6 +36,11 @@ class Enemy:
             
             self.screen.blit(self.img, (self.x-scroll[0], self.y-scroll[1]))
             pos = self.x-scroll[0], self.y-scroll[1]
+
+            for dmg_txt in self.damages_texts:
+                kill = dmg_txt.update(scroll)
+                if kill == "kill":
+                    self.damages_texts.remove(dmg_txt)
 
             self.Rect = self.img.get_rect(topleft=pos)
             
