@@ -116,13 +116,14 @@ class Weapons:
 
     class Training_Sword: # Reference Model
 
-        def __init__(self):
+        def __init__(self, dmgs:int=15):
             
+            self.type = "Weapon"
             self.font = pg.font.Font("data/database/pixelfont.ttf", 18)  
             self.text = self.font.render(self.__class__.__name__, True, (0, 0, 0))
             self.stat = self.font.render(" +1", True, (255, 0, 255))
             self.eq = self.font.render(">", True, (255, 0, 0))  # to replace with an image later on
-            self.damage = 15
+            self.damage = dmgs
 
             self.image = pg.Surface((self.text.get_width()+self.stat.get_width()+self.eq.get_width(), self.text.get_height()))
             self.image.fill((255, 204, 0))
@@ -133,7 +134,7 @@ class Weapons:
 
         def update(self, surf, pos, dmg):
             d_dmg = self.damage - dmg  # getting the difference from the player's damages and the current item's damages
-            txt_stat = (" +" if d_dmg >= 0 else " ")+str(d_dmg)
+            txt_stat = (" +" if d_dmg >= 0 else " ")+str(d_dmg) if not self.equiped else ""
             color = (0, 255, 0) if d_dmg > 0 else ((100 if d_dmg == 0 else 255), (100 if d_dmg == 0 else 0), (100 if d_dmg == 0 else 0))  # grey if the d_dmg is 0, green if > 0, red if < 0
             self.stat = self.font.render(txt_stat, True, color)  # resetting the stat rendering
 
@@ -149,7 +150,9 @@ class Weapons:
             surf.blit(self.image, pos)
 
         def handle_clicks(self, pos):
-            if self.rect.collidepoint(pos): self.set_equiped() # Un/Equips clicked item
+            if self.rect.collidepoint(pos): 
+                return self.set_equiped() # Un/Equips clicked item
 
         def set_equiped(self):
             self.equiped = not self.equiped
+            return self.equiped, self.type, self
