@@ -61,19 +61,32 @@ class Player(object):
         self.last_attacking_click = 0  # ticks value in the future
         self.attack_speed = 1250  # still to be determined
         self.attack_cooldown = 250  # still to be determined
+        self.max_combo_multiplier = 1.025
 
         self.attacking_hitbox = None
         self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
+        self.rooms_objects = []
+
+    def check_for_hitting(self):
+
+        for obj in self.rooms_objects:
+            if hasattr(obj, "attackable"):
+                if obj.attackable:  
+                    if self.attacking_hitbox.colliderect(obj.Rect):
+                        obj.deal_damage(self.modified_damages) if self.current_combo != 4 else obj.deal_damage(self.modified_damages*self.max_combo_multiplier)
 
     def attack(self):
 
         click_time = p.time.get_ticks()
-        if not self.attacking:
+        if not self.attacking and self.inventory.get_equiped("Weapon") is not None:
             self.attacking = True
             self.last_attacking_click = click_time
 
             self.current_combo += 1
             print("Started attack -> current combo :", self.current_combo)
+
+            self.update_attack()
+            self.check_for_hitting()
 
         else:
             if click_time - self.last_attacking_click < self.attack_cooldown:
@@ -87,6 +100,9 @@ class Player(object):
                     
                     self.current_combo += 1
                     self.last_attacking_click = click_time
+                    self.update_attack()
+                    self.check_for_hitting()
+
 
                     if self.current_combo < 4:
                         print("Current combo : ", self.current_combo)
@@ -154,6 +170,7 @@ class Player(object):
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
 
     def update(self):
+
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
         self.update_attack()

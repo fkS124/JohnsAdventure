@@ -8,6 +8,7 @@ from pygame.constants import KEYDOWN, MOUSEBUTTONDOWN
 from .backend import *
 from .player import *
 from .inventory import *
+from .enemies import Enemy
 
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
 DISPLAY = pg.display.set_mode((1280, 720))
@@ -176,7 +177,7 @@ class Game:
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below
         self.objects = [
-            [Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192)], # John's Room
+            [Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192), Enemy.Dummie(DISPLAY, (500, 400))], # John's Room
             [Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')),Chest(960,175, 0),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
@@ -252,7 +253,9 @@ class Game:
                 DISPLAY.blit(self.world, (0 - scroll[0], 0 - scroll[1]))  # World Background Image
                 ''' John's Room '''
                 if self.PlayerRoom:
+                    self.Player.rooms_objects = self.objects[0]
                     self.objects[0][0].update(DISPLAY, scroll, self.Player), self.room_borders() # Mau
+                    self.objects[0][4].update(scroll)
                     if self.Player.y < 270 and self.Player.x < 870:
                        self.Player.interact_text, self.Player.is_interacting = 'computer' if 680 <= self.Player.x <= 870 else 'desk', True                  
                     # Stairs
@@ -262,6 +265,7 @@ class Game:
                              self.PlayerRoom, self.world, self.Kitchen, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], True, 1120, 250, False, 1
                      # End of John's Room
                 elif self.Kitchen:
+                    self.Player.rooms_objects = self.objects[1]
                     self.room_borders()
                     self.objects[1][0].update(DISPLAY, scroll, self.Player)
                     self.objects[1][1].update(DISPLAY, scroll, self.Player)
