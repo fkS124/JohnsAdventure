@@ -133,7 +133,7 @@ class Weapons:
 
         def update(self, surf, pos, dmg):
             d_dmg = self.damage - dmg  # getting the difference from the player's damages and the current item's damages
-            txt_stat = (" +" if d_dmg >= 0 else " ")+str(d_dmg)
+            txt_stat = (" +" if d_dmg >= 0 else " ")+str(d_dmg) if not self.equiped else ""
             color = (0, 255, 0) if d_dmg > 0 else ((100 if d_dmg == 0 else 255), (100 if d_dmg == 0 else 0), (100 if d_dmg == 0 else 0))  # grey if the d_dmg is 0, green if > 0, red if < 0
             self.stat = self.font.render(txt_stat, True, color)  # resetting the stat rendering
 
