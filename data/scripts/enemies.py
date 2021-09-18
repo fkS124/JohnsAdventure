@@ -18,8 +18,10 @@ class Enemy:
             self.hp = hp
             self.MAX_HP = hp
 
+            self.endurance = 5
+
         def deal_damage(self, value:int):
-            self.hp -= value
+            self.hp -= value - self.endurance
             if self.hp <= 0:
                 self.attackable = False
                 self.hp = 0
