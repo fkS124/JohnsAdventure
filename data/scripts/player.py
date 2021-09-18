@@ -39,6 +39,8 @@ class Player(object):
         ''' Stats'''
         self.health = 110
         self.damage = 10
+        # recalculate the damages, considering the equiped weapon
+        self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
         
         ''' UI '''
         self.health_box = scale(ui_sprite_sheet.parse_sprite('health'),5)
@@ -49,17 +51,18 @@ class Player(object):
         self.crosshair,  self.attack_pointer = load('data/ui/crosshair.png', True), load('data/ui/attack_pointer.png', True)
         self.dash = False
         self.dash_t = p.time.get_ticks()
+
+    
         
     def health_bar(self):
         p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
         self.screen.blit(self.health_box, self.hp_box_rect)
         self.screen.blit(self.heart, (self.hp_box_rect.x + 10 , self.hp_box_rect.y + 15))
         
-        
-        
-
-
     def update(self):
+        # recalculate the damages, considering the equiped weapon
+        self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+
         self.controls()
         self.health_bar()    
         if not self.inventory.show_menu:
@@ -128,8 +131,6 @@ class Player(object):
                 else:
                     self.screen.blit(self.walk_right[0], player_pos)
             
-        
-
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
       
