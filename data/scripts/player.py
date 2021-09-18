@@ -35,6 +35,10 @@ class Player(object):
         self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
         self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
         self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
+        self.looking_down = False
+        self.looking_up = False
+        self.looking_right = False
+        self.looking_left = False
         
         ''' Stats'''
         self.health = 110
@@ -52,16 +56,113 @@ class Player(object):
         self.dash = False
         self.dash_t = p.time.get_ticks()
 
-    
+        self.attacking = False
+        self.current_combo = 0
+        self.last_attacking_click = 0  # ticks value in the future
+        self.attack_speed = 1250  # still to be determined
+        self.attack_cooldown = 250  # still to be determined
+
+        self.attacking_hitbox = None
+        self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
+
+    def attack(self):
+
+        click_time = p.time.get_ticks()
+        if not self.attacking:
+            self.attacking = True
+            self.last_attacking_click = click_time
+
+            self.current_combo += 1
+            print("Started attack -> current combo :", self.current_combo)
+
+        else:
+            if click_time - self.last_attacking_click < self.attack_cooldown:
+                print("Unable to attack -> Wait the cooldown to end : ", round(click_time-self.last_attacking_click))
+            else:
+                if click_time - self.last_attacking_click > self.attack_speed:
+                    print("You missed your combo, resetting the attack.")
+                    self.attacking = False
+                    self.current_combo = 0
+                else:
+                    
+                    self.current_combo += 1
+                    self.last_attacking_click = click_time
+
+                    if self.current_combo < 4:
+                        print("Current combo : ", self.current_combo)
+                    else:
+                        print("You did a combo ! Resetting the attack.")
+                        self.attacking = False
+                        self.current_combo = 0
+
+        if self.walking:
+            self.attacking = False
+            self.current_combo = 0
+
+            print("You moved ! Attack resets.")
+
+    def update_attack(self):
+        # print("Up:", self.looking_up, "Down:", self.looking_down, "Left:", self.looking_left, "Right:", self.looking_right)
+        
+        if self.attacking:
+            
+            if self.looking_up:
+                self.attacking_hitbox = p.Rect(
+                    self.Rect.x,
+                    self.Rect.y-2*self.attacking_hitbox_size[1],
+                    self.attacking_hitbox_size[1],
+                    self.attacking_hitbox_size[0]
+                )
+            elif self.looking_down:
+                self.attacking_hitbox = p.Rect(
+                    self.Rect.x,
+                    self.Rect.y+self.attacking_hitbox_size[1],
+                    self.attacking_hitbox_size[1],
+                    self.attacking_hitbox_size[0]
+                )
+            elif self.looking_left:
+                self.attacking_hitbox = p.Rect(
+                    self.Rect.x-self.attacking_hitbox_size[0],
+                    self.Rect.y,
+                    self.attacking_hitbox_size[0],
+                    self.attacking_hitbox_size[1]
+                )
+            elif self.looking_right:
+                self.attacking_hitbox = p.Rect(
+                    self.Rect.x+self.attacking_hitbox_size[1],
+                    self.Rect.y,
+                    self.attacking_hitbox_size[0],
+                    self.attacking_hitbox_size[1]
+                )
+
+            p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox)
+
+            if p.time.get_ticks() - self.last_attacking_click > self.attack_speed:
+                print("You failed your combo, resetting the attack.")
+                self.attacking = False
+                self.current_combo = 0
+
+                # RESET ANIMATION HERE
         
     def health_bar(self):
         p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
         self.screen.blit(self.health_box, self.hp_box_rect)
         self.screen.blit(self.heart, (self.hp_box_rect.x + 10 , self.hp_box_rect.y + 15))
-        
+    
+    def set_looking(self, dir_:str):
+        if dir_ == "up":
+            self.looking_up, self.looking_down, self.looking_right, self.looking_left = True, False, False, False
+        elif dir_ == "down":
+            self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, True, False, False
+        elif dir_ == "left":
+            self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, False, True
+        elif dir_ == "right":
+            self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
+
     def update(self):
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+        self.update_attack()
 
         self.controls()
         self.health_bar()    
@@ -110,22 +211,26 @@ class Player(object):
         # Player animation
         if mouse_p[0] > 550 and mouse_p[0] < 750:
             if mouse_p[1] < self.Rect.y: # ? Up
+                self.set_looking("up")
                 if self.walking:
                         self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
                 else:
                     self.screen.blit(self.walk_up[0], player_pos)
             else: # ? Down
+                self.set_looking("down")
                 if self.walking:
                         self.screen.blit(self.walk_down[self.a_index // 7], player_pos) 
                 else:
                     self.screen.blit(self.walk_down[0], player_pos)
         else: # Left/Right
             if mouse_p[0] <= self.Rect.x: # ? Left
+                self.set_looking("left")
                 if self.walking:
                         self.screen.blit(self.walk_left[self.a_index // 7], player_pos) 
                 else:
                     self.screen.blit(self.walk_left[0], player_pos)
             else: # ? Right
+                self.set_looking("right")
                 if self.walking:
                         self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
                 else:
@@ -200,14 +305,19 @@ class Player(object):
                       else: self.paused = True   
             # ----- Mouse -----                       
             if event.type == p.MOUSEBUTTONDOWN: 
-                if event.button == 1:
-                    self.inventory.handle_clicks(event.pos)
-                if event.button == 4:  # scroll up
-                    if self.inventory.im_rect.collidepoint(event.pos):  # check if the mouse is colliding with the rect
-                        self.inventory.scroll_up()
-                if event.button == 5:  # scroll down
-                    if self.inventory.im_rect.collidepoint(event.pos):
-                        self.inventory.scroll_down()            
+                if self.inventory.show_menu:
+                    if event.button == 1:
+                        self.inventory.handle_clicks(event.pos)
+                    if event.button == 4:  # scroll up
+                        if self.inventory.im_rect.collidepoint(event.pos):  # check if the mouse is colliding with the rect
+                            self.inventory.scroll_up()
+                    if event.button == 5:  # scroll down
+                        if self.inventory.im_rect.collidepoint(event.pos):
+                            self.inventory.scroll_down()  
+                else:
+                    if event.button == 1:
+                        self.attack()
+
                 self.click = True         
             else: 
                 self.click = False
