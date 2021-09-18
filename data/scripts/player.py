@@ -95,12 +95,6 @@ class Player(object):
                         self.attacking = False
                         self.current_combo = 0
 
-        if self.walking:
-            self.attacking = False
-            self.current_combo = 0
-
-            print("You moved ! Attack resets.")
-
     def update_attack(self):
         # print("Up:", self.looking_up, "Down:", self.looking_down, "Left:", self.looking_left, "Right:", self.looking_right)
         
@@ -143,6 +137,12 @@ class Player(object):
                 self.current_combo = 0
 
                 # RESET ANIMATION HERE
+
+            if self.Up or self.Left or self.Right or self.Down:
+                self.attacking = False
+                self.current_combo = 0
+
+                print("You moved ! Attack resets.")
         
     def health_bar(self):
         p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
