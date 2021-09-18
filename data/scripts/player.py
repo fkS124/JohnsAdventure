@@ -137,12 +137,6 @@ class Player(object):
                 self.current_combo = 0
 
                 # RESET ANIMATION HERE
-
-            if self.Up or self.Left or self.Right or self.Down:
-                self.attacking = False
-                self.current_combo = 0
-
-                print("You moved ! Attack resets.")
         
     def health_bar(self):
         p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
@@ -167,21 +161,27 @@ class Player(object):
         self.controls()
         self.health_bar()    
         if not self.inventory.show_menu:
-            ''' Movement '''
-            if self.Up: 
-                self.y -= self.speedY 
-                dash_vel = -15 
-            elif self.Down: 
-                self.y += self.speedY   
-                dash_vel = 15
             
-            if self.Left: 
-                self.x -= self.speedX   
-                dash_vel = -15 if not self.Down else 15 # Diagonal
-            # Note: Add here a smoother diagonal dash if combat system demands it
-            elif self.Right: 
-                self.x += self.speedX 
-                dash_vel = 15 if not self.Up else -15 # Diagonal
+            if not self.attacking: # if he is not attacking, allow him to move
+                ''' Movement '''
+                if self.Up: 
+                    self.y -= self.speedY 
+                    dash_vel = -15 
+                elif self.Down: 
+                    self.y += self.speedY   
+                    dash_vel = 15
+                
+                if self.Left: 
+                    self.x -= self.speedX   
+                    dash_vel = -15 if not self.Down else 15 # Diagonal
+                # Note: Add here a smoother diagonal dash if combat system demands it
+                elif self.Right: 
+                    self.x += self.speedX 
+                    dash_vel = 15 if not self.Up else -15 # Diagonal
+            
+            else: # He is attacking
+                dash_vel = 0
+                    
             ''' Animation '''
             if self.a_index >= 27: self.a_index = 0
             self.a_index += 1
@@ -209,32 +209,45 @@ class Player(object):
         self.screen.blit(image, ring_pos)
         
         # Player animation
-        if mouse_p[0] > 550 and mouse_p[0] < 750:
-            if mouse_p[1] < self.Rect.y: # ? Up
-                self.set_looking("up")
-                if self.walking:
-                        self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
-                else:
-                    self.screen.blit(self.walk_up[0], player_pos)
-            else: # ? Down
-                self.set_looking("down")
-                if self.walking:
-                        self.screen.blit(self.walk_down[self.a_index // 7], player_pos) 
-                else:
-                    self.screen.blit(self.walk_down[0], player_pos)
-        else: # Left/Right
-            if mouse_p[0] <= self.Rect.x: # ? Left
-                self.set_looking("left")
-                if self.walking:
-                        self.screen.blit(self.walk_left[self.a_index // 7], player_pos) 
-                else:
-                    self.screen.blit(self.walk_left[0], player_pos)
-            else: # ? Right
-                self.set_looking("right")
-                if self.walking:
-                        self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
-                else:
-                    self.screen.blit(self.walk_right[0], player_pos)
+        if not self.attacking:
+            if mouse_p[0] > 550 and mouse_p[0] < 750:
+                if mouse_p[1] < self.Rect.y: # ? Up
+                    self.set_looking("up")
+                    if self.walking:
+                            self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
+                    else:
+                        self.screen.blit(self.walk_up[0], player_pos)
+                else: # ? Down
+                    self.set_looking("down")
+                    if self.walking:
+                            self.screen.blit(self.walk_down[self.a_index // 7], player_pos) 
+                    else:
+                        self.screen.blit(self.walk_down[0], player_pos)
+            else: # Left/Right
+                if mouse_p[0] <= self.Rect.x: # ? Left
+                    self.set_looking("left")
+                    if self.walking:
+                            self.screen.blit(self.walk_left[self.a_index // 7], player_pos) 
+                    else:
+                        self.screen.blit(self.walk_left[0], player_pos)
+                else: # ? Right
+                    self.set_looking("right")
+                    if self.walking:
+                            self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
+                    else:
+                        self.screen.blit(self.walk_right[0], player_pos)
+                        
+        else:
+            # This is where  I believe we will put the attack animation
+                
+            if self.looking_up:
+                self.screen.blit(self.walk_up[0], player_pos)
+            elif self.looking_down:
+                self.screen.blit(self.walk_down[0], player_pos)
+            elif self.looking_left:
+                self.screen.blit(self.walk_left[0], player_pos)
+            elif self.looking_right:
+                self.screen.blit(self.walk_right[0], player_pos)         
             
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
@@ -305,9 +318,10 @@ class Player(object):
                       else: self.paused = True   
             # ----- Mouse -----                       
             if event.type == p.MOUSEBUTTONDOWN: 
+                if event.button == 1:
+                    self.inventory.handle_clicks(event.pos)
+
                 if self.inventory.show_menu:
-                    if event.button == 1:
-                        self.inventory.handle_clicks(event.pos)
                     if event.button == 4:  # scroll up
                         if self.inventory.im_rect.collidepoint(event.pos):  # check if the mouse is colliding with the rect
                             self.inventory.scroll_up()
