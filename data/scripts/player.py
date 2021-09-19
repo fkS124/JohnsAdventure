@@ -31,10 +31,10 @@ class Player(object):
         # Animation
         self.sheet = load('data/sprites/john.png')
         self.a_index = 0
-        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,46), 3) for i in range(4)]
+        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,47), 3) for i in range(4)]
         self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
-        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,46), 3) for i in range(4)]
-        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,46), 3) for i in range(4)]
+        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,47), 3) for i in range(4)]
+        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,47), 3) for i in range(4)]
         self.looking_down = False
         self.looking_up = False
         self.looking_right = False
@@ -58,6 +58,7 @@ class Player(object):
 
         self.attacking = False
         self.current_combo = 0
+        self.last_attack = 3 # The number of attacks the player deals to the enemy, last is rewarding extra damage
         self.last_attacking_click = 0  # ticks value in the future
         self.attack_speed = 1250  # still to be determined
         self.attack_cooldown = 250  # still to be determined
@@ -73,7 +74,7 @@ class Player(object):
             if hasattr(obj, "attackable"):
                 if obj.attackable:  
                     if self.attacking_hitbox.colliderect(obj.Rect):
-                        obj.deal_damage(self.modified_damages) if self.current_combo != 4 else obj.deal_damage(self.modified_damages*self.max_combo_multiplier)
+                        obj.deal_damage(self.modified_damages) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier)
 
     def attack(self):
 
@@ -104,7 +105,7 @@ class Player(object):
                     self.check_for_hitting()
 
 
-                    if self.current_combo < 4:
+                    if self.current_combo < self.last_attack:
                         print("Current combo : ", self.current_combo)
                     else:
                         print("You did a combo ! Resetting the attack.")
