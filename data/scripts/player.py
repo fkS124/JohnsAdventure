@@ -31,14 +31,26 @@ class Player(object):
         # Animation
         self.sheet = load('data/sprites/john.png')
         self.a_index = 0
-        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,47), 3) for i in range(4)]
+        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,47), 3) for i in range(5)]
+        
         self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
-        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,47), 3) for i in range(4)]
-        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,47), 3) for i in range(4)]
+        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,47), 3) for i in range(5)]
+        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,47), 3) for i in range(5)]
         self.looking_down = False
         self.looking_up = False
         self.looking_right = False
         self.looking_left = False
+
+        self.combo_1_3_right = [scale(get_sprite(self.sheet, 27*5 + 35 * i, 0, 35, 48), 3) for i in range(5)]
+        self.combo_1_3_left = [flip_vertical(image) for image in self.combo_1_3_right]
+
+        self.combo_2_right = [scale(get_sprite(self.sheet, 27*5 + 35 * i, 48, 35, 48), 3) for i in range(5)]
+        self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
+
+        self.index_attack_animation = 0
+        self.delay_attack_animation = 0
+        self.restart_animation = True
+        self.attacking_frame = self.combo_1_3_left[self.index_attack_animation]
         
         ''' Stats'''
         self.health = 110
@@ -60,9 +72,11 @@ class Player(object):
         self.current_combo = 0
         self.last_attack = 3 # The number of attacks the player deals to the enemy, last is rewarding extra damage
         self.last_attacking_click = 0  # ticks value in the future
-        self.attack_speed = 1250  # still to be determined
-        self.attack_cooldown = 250  # still to be determined
+        self.attack_speed = 1750 # still to be determined
+        self.attack_cooldown = 500  # still to be determined
         self.max_combo_multiplier = 1.025
+        self.last_combo_hit_time = 0
+        self.next_combo_available = True
 
         self.attacking_hitbox = None
         self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
@@ -84,74 +98,96 @@ class Player(object):
             self.last_attacking_click = click_time
 
             self.current_combo += 1
-            print("Started attack -> current combo :", self.current_combo)
+            self.next_combo_available = False
 
             self.update_attack()
             self.check_for_hitting()
 
         else:
-            if click_time - self.last_attacking_click < self.attack_cooldown:
-                print("Unable to attack -> Wait the cooldown to end : ", round(click_time-self.last_attacking_click))
+            if not self.next_combo_available:
+                pass
             else:
                 if click_time - self.last_attacking_click > self.attack_speed:
-                    print("You missed your combo, resetting the attack.")
                     self.attacking = False
                     self.current_combo = 0
                 else:
                     
+                    self.restart_animation = True
                     self.current_combo += 1
                     self.last_attacking_click = click_time
                     self.update_attack()
                     self.check_for_hitting()
-
+                    self.next_combo_available = False
 
                     if self.current_combo < self.last_attack:
-                        print("Current combo : ", self.current_combo)
+                        pass
                     else:
-                        print("You did a combo ! Resetting the attack.")
-                        self.attacking = False
-                        self.current_combo = 0
+                        self.last_combo_hit_time = p.time.get_ticks()
 
     def update_attack(self):
         # print("Up:", self.looking_up, "Down:", self.looking_down, "Left:", self.looking_left, "Right:", self.looking_right)
         
-        if self.attacking:
-            
-            if self.looking_up:
-                self.attacking_hitbox = p.Rect(
-                    self.Rect.x,
-                    self.Rect.y-2*self.attacking_hitbox_size[1],
-                    self.attacking_hitbox_size[1],
-                    self.attacking_hitbox_size[0]
-                )
-            elif self.looking_down:
-                self.attacking_hitbox = p.Rect(
-                    self.Rect.x,
-                    self.Rect.y+self.attacking_hitbox_size[1],
-                    self.attacking_hitbox_size[1],
-                    self.attacking_hitbox_size[0]
-                )
-            elif self.looking_left:
-                self.attacking_hitbox = p.Rect(
-                    self.Rect.x-self.attacking_hitbox_size[0],
-                    self.Rect.y,
-                    self.attacking_hitbox_size[0],
-                    self.attacking_hitbox_size[1]
-                )
-            elif self.looking_right:
-                self.attacking_hitbox = p.Rect(
-                    self.Rect.x+self.attacking_hitbox_size[1],
-                    self.Rect.y,
-                    self.attacking_hitbox_size[0],
-                    self.attacking_hitbox_size[1]
-                )
+        # print("Current combo :", self.current_combo, "Time elapsed :", p.time.get_ticks()-self.last_attacking_click, "Cooldown :", p.time.get_ticks()-self.last_attacking_click>self.attack_cooldown, "Index :", self.index_attack_animation)
 
-            p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox)
+        if self.attacking:
+
+            # sets the attacking hitbox according to the direction 
+            if self.looking_up:
+                self.attacking_hitbox = p.Rect(self.Rect.x, self.Rect.y-2*self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+            elif self.looking_down:
+                self.attacking_hitbox = p.Rect(self.Rect.x, self.Rect.y+self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+            elif self.looking_left:
+                self.attacking_hitbox = p.Rect(self.Rect.x-self.attacking_hitbox_size[0], self.Rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+            elif self.looking_right:
+                self.attacking_hitbox = p.Rect(self.Rect.x+self.attacking_hitbox_size[1], self.Rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+
+            # animation delay of 100 ms
+            if p.time.get_ticks() - self.delay_attack_animation > 100 and self.restart_animation:
+                
+                # select the animation list according to where the player's looking at
+                if self.looking_right:
+                    curr_anim = self.combo_1_3_right if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_right
+                elif self.looking_left:
+                    curr_anim = self.combo_1_3_left if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_left
+                elif self.looking_down:
+                    curr_anim = []  # -> add here down anim
+                elif self.looking_up:
+                    curr_anim = []  # -> add here up anim
+
+                if self.index_attack_animation + 1 < len(curr_anim):  # check if the animation didn't reach its end
+                        self.delay_attack_animation = p.time.get_ticks()  # reset the delay
+                        self.attacking_frame = curr_anim[self.index_attack_animation+1]  # change the current animation frame
+                        self.index_attack_animation+=1  # increment the animation index
+                else:
+                    print("ended animation")
+                    self.restart_animation = False  # don't allow the restart of the animation until a next combo is reached
+                    self.index_attack_animation = 0  # reset the animation index, without changing the frame in order to stay in "pause"
+                    self.next_combo_available = True  # allow to attack again
+
+            if self.looking_right:  # blitting the frame, with the right coordinates according to the side of the attack
+                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(left=self.Rect.left-13, y=self.Rect.y-80))
+            elif self.looking_left:
+                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(right=self.Rect.right+13, y=self.Rect.y-80))
+            elif self.looking_down:
+                pass  # -> add here down anim
+            elif self.looking_up:
+                pass  # -> add here up anim
+
+            # reset the whole thing if the combo reach his end and the animation of the last hit ended too
+            if self.current_combo == self.last_attack and not self.restart_animation and not self.index_attack_animation:
+                self.attacking = False  # stop attack
+                self.current_combo = 0  # reset combo number
+                self.next_combo_available = True  # allow to attack again
+                self.restart_animation = True  # allow to restart an animation
+
+            # show hitbox
+            # p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox)
 
             if p.time.get_ticks() - self.last_attacking_click > self.attack_speed:
-                print("You failed your combo, resetting the attack.")
                 self.attacking = False
                 self.current_combo = 0
+                self.next_combo_available = True
+                self.restart_animation = True
 
                 # RESET ANIMATION HERE
         
@@ -174,7 +210,6 @@ class Player(object):
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
-        self.update_attack()
 
         self.controls()
         self.health_bar()    
@@ -225,7 +260,8 @@ class Player(object):
         image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
         ring_pos = (x - image.get_width()//2  + 40, y - image.get_height()//2  + 120)
         self.screen.blit(image, ring_pos)
-        
+        self.update_attack()
+
         # Player animation
         if not self.attacking:
             if mouse_p[0] > 550 and mouse_p[0] < 750:
@@ -256,16 +292,17 @@ class Player(object):
                         self.screen.blit(self.walk_right[0], player_pos)
                         
         else:
-            # This is where  I believe we will put the attack animation
-                
-            if self.looking_up:
-                self.screen.blit(self.walk_up[0], player_pos)
-            elif self.looking_down:
-                self.screen.blit(self.walk_down[0], player_pos)
-            elif self.looking_left:
-                self.screen.blit(self.walk_left[0], player_pos)
-            elif self.looking_right:
-                self.screen.blit(self.walk_right[0], player_pos)         
+            # This is where  I believe we will put the attack animation -> No ! ;)
+
+            if not self.attacking:   
+                if self.looking_up:
+                    self.screen.blit(self.walk_up[0], player_pos)
+                elif self.looking_down:
+                    self.screen.blit(self.walk_down[0], player_pos)
+                elif self.looking_left:
+                    self.screen.blit(self.walk_left[0], player_pos)
+                elif self.looking_right:
+                    self.screen.blit(self.walk_right[0], player_pos)         
             
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
