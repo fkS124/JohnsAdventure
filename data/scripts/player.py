@@ -1,3 +1,4 @@
+from threading import setprofile
 from data.scripts.backend import UI_Spritesheet
 from types import prepare_class
 from typing import Tuple
@@ -17,7 +18,8 @@ class Player(object):
     def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
-        self.Rect = p.Rect(self.x - 27, self.y, 64, 64)
+       
+        self.Rect = p.Rect(self.x - 46, self.y, 64, 64)
         self.speedX = self.speedY = 6 # Player's speed       
         self.paused = self.click = self.Interactable = self.is_interacting = False #  Features       
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
@@ -30,22 +32,38 @@ class Player(object):
 
         # Animation
         self.sheet = load('data/sprites/john.png')
-        self.a_index = 0
-        self.walk_right: list = [scale(get_sprite(self.sheet, 27 * i, 0, 27,47), 3) for i in range(5)]
         
-        self.walk_left: list = [flip_vertical(image) for image in self.walk_right]
-        self.walk_up: list = [scale(get_sprite(self.sheet, 27 * i, 48, 27,47), 3) for i in range(5)]
-        self.walk_down: list = [scale(get_sprite(self.sheet, 27 * i, 97, 27,47), 3) for i in range(5)]
+        
+        
+        self.a_index = 0
+        
+        #scale(get_sprite(self.sheet, 52, 46 * row, 46,52), 3) for i in range(10)
+        
+        
+        # Frame Width: 46
+        # Frame Height: 52
+        
+        self.walk_right = [scale(get_sprite(self.sheet, 46 * i, 0, 46, 52),3) for i in range(5)]
+        self.walk_left = [flip_vertical(image) for image in self.walk_right]
+        
+        self.walk_up = [scale(get_sprite(self.sheet, 46 * i, 52, 46, 52),3) for i in range(5)]
+        self.walk_down = [scale(get_sprite(self.sheet, 46 * i, 104, 46, 52),3) for i in range(5)]
+        
+
+        self.combo_1_3_right = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 0, 46,52), 3) for i in range(5)]
+        self.combo_1_3_left = [flip_vertical(image) for image in self.combo_1_3_right]
+        
+        
+        self.combo_2_right = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 0, 46,52), 3) for i in range(5)]
+        self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
+        
+        
         self.looking_down = False
         self.looking_up = False
         self.looking_right = False
         self.looking_left = False
 
-        self.combo_1_3_right = [scale(get_sprite(self.sheet, 27*5 + 35 * i, 0, 35, 48), 3) for i in range(5)]
-        self.combo_1_3_left = [flip_vertical(image) for image in self.combo_1_3_right]
-
-        self.combo_2_right = [scale(get_sprite(self.sheet, 27*5 + 35 * i, 48, 35, 48), 3) for i in range(5)]
-        self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
+        
 
         self.index_attack_animation = 0
         self.delay_attack_animation = 0
@@ -164,10 +182,12 @@ class Player(object):
                     self.index_attack_animation = 0  # reset the animation index, without changing the frame in order to stay in "pause"
                     self.next_combo_available = True  # allow to attack again
 
+
+            p.draw.rect(self.screen, (255,255,255), self.Rect)
             if self.looking_right:  # blitting the frame, with the right coordinates according to the side of the attack
-                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(left=self.Rect.left-13, y=self.Rect.y-80))
+                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(left=self.Rect.right, y=self.Rect.y))
             elif self.looking_left:
-                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(right=self.Rect.right+13, y=self.Rect.y-80))
+                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(right=self.Rect.right, y=self.Rect.y))
             elif self.looking_down:
                 pass  # -> add here down anim
             elif self.looking_up:
@@ -219,18 +239,18 @@ class Player(object):
                 ''' Movement '''
                 if self.Up: 
                     self.y -= self.speedY 
-                    dash_vel = -15 
+                    dash_vel = -25 
                 elif self.Down: 
                     self.y += self.speedY   
-                    dash_vel = 15
+                    dash_vel = 25
                 
                 if self.Left: 
                     self.x -= self.speedX   
-                    dash_vel = -15 if not self.Down else 15 # Diagonal
+                    dash_vel = -25 if not self.Down else 25 # Diagonal
                 # Note: Add here a smoother diagonal dash if combat system demands it
                 elif self.Right: 
                     self.x += self.speedX 
-                    dash_vel = 15 if not self.Up else -15 # Diagonal
+                    dash_vel = 25 if not self.Up else -25 # Diagonal
             
             else: # He is attacking
                 dash_vel = 0
@@ -242,7 +262,7 @@ class Player(object):
             self.a_index = 0 # Play only first frame
 
         if self.dash:
-            if p.time.get_ticks() - self.dash_t > 150:
+            if p.time.get_ticks() - self.dash_t > 30:
                 self.dash = False          
             if self.Up or self.Down:
                 self.y += dash_vel
@@ -250,7 +270,7 @@ class Player(object):
                 self.x += dash_vel
 
         ''' Animation '''
-        player_pos = self.Rect[0] - 5, self.Rect[1] - 80
+        player_pos = self.Rect[0], self.Rect[1] - 80
         # ? Mouse position
         mouse_p = p.mouse.get_pos()
         
@@ -258,7 +278,7 @@ class Player(object):
         angle = math.atan2(mouse_p[0] - self.Rect.midbottom[0], mouse_p[1] - self.Rect.midbottom[1]) 
         x, y = player_pos[0] - math.cos(angle), player_pos[1] - math.sin(angle) 
         image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
-        ring_pos = (x - image.get_width()//2  + 40, y - image.get_height()//2  + 120)
+        ring_pos = (x - image.get_width()//2 + 50, y - image.get_height()//2  + 120)
         self.screen.blit(image, ring_pos)
         self.update_attack()
 
@@ -290,19 +310,7 @@ class Player(object):
                             self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
                     else:
                         self.screen.blit(self.walk_right[0], player_pos)
-                        
-        else:
-            # This is where  I believe we will put the attack animation -> No ! ;)
-
-            if not self.attacking:   
-                if self.looking_up:
-                    self.screen.blit(self.walk_up[0], player_pos)
-                elif self.looking_down:
-                    self.screen.blit(self.walk_down[0], player_pos)
-                elif self.looking_left:
-                    self.screen.blit(self.walk_left[0], player_pos)
-                elif self.looking_right:
-                    self.screen.blit(self.walk_right[0], player_pos)         
+                       
             
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
