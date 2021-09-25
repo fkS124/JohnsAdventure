@@ -49,21 +49,22 @@ class Player(object):
         self.walk_up = [scale(get_sprite(self.sheet, 46 * i, 52, 46, 52),3) for i in range(5)]
         self.walk_down = [scale(get_sprite(self.sheet, 46 * i, 104, 46, 52),3) for i in range(5)]
         
+        self.combo_1_3_up = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 52, 46, 52), 3) for i in range(5)]
+        self.combo_2_up = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 52, 46, 52), 3) for i in range(5)]
 
-        self.combo_1_3_right = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 0, 46,52), 3) for i in range(5)]
+        self.combo_1_3_down = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 52 * 2, 46, 52), 3) for i in range(5)]
+        self.combo_2_down = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 52 * 2, 46, 52), 3) for i in range(5)]
+
+        self.combo_1_3_right = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 0, 46, 52), 3) for i in range(5)]
         self.combo_1_3_left = [flip_vertical(image) for image in self.combo_1_3_right]
         
-        
-        self.combo_2_right = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 0, 46,52), 3) for i in range(5)]
+        self.combo_2_right = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 0, 46, 52), 3) for i in range(5)]
         self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
-        
         
         self.looking_down = False
         self.looking_up = False
         self.looking_right = False
         self.looking_left = False
-
-        
 
         self.index_attack_animation = 0
         self.delay_attack_animation = 0
@@ -168,9 +169,9 @@ class Player(object):
                 elif self.looking_left:
                     curr_anim = self.combo_1_3_left if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_left
                 elif self.looking_down:
-                    curr_anim = []  # -> add here down anim
+                    curr_anim = self.combo_1_3_down if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_down
                 elif self.looking_up:
-                    curr_anim = []  # -> add here up anim
+                    curr_anim = self.combo_1_3_up if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_up
 
                 if self.index_attack_animation + 1 < len(curr_anim):  # check if the animation didn't reach its end
                         self.delay_attack_animation = p.time.get_ticks()  # reset the delay
@@ -183,15 +184,8 @@ class Player(object):
                     self.next_combo_available = True  # allow to attack again
 
 
-            p.draw.rect(self.screen, (255,255,255), self.Rect)
-            if self.looking_right:  # blitting the frame, with the right coordinates according to the side of the attack
-                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(left=self.Rect.right, y=self.Rect.y))
-            elif self.looking_left:
-                self.screen.blit(self.attacking_frame, self.attacking_frame.get_rect(right=self.Rect.right, y=self.Rect.y))
-            elif self.looking_down:
-                pass  # -> add here down anim
-            elif self.looking_up:
-                pass  # -> add here up anim
+            #p.draw.rect(self.screen, (255,255,255), self.Rect)
+            self.screen.blit(self.attacking_frame, (self.Rect[0], self.Rect[1] - 80))
 
             # reset the whole thing if the combo reach his end and the animation of the last hit ended too
             if self.current_combo == self.last_attack and not self.restart_animation and not self.index_attack_animation:
@@ -278,7 +272,7 @@ class Player(object):
         angle = math.atan2(mouse_p[0] - self.Rect.midbottom[0], mouse_p[1] - self.Rect.midbottom[1]) 
         x, y = player_pos[0] - math.cos(angle), player_pos[1] - math.sin(angle) 
         image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
-        ring_pos = (x - image.get_width()//2 + 50, y - image.get_height()//2  + 120)
+        ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
         self.screen.blit(image, ring_pos)
         self.update_attack()
 
