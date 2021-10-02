@@ -9,7 +9,9 @@ from .backend import *
 from .player import *
 from .inventory import *
 from .enemies import Enemy
+from .sound_manager import SoundManager
 
+pg.mixer.pre_init(44100, 16, 2, 4096)
 pg.init(), pg.display.set_caption("iBoxStudio Engine")
 DISPLAY = pg.display.set_mode((1280, 720))
 
@@ -163,6 +165,8 @@ class MainMenu(object):
                 if event.key == pg.K_F12: pg.display.toggle_fullscreen()
 class Game:
     def __init__(self):
+        self.sound_manager = SoundManager()
+
         self.menu = MainMenu()
         self.Menu = True # If False , the adventure starts
         #------- World -----
