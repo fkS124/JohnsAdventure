@@ -4,6 +4,7 @@ from types import prepare_class
 from typing import Tuple
 import pygame as p
 import math
+from .sound_manager import SoundManager
 
 from pygame import mouse
 from pygame.time import get_ticks
@@ -18,6 +19,7 @@ class Player(object):
     def __init__(self, x, y, screen, debug, interface, data, ui_sprite_sheet):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
+        self.sound_manager = SoundManager(sound_only=True)
        
         self.Rect = p.Rect(self.x - 46, self.y, 64, 64)
         self.speedX = self.speedY = 6 # Player's speed       
@@ -107,6 +109,7 @@ class Player(object):
             if hasattr(obj, "attackable"):
                 if obj.attackable:  
                     if self.attacking_hitbox.colliderect(obj.Rect):
+                        self.sound_manager.play_sound("letterSound")
                         obj.deal_damage(self.modified_damages) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier)
 
     def attack(self):
