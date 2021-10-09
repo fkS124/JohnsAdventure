@@ -8,6 +8,7 @@ Here is john, our protagonist.
 
 import pygame as p
 import math
+from random import random
 from ..sound_manager import SoundManager
 from ..utils import load, get_sprite, scale, flip_vertical
 from .inventory import Inventory
@@ -97,7 +98,12 @@ class Player:
         self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
         self.rooms_objects = []
 
-    
+    def get_crit(self):
+        crit = random()
+        crit_chance = self.inventory.get_equiped("Weapon").crit_chance
+        if crit < crit_chance:
+            return self.modified_damages*crit_chance
+        return 0
 
     def check_for_hitting(self):
         '''
@@ -110,7 +116,9 @@ class Player:
                 if obj.attackable:  
                     if self.attacking_hitbox.colliderect(obj.Rect):
                         self.sound_manager.play_sound("dummyHit") # This is where it will play the object's hit sound NOT THE SWORD
-                        obj.deal_damage(self.modified_damages) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier)
+                        crit = self.get_crit()
+                        obj.deal_damage(self.modified_damages+crit, crit>0) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier+crit, crit>0)
+                        self.inventory.get_equiped("Weapon").start_special_effect(obj)
 
     def attack(self):
 
@@ -231,6 +239,10 @@ class Player:
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+        equiped = self.inventory.get_equiped("Weapon")
+        if hasattr(equiped, "special_effect"):
+            equiped.special_effect()
+        
 
         self.controls()
         self.health_bar()    

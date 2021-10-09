@@ -30,13 +30,16 @@ class Enemy:
             self.hitted = False
             self.delay = 0
 
-        def deal_damage(self, value:int):
-            self.hp -= ceil(value - self.endurance)
+        def deal_damage(self, value:int, crit:bool, endurance_ignorance:bool=False):
+            self.hp -= ceil(value - self.endurance) if not endurance_ignorance else ceil(value)
             if self.hitted:
                 self.id_anim = 0
             self.hitted = True
             # -> crit : dmg_type="crit" -> health ; dmg_type="health" ...
-            self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value-self.endurance), dmg_type="default")) 
+            if not endurance_ignorance:
+                self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
+            else:
+                self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value), dmg_type="health"))
             if self.hp <= 0:
                 self.attackable = False
                 self.hp = 0

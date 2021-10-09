@@ -12,7 +12,7 @@ class DamagePopUp:
         self.basic_rect = copy(rect)
 
         colors = {
-            "health": (0, 255, 0), 
+            "health": (110, 0, 150), 
             "crit": (255, 255, 0), 
             "default": (255, 255, 255)
         }
