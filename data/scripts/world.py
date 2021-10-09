@@ -17,6 +17,7 @@ from .sound_manager import SoundManager
 from .AI import npc
 from .UI.mainmenu import Menu
 from .UI.interface import Interface
+from .UI.loading_screen import LoadingScreen
 
 
 pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer 
@@ -52,6 +53,8 @@ class Game:
         
         self.menu = Menu(DISPLAY, blacksword, ui)
         self.Menu = True # If False , the adventure starts
+        self.loading = False
+        self.loading_screen = LoadingScreen(DISPLAY)
         #------- World -----
         self.worlds = [
             pg.transform.scale(load('data/sprites/world/Johns_room.png'), (1280,720)), # 0 John's Room
@@ -135,10 +138,19 @@ class Game:
                 # Position of the buttons
                 if self.menu.event.type == pg.MOUSEBUTTONDOWN and not self.menu.show_settings:
                     if self.menu.btns_rects[0].collidepoint(mouse_p):  
-                        self.Menu = False; self.PlayerRoom = True;
-                        self.sound_manager.play_music("forest_theme")
+                        self.Menu = False
+                        self.loading = True
+                        self.loading_screen.start("PlayerRoom")
                     if self.menu.btns_rects[2].collidepoint(mouse_p): 
                         raise SystemExit
+
+            elif self.loading:
+                update_return = self.loading_screen.update()
+                if update_return is not None:
+                    setattr(self, update_return["next_state"], True)
+                    self.loading = False
+                    if update_return["next_music"] is not None:
+                        self.sound_manager.play_music(update_return["next_music"])
 
             else: # The game           
                 scroll += pg.Vector2(self.Player.x - scroll[0] - get_screen_w // 2, self.Player.y - scroll[1] - get_screen_h // 2)
@@ -152,9 +164,11 @@ class Game:
                        self.Player.interact_text, self.Player.is_interacting = 'computer' if 680 <= self.Player.x <= 870 else 'desk', True                  
                     # Stairs
                     if self.Player.Rect.colliderect(pg.Rect(get_screen_w // 2 + 353 - scroll[0], 150 - scroll[1], 155, 130)):
-                         self.Player.interact_text, self.Player.is_interacting  = 'stairs', True
-                         if self.Player.InteractPoint == 2:
-                             self.PlayerRoom, self.world, self.Kitchen, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], True, 1120, 250, False, 1
+                        self.Player.interact_text, self.Player.is_interacting  = 'stairs', True
+                        if self.Player.InteractPoint == 2:
+                            self.PlayerRoom, self.world, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], 1120, 250, False, 1
+                            self.loading = True
+                            self.loading_screen.start("Kitchen", text=False, cat=False, duration=1250)
                      # End of John's Room
                 elif self.Kitchen:
                     self.Player.rooms_objects = self.objects[1]
