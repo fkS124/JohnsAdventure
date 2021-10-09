@@ -1,4 +1,6 @@
 '''
+ Credits @Marios325346
+
  Functions to reduce typing :rofl:
 
 '''

@@ -5,14 +5,9 @@
         
         "button_hover.png": {"frame": {"x": 57, "y":0, "w":56, "h":12}},
         
-        "keybind.png": {"frame": {"x": 122, "y":31, "w":27, "h":10}},
+        "keybind.png": {"frame": {"x": 122, "y":31, "w":24, "h":10}},
 
         "catalog_button.png":{"frame": {"x": 1, "y":13, "w":79, "h":41}},
-
-        "mouse_cursor.png":
-        {
-            "frame": {"x": 541, "y":291, "w":14, "h":22}
-        },
 
         "heart.png":
         {
@@ -52,6 +47,11 @@
         "heart":
         {
             "frame": {"x": 101, "y":36, "w":9, "h":8}
+        },
+
+        "mouse_cursor":
+        {
+            "frame": {"x": 2, "y":56, "w":37, "h":37}
         }
     }
 }

@@ -1,8 +1,16 @@
+
+
+'''
+Credits @Marios325346
+
+This class is for takes a sprite from the sheet based on its coordinates from the json file
+
+'''
+
 import json, pygame
 
 class UI_Spritesheet:
     def __init__(self, filename):
-        self.filename = filename
         self.sprite_sheet = pygame.image.load(filename).convert()
         with open('data/database/ui.json') as f:
             self.data = json.load(f)

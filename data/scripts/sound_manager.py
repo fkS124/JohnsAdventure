@@ -10,12 +10,15 @@ class SoundManager:
         # musics and only in the sounds.
 
         if not pg.mixer.get_init():
-            pg.mixer.init() 
+            pg.mixer.pre_init() 
 
         self.volume = 0.5
 
         self.sounds = {
-            "letterSound": pg.mixer.Sound("data/sound/letter_sound.wav")
+            "letterSound": pg.mixer.Sound("data/sound/letter_sound.wav"),
+            "woodenSword": pg.mixer.Sound("data/sound/sword_slice.flac"),
+            "dummyHit": pg.mixer.Sound("data/sound/dummy_hit.wav")
+
         } if not music_only else {}
 
         self.musics = {
@@ -23,10 +26,12 @@ class SoundManager:
             "Select_UI": "data/sound/Select_UI.wav"
         } if not sound_only else {}
 
+        
     def play_sound(self, key: str) -> bool: # return False if the sound couldn't be player, True otherwise
         if key not in self.sounds:
             print("Error when playing sound : unable to find ", key, "in database.")
             return False
+        self.sounds[key].set_volume(self.volume)
         self.sounds[key].play()
         return True
 
