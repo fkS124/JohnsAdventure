@@ -65,12 +65,12 @@ class Game:
 
         self.interface = Interface(DISPLAY, ui, font, dt)
 
-        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, debug, self.interface, self.menu.save, ui) # The player
+        self.Player = Player(get_screen_w // 2, get_screen_h // 2, DISPLAY, self.interface, self.menu.save, ui) # The player
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below
         self.objects = [
             [npc.NPCS.Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192), Enemy.Dummie(DISPLAY, (1050, 300))], # John's Room
-            [npc.NPCS.Cynthia(570, 220, load('data/sprites/npc_spritesheet.png')),Chest(960,175, 0),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
+            [npc.NPCS.Cynthia(570, 220), Chest(960,175, 0),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
         self.object_p = [
@@ -183,7 +183,7 @@ class Game:
                         if self.Player.InteractPoint == 2:
                             self.PlayerRoom, self.world, self.Kitchen, self.Player.x, self.Player.y, self.Player.is_interacting, self.o_index = True, self.worlds[0], False, 1080, 320, False, 0
                 # Global stuff that all worlds share
-                self.Player.update()  # Draw player
+                self.Player.update(dt)  # Draw player
                 self.collision_system(self.o_index)
                 self.pause(mouse_p)  # Pause menu
             # General Function         

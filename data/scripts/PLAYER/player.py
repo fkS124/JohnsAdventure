@@ -19,7 +19,7 @@ font = p.font.Font("data/database/pixelfont.ttf", 16)
 debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
 
 class Player:
-    def __init__(self, x, y, screen, debug, interface, data ,ui):
+    def __init__(self, x, y, screen, interface, data ,ui):
         self.x, self.y = self.position = p.Vector2(x,y)
         self.screen, self.InteractPoint, self.Interface = screen, 0, interface
         self.sound_manager = SoundManager(sound_only=True)
@@ -28,7 +28,7 @@ class Player:
         self.speedX = self.speedY = 6 # Player's speed       
         self.paused = self.click = self.Interactable = self.is_interacting = False #  Features       
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
-        self.debug, self.interact_text = debug, '' # Debugging and Interaction
+        self.interact_text =  '' # Debugging and Interaction
         self.data = data
         self.inventory = Inventory(self.screen, ui, font)
 
@@ -69,20 +69,30 @@ class Player:
         self.attacking_frame = self.combo_1_3_left[self.index_attack_animation]
         
         ''' Stats'''
-        self.health = 110
+
+        # The width for the UI is 180, but we need to find a way to put less health and keep the width
+        self.health = 180
         self.damage = 10
+        self.endurance = 0
+        self.critical_chance = 0  # The critical change the player has gathered without the weapon
+
+
+        # Code for Dash Ability goes here
+        self.dash_width = 180 # the pixel width for bars
+
+
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
         
         ''' UI '''
         self.health_box = scale(ui.parse_sprite('health'),5)
         self.heart = scale(ui.parse_sprite('heart'), 4)
-        self.hp_box_rect = self.health_box.get_rect(topleft = (self.screen.get_width() - self.health_box.get_width() - 10, 20))
+        self.hp_box_rect = self.health_box.get_rect(topleft = (self.screen.get_width() - self.health_box.get_width() - 90, 20))
+
+        self.level_status = scale(ui.parse_sprite("level_status"), 5) # The button that lunches the upgrade station
         
         '''  Combat System '''
         self.crosshair,  self.attack_pointer = ui.parse_sprite("mouse_cursor"), load('data/ui/attack_pointer.png', True)
-        self.dash = False
-        self.dash_t = p.time.get_ticks()
 
         self.attacking = False
         self.current_combo = 0
@@ -220,9 +230,26 @@ class Player:
         
     # This is temporar because we will upgrade HP bar soon ;)
     def health_bar(self):
-        p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x + 25,self.hp_box_rect.y  + 20, self.health, 25)) # Health bar
+        # Health bar
+        p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x,self.hp_box_rect.y  + 20, self.health, 25)) 
+
+        # Experience bar
+
+        # Dash Cooldown bar
+        p.draw.rect(self.screen, (0,255,0), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 90, self.dash_width, 10))
+        
+
+        # Player UI 
+
         self.screen.blit(self.health_box, self.hp_box_rect)
-        self.screen.blit(self.heart, (self.hp_box_rect.x + 10 , self.hp_box_rect.y + 15))
+
+        # Level status button goes here
+
+        # Inventory Icon
+        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
+        
+        # Heart Icon
+        self.screen.blit(self.heart, (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15))
     
     def set_looking(self, dir_:str):
         ''' This function is for coordinating the attacking hitbox '''
@@ -235,7 +262,7 @@ class Player:
         elif dir_ == "right":
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
 
-    def update(self):
+    def update(self, dt): # delta time
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
@@ -274,13 +301,19 @@ class Player:
         else: # Player is looking at the inventory,therefore dont allow him to animate walking
             self.a_index = 0 # Play only first frame
 
+
+        ''' This needs a remake 
         if self.dash:
-            if p.time.get_ticks() - self.dash_t > 30:
-                self.dash = False          
+            self.dash_cooldown -= self.dash_cooldown/33.333 * dt * 1000 # This needs to be fixed
             if self.Up or self.Down:
-                self.y += dash_vel
+                self.y += dash_vel + dash_vel * dt
             elif self.Left or self.Right:
-                self.x += dash_vel
+                self.x += dash_vel + dash_vel * dt
+            if p.time.get_ticks() - self.dash_t > 50:
+                self.dash = False 
+        '''
+
+            
 
         ''' Animation '''
         player_pos = self.Rect[0], self.Rect[1] - 80
@@ -332,17 +365,7 @@ class Player:
         if self.Interactable and self.is_interacting:
             self.Interface.draw(self.interact_text)
      
-        if self.debug:          
-            i = 1
-            for name, value in self.__dict__.items():
-               self.position = p.Vector2(self.x,self.y) # update it
-               text = debug_font.render(f"{name}={value}", True, (255,255,255))
-               self.screen.blit(text, (20, 0 + 15 * i))
-               i+=1
-
         self.screen.blit(self.crosshair, self.crosshair.get_rect(center=mouse_p)) # Mouse Cursor
-        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
-
 
     def controls(self):       
         for event in p.event.get():   
@@ -351,7 +374,7 @@ class Player:
                 p.quit(); raise SystemExit
 
             if not self.inventory.show_menu: # if player is looking at the inventory dont allow him to press keys besides Inventory
-                self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"][0]], keys[self.data["controls"][1]], keys[self.data["controls"][2]], keys[self.data["controls"][3]]      
+                self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"]["up"]], keys[self.data["controls"]["down"]], keys[self.data["controls"]["left"]], keys[self.data["controls"]["right"]]      
             self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
             
                         
@@ -361,12 +384,14 @@ class Player:
                 if event.key == p.K_F12:  p.display.toggle_fullscreen()
                 
                 ''' Dash Ability'''
-                if event.key == p.K_LSHIFT:             
-                    if p.time.get_ticks() - self.dash_t > 1500: # 1.5 Second (not yet balanced)
-                        self.dash, self.dash_t = True, p.time.get_ticks()
+                if event.key == self.data["controls"]["dash"]:             
+                    # Dash ability goes here
+                    pass
+                    #if p.time.get_ticks() - self.dash_t > 1500: # 1.5 Second (not yet balanced)
+                    #    self.dash, self.dash_t = True, p.time.get_ticks()
                         
                 ''' Inventory '''
-                if event.key == p.K_e:
+                if event.key == self.data["controls"]["inventory"]:
                     self.inventory.set_active()
 
                 if self.inventory.show_menu:
@@ -378,7 +403,7 @@ class Player:
                         self.srl_gap += 1
 
                 ''' Interaction '''
-                if event.key == self.data["controls"][4]: 
+                if event.key == self.data["controls"]["interact"]: 
                     self.Interactable = True 
                     self.InteractPoint += 1 
 

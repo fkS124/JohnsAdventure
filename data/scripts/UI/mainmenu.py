@@ -53,12 +53,6 @@ class Menu:
             ) 
                 for i, btn in enumerate(self.btns)
         ]
-
-        # Settings
-        self.settings_bg = scale(ui.parse_sprite('catalog_button.png'), 11)
-
-        # Load/Save Data
-        self.save = self.get_data('data/database/data.json')
         
         # Function
         self.event = None # This is a temp value for control saving
@@ -72,19 +66,18 @@ class Menu:
         self.blank_keys = False # if True, means the user left a blank key in Controls
         
         self.change_key_index = None  # The index of the key we're changing
-        
-        self.keybinds = [
-            scale(ui.parse_sprite("keybind.png"), 5)
-            for i in range(len(self.save["controls"]))
-        ]
 
-        self.settings_text = [
-            self.f.render('Up', True, (0, 0, 0)), 
-            self.f.render('Down', True, (0, 0, 0)), 
-            self.f.render('Left', True, (0, 0, 0)), 
-            self.f.render('Right', True, (0, 0, 0)), 
-            self.f.render('Interact', True, (0, 0, 0))
-        ]
+        # Settings
+        self.settings_bg = scale(ui.parse_sprite('catalog_button.png'), 11)
+
+        # Load/Save Data
+        self.save = self.get_data('data/database/data.json')
+
+        # Load the GUI keys and Text surfaces based on the above data
+        self.keybinds = [scale(ui.parse_sprite('keybind.png'), 5) for key in self.save["controls"]]
+        self.settings_text = [self.f.render(f"{key}", True, (0, 0, 0)) for key in self.save["controls"]]
+
+        
 
     ''' Utils '''
 
@@ -97,11 +90,25 @@ class Menu:
             return json.dump(self.save, f)
 
     # This function is for centering the keywords in control section
-    def draw_txt(self, txt, pos): 
+    def draw_txt(self, txt, rect, surf): 
         render = self.f.render(txt, True, (0, 0, 0))
-        rect = render.get_rect()
-        rect.centerx, rect.centery = self.half_w - 7, pos.centery - 2
-        self.screen.blit(render, rect)
+        pos = surf.get_size() # Get the size of the button img
+        y_gap = 8 # Y coords for the text
+        x_gap = pos[0]//2
+        # Check its length and tweak X coords
+        match len(txt):
+            case 1:
+                x_gap -= 12
+            case 5:
+                x_gap -= 55
+            case 10: # its 9 letters + space 
+                render = self.f.render(txt[-5:], True, (0, 0, 0)) # Overwite text surface
+                x_gap -= 55
+            case _:
+                pass
+
+        
+        self.screen.blit(render, (rect[0] + x_gap, rect[1] + y_gap))
 
 
     def buttons_menu(self, m):
@@ -137,17 +144,28 @@ class Menu:
                 self.screen.blit(self.f.render("Please fill the keys!", True, (0,0,0)), (self.half_w - 220, self.half_h - 200))
 
             #  Key Button    
+            key_data = list(self.save["controls"].values())
             for i, key in enumerate(self.keybinds):
-                rect = key.get_rect(center = (self.half_w,  self.half_h - 110 +  60 * i))
-                self.screen.blit(key, rect), self.screen.blit(self.settings_text[i], (rect[0] - 250, rect[1] + 10))
-
-                # if the player clicks the button, reset the keybind and save the index for configuration
-                if rect.collidepoint(m) and self.event.type == p.MOUSEBUTTONDOWN and self.event.button == 1:
-                    self.changing, self.controls_error, self.save['controls'][i], self.change_key_index = True, False, '', i
                 
-                # bind takes from pygame the format of the key and return it as string, the else is for in case the player clicks a duplicate key
-                bind = str(p.key.name(self.save['controls'][i])) if type(self.save["controls"][i]) is int else " "
-                kb = self.draw_txt(bind, rect) # This centers the text
+                group_y = 20 # A temp value to tweak the Y position of all of them
+
+                bind = f"{p.key.name(key_data[i])}" if type(key_data[i]) is int else " "
+
+                if i < 4:
+                    rect = key.get_rect(center = (self.half_w - 120,  self.half_h - 110 + group_y +  60 * i))
+                    self.screen.blit(key, rect), self.screen.blit(self.settings_text[i], (rect[0] - 130, rect[1] + 10))
+                else:
+                    rect = key.get_rect(center = (self.half_w + 265,  self.half_h - 330 + group_y + 60 * i))
+                    self.screen.blit(key, rect), self.screen.blit(self.settings_text[i], (rect[0] - 220, rect[1] + 10))
+                
+                self.draw_txt(bind, rect, key) # Center text                
+                
+                # if the player clicks the button, reset the keybind and save the index for configuration         
+                if rect.collidepoint(m) and self.event.type == p.MOUSEBUTTONDOWN and self.event.button == 1:
+                    self.changing, self.controls_error, self.change_key_index = True, False, i
+                    # Find the key using list()[index]
+                    txt = list(self.save["controls"])[i] 
+                    self.save["controls"][txt] = 0 # Reset that key
 
     ''' Drawing/ Function '''
 
@@ -179,21 +197,26 @@ class Menu:
                         self.show_settings = True
                 case p.KEYDOWN:
                     if self.changing:
-                        if e.key in self.save['controls']:
-                            self.controls_error = True # Duplicate is found
-                        elif e.key != p.K_ESCAPE: # Escape button is not allowed
-                            self.save['controls'][self.change_key_index] = e.key # Sets new key
+                        
+                        controls = list(self.save["controls"])
+                        # Find Duplicate among keys (amongus ??!?!?)
+                        for key, btn in self.save["controls"].items():
+                            if e.key == btn:
+                                self.controls_error = True
+
+                        if e.key != p.K_ESCAPE and not self.controls_error: # Escape button is not allowed
+                            txt = controls[self.change_key_index]
+                            self.save["controls"][txt] = e.key
                             self.controls_error = self.changing = self.blank_keys = False # Change the button and close it
                         else:
-                            self.blank_keys = True # Warn the user that he must fill the keys
+                            # Warn the user that he must fill the keys
+                            self.blank_keys = True                             
+                        
+                    # if everything is correct, write the new data to the json and close the menu
+                    if self.show_settings and e.key == p.K_ESCAPE and not self.blank_keys:
+                        self.save_data()
+                        self.show_settings = False
 
-                    if self.show_settings and e.key == p.K_ESCAPE:
-                        # If there are empty boxes
-                        if '' in self.save['controls']: 
-                            self.blank_keys = True
-                        else: # Every box is filled
-                            self.save_data() # Update Json File
-                            self.blank_keys = self.show_settings = False
                 case p.K_F12:
                     p.display.toggle_fullscreen()
 

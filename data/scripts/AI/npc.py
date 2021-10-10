@@ -47,7 +47,7 @@ class NPCS:
             else: self.Idle = self.is_talking = False # Stop animation
                 
             # Movement mechanism
-            if not(self.x < 768 and self.Right): self.Right = False
+            if not(self.x < 450 and self.Right): self.Right = False
             if self.x < 150: self.Right = True
 
             # Animation Mechanism
@@ -72,9 +72,10 @@ class NPCS:
  
     # John's sister
     class Cynthia: 
-        def __init__(self, x, y, sprite):
+        def __init__(self, x, y):
             self.x, self.y = x, y
-            self.image = [scale(get_sprite(sprite, 2 + 26 * i, 1, 24, 42), 3) for i in range(3)]
+            self.img = load('data/sprites/npc_spritesheet.png')
+            self.image = [scale(get_sprite(self.img, 2 + 26 * i, 1, 24, 42), 3) for i in range(3)]
             self.Rect = self.image[0].get_rect() 
             self.animation_counter = 0
             self.interact_text = 'cynthia'

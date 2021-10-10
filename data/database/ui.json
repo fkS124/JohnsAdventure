@@ -9,11 +9,6 @@
 
         "catalog_button.png":{"frame": {"x": 1, "y":13, "w":79, "h":41}},
 
-        "heart.png":
-        {
-            "frame": {"x": 471, "y":286, "w":32, "h":28}
-        },
-
         "interface_button.png":
         {
             "frame": {"x": 114, "y":0, "w":122, "h":30}
@@ -36,22 +31,27 @@
 
         "inventory":
         {
-            "frame": {"x": 81, "y":36, "w":19, "h":14}
+            "frame": {"x": 102, "y":54, "w":17, "h":14}
         },
 
         "health":
         {
-            "frame": {"x": 81, "y":22, "w":32, "h":13}
+            "frame": {"x": 82, "y":31, "w":36, "h":22}
         },
-
+        
         "heart":
         {
-            "frame": {"x": 101, "y":36, "w":9, "h":8}
+            "frame": {"x": 90, "y":22, "w":9, "h":8}
         },
 
         "mouse_cursor":
         {
             "frame": {"x": 2, "y":56, "w":37, "h":37}
+        },
+
+        "level_status":
+        {
+            "frame": {"x": 84, "y":54, "w": 17, "h":14}
         }
     }
 }

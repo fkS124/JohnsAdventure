@@ -123,7 +123,7 @@ class Weapon:
         self.crit_chance = crit_chance
 
         self.image = pg.Surface((self.text.get_width()+self.stat.get_width()+self.eq.get_width(), self.text.get_height()))
-        self.image.fill((255, 204, 0))
+        self.image.fill((239,159,26))
         self.image.blit(self.text, (0, 0))
         self.image.blit(self.stat, (self.text.get_width(), 0))
         self.equiped = False
@@ -145,7 +145,7 @@ class Weapon:
         color = (0, 255, 0) if d_dmg > 0 else ((100 if d_dmg == 0 else 255), (100 if d_dmg == 0 else 0), (100 if d_dmg == 0 else 0))  # grey if the d_dmg is 0, green if > 0, red if < 0
         self.stat = self.font.render(txt_stat, True, color)  # resetting the stat rendering
 
-        self.image.fill((255, 204, 0))
+        self.image.fill((239,159,26))
         if not self.equiped:
             self.image.blit(self.text, (0, 0))
             self.image.blit(self.stat, (self.text.get_width(), 0))
