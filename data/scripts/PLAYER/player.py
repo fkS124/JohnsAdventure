@@ -12,6 +12,7 @@ from random import random
 from ..sound_manager import SoundManager
 from ..utils import load, get_sprite, scale, flip_vertical
 from .inventory import Inventory
+from .player_stats import UpgradeStation
 
 
 p.font.init()
@@ -70,11 +71,12 @@ class Player:
         
         ''' Stats'''
 
-        # The width for the UI is 180, but we need to find a way to put less health and keep the width
+        # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width / max_hp * hp
+        self.level = 1
         self.health = 180
         self.damage = 10
-        self.endurance = 0
-        self.critical_chance = 0  # The critical change the player has gathered without the weapon
+        self.endurance = 15
+        self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
 
 
         # Code for Dash Ability goes here
@@ -83,13 +85,16 @@ class Player:
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+  
+        self.upgrade_station = UpgradeStation(self.screen, ui, font, self)
+        self.level += 1
+        self.upgrade_station.new_level()
         
         ''' UI '''
         self.health_box = scale(ui.parse_sprite('health'),5)
         self.heart = scale(ui.parse_sprite('heart'), 4)
         self.hp_box_rect = self.health_box.get_rect(topleft = (self.screen.get_width() - self.health_box.get_width() - 90, 20))
 
-        self.level_status = scale(ui.parse_sprite("level_status"), 5) # The button that lunches the upgrade station
         
         '''  Combat System '''
         self.crosshair,  self.attack_pointer = ui.parse_sprite("mouse_cursor"), load('data/ui/attack_pointer.png', True)
@@ -110,7 +115,7 @@ class Player:
 
     def get_crit(self):
         crit = random()
-        crit_chance = self.inventory.get_equiped("Weapon").crit_chance
+        crit_chance = self.inventory.get_equiped("Weapon").critical_chance
         if crit < crit_chance:
             return self.modified_damages*crit_chance
         return 0
@@ -242,14 +247,15 @@ class Player:
         # Player UI 
 
         self.screen.blit(self.health_box, self.hp_box_rect)
-
-        # Level status button goes here
-
-        # Inventory Icon
-        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
         
         # Heart Icon
         self.screen.blit(self.heart, (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15))
+
+         # Level status button goes here
+        self.upgrade_station.update(self)
+
+        # Inventory Icon
+        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
     
     def set_looking(self, dir_:str):
         ''' This function is for coordinating the attacking hitbox '''
@@ -422,6 +428,7 @@ class Player:
             if event.type == p.MOUSEBUTTONDOWN: 
                 if event.button == 1:
                     self.inventory.handle_clicks(event.pos)
+                    self.upgrade_station.handle_clicks(event.pos)
 
                 if self.inventory.show_menu:
                     if event.button == 4:  # scroll up
@@ -430,6 +437,8 @@ class Player:
                     if event.button == 5:  # scroll down
                         if self.inventory.im_rect.collidepoint(event.pos):
                             self.inventory.scroll_down()  
+                elif self.upgrade_station.show_menu:
+                    pass
                 else:
                     if event.button == 1:
                         self.attack()
