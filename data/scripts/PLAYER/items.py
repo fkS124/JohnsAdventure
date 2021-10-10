@@ -120,7 +120,7 @@ class Weapon:
         self.stat = self.font.render(" +1", True, (255, 0, 255))
         self.eq = self.font.render(">", True, (255, 0, 0))  # to replace with an image later on
         self.damage = dmg
-        self.crit_chance = crit_chance
+        self.critical_chance = crit_chance
 
         self.image = pg.Surface((self.text.get_width()+self.stat.get_width()+self.eq.get_width(), self.text.get_height()))
         self.image.fill((239,159,26))

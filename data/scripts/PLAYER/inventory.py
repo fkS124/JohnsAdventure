@@ -1,7 +1,6 @@
 import pygame as pg
-from .items import Items, ItemSorter
+from .items import ItemSorter
 from ..utils import scale, get_sprite
-from random import choice
 
 
 class Inventory:
@@ -14,11 +13,11 @@ class Inventory:
 
         # invetory button
         self.button_inv = scale(self.spr_sh.parse_sprite("inventory"), 5)
-        self.bi_rect = self.button_inv.get_rect(right=self.w-10, y=100)
+        self.bi_rect = self.button_inv.get_rect(right=self.w-10, y=80)
         # the menu where all the items in the inventory will be displayed
         # only if the player is currently in this state
         self.inv_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
-        self.im_rect = self.inv_menu.get_rect(right=self.bi_rect.x-10, y=self.bi_rect.y)  # center
+        self.im_rect = self.inv_menu.get_rect(right=self.bi_rect.x-5, y=140)  # center
 
         # ui piece for the inventory
         self.ui_inv = scale(self.spr_sh.parse_sprite("catalog_button.png"), 5)
@@ -87,12 +86,13 @@ class Inventory:
         if not self.show_menu and self.bi_rect.collidepoint(pos) or self.show_menu and not self.im_rect.collidepoint(pos):
             self.set_active()
         
-        pos -= pg.Vector2(*self.im_rect.topleft) # get the pos of the click on the surface
-        for item in self.items: 
-            changes = item.handle_clicks(pos)  # Handle the clicks for all items
-            if changes is not None:
-                if changes[0]:
-                    self.reset_equipement(changes[1], changes[2])
+        if self.show_menu:
+            pos -= pg.Vector2(*self.im_rect.topleft) # get the pos of the click on the surface
+            for item in self.items: 
+                changes = item.handle_clicks(pos)  # Handle the clicks for all items
+                if changes is not None:
+                    if changes[0]:
+                        self.reset_equipement(changes[1], changes[2])
 
     def set_active(self): # Switch state of the invetory
         self.show_menu = not self.show_menu
