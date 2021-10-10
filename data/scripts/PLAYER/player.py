@@ -115,7 +115,7 @@ class Player:
 
     def get_crit(self):
         crit = random()
-        crit_chance = self.inventory.get_equiped("Weapon").crit_chance
+        crit_chance = self.inventory.get_equiped("Weapon").critical_chance
         if crit < crit_chance:
             return self.modified_damages*crit_chance
         return 0
