@@ -59,6 +59,11 @@ class Player:
         self.combo_2_right = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 0, 46, 52), 3) for i in range(5)]
         self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
         
+        self.dashing_right = [scale(get_sprite(self.sheet, 46 * i, 52*3, 46, 52),3) for i in range(5)]
+        self.dashing_left = [flip_vertical(image) for image in self.dashing_right]
+        self.dashing_up = [scale(get_sprite(self.sheet, 46 * i + 46 * 5, 52*3, 46, 52),3) for i in range(5)]
+        self.dashing_down = [scale(get_sprite(self.sheet, 46 * i + 46 * 10, 52*3, 46, 52),3) for i in range(5)]
+
         self.looking_down = False
         self.looking_up = False
         self.looking_right = False
@@ -81,14 +86,21 @@ class Player:
 
         # Code for Dash Ability goes here
         self.dash_width = 180 # the pixel width for bars
-
+        self.dash_cd = 750
+        self.last_dash_end = 0
+        self.dash_start = 0
+        self.dashing = False
+        self.dashing_direction = None
+        self.dash_available = True
+        self.delay_increasing_dash = 0
+        self.delay_dash_animation = 0
+        self.index_dash_animation = 0
+        self.current_dashing_frame = None
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
   
         self.upgrade_station = UpgradeStation(self.screen, ui, font, self)
-        self.level += 1
-        self.upgrade_station.new_level()
         
         ''' UI '''
         self.health_box = scale(ui.parse_sprite('health'),5)
@@ -112,6 +124,13 @@ class Player:
         self.attacking_hitbox = None
         self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
         self.rooms_objects = []
+
+    def level_up(self):
+
+        # PLAY THE SOUND OF THE LEVEL UPGRADING
+
+        self.level += 1
+        self.upgrade_station.new_level()
 
     def get_crit(self):
         crit = random()
@@ -268,6 +287,70 @@ class Player:
         elif dir_ == "right":
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
 
+    def start_dash(self):
+
+        if not self.dashing and self.dash_available:
+            self.dashing = True
+            self.dash_start = p.time.get_ticks()
+            self.dash_available = False
+            self.delay_increasing_dash = p.time.get_ticks()
+            if self.looking_down:
+                self.dashing_direction = "down"
+            elif self.looking_left:
+                self.dashing_direction = "left"
+            elif self.looking_right:
+                self.dashing_direction = "right"
+            else:
+                self.dashing_direction = "up"
+            
+
+    def update_dash(self, dt):
+
+        if self.dashing:
+
+            if p.time.get_ticks() - self.delay_dash_animation > 50:
+                self.delay_dash_animation = p.time.get_ticks()
+                match self.dashing_direction:
+                    case "left":
+                        anim = self.dashing_left
+                    case "right":
+                        anim = self.dashing_right
+                    case "up":
+                        anim = self.dashing_up
+                    case "down":
+                        anim = self.dashing_down
+                self.index_dash_animation = (self.index_dash_animation + 1) % len(anim)
+                self.current_dashing_frame = anim[self.index_dash_animation]
+            self.screen.blit(self.current_dashing_frame, (self.Rect[0], self.Rect[1] - 80))
+
+            if p.time.get_ticks() - self.dash_start > 75:
+                self.dashing = False
+                self.last_dash_end = p.time.get_ticks()
+                self.delay_increasing_dash = self.last_dash_end
+                self.dash_width = 0
+
+            if p.time.get_ticks() - self.delay_increasing_dash > 2:
+                self.delay_attack_animation = p.time.get_ticks()
+                match self.dashing_direction:
+                    case "up":
+                        self.y -= 15*dt*35
+                    case "down":
+                        self.y += 15*dt*35
+                    case "right":
+                        self.x += 15*dt*35
+                    case "left":
+                        self.x -= 15*dt*35
+
+        else:
+            if p.time.get_ticks() - self.delay_increasing_dash > self.dash_cd / ((11 / 3) * 2):
+                self.dash_width += 180/((11 / 3) * 2)
+                self.delay_increasing_dash = p.time.get_ticks()
+
+
+            if p.time.get_ticks() - self.last_dash_end > self.dash_cd:
+                self.dash_available = True
+                self.dash_width = 180
+
     def update(self, dt): # delta time
 
         # recalculate the damages, considering the equiped weapon
@@ -276,7 +359,7 @@ class Player:
         if hasattr(equiped, "special_effect"):
             equiped.special_effect()
         
-
+        
         self.controls()
         self.health_bar()    
         if not self.inventory.show_menu:
@@ -333,9 +416,10 @@ class Player:
         ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
         self.screen.blit(image, ring_pos)
         self.update_attack()
+        self.update_dash(dt)
 
         # Player animation
-        if not self.attacking:
+        if not self.attacking and not self.dashing:
             if mouse_p[0] > 550 and mouse_p[0] < 750:
                 if mouse_p[1] < self.Rect.y: # ? Up
                     self.set_looking("up")
@@ -391,10 +475,7 @@ class Player:
                 
                 ''' Dash Ability'''
                 if event.key == self.data["controls"]["dash"]:             
-                    # Dash ability goes here
-                    pass
-                    #if p.time.get_ticks() - self.dash_t > 1500: # 1.5 Second (not yet balanced)
-                    #    self.dash, self.dash_t = True, p.time.get_ticks()
+                    self.start_dash()
                         
                 ''' Inventory '''
                 if event.key == self.data["controls"]["inventory"]:
