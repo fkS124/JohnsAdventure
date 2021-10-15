@@ -82,6 +82,7 @@ class Player:
         self.damage = 10
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
+        self.xp = 0 # wtf leveling system in john's adventures!??!?
 
 
         # Code for Dash Ability goes here
@@ -96,6 +97,12 @@ class Player:
         self.delay_dash_animation = 0
         self.index_dash_animation = 0
         self.current_dashing_frame = None
+
+
+        # Levelling
+        self.experience = 0 # XP
+        self.experience_width = 0 # This is for the UI 
+        self.level_index = 1
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
@@ -125,11 +132,14 @@ class Player:
         self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
         self.rooms_objects = []
 
-    def level_up(self):
+    def leveling(self):
 
         # PLAY THE SOUND OF THE LEVEL UPGRADING
-
-        self.level += 1
+        if self.experience >= 180: # <- The max width of the bar
+            self.level += 1 # Increase the level
+            self.experience = 0 # Reset XP
+            self.level_index += 1 # a index for multiplying 180(width)
+        self.experience_width = self.experience / self.level_index # Player needs more and more exp on each level, therefore we have to cut it
         self.upgrade_station.new_level()
 
     def get_crit(self):
@@ -143,7 +153,6 @@ class Player:
         '''
         room_objects is a list containing only the enemies of the current environment, 
         for each one, if they are attackable and player hits them, they will lose hp
-
         '''
         for obj in self.rooms_objects:
             if hasattr(obj, "attackable"):
@@ -153,6 +162,8 @@ class Player:
                         crit = self.get_crit()
                         obj.deal_damage(self.modified_damages+crit, crit>0) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier+crit, crit>0)
                         self.inventory.get_equiped("Weapon").start_special_effect(obj)
+                    if obj.hp <= 0: # Check if its dead , give xp to the player
+                        self.experience += obj.xp_drop
 
     def attack(self):
 
@@ -257,14 +268,13 @@ class Player:
         # Health bar
         p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x,self.hp_box_rect.y  + 20, self.health, 25)) 
 
-        # Experience bar
-
         # Dash Cooldown bar
-        p.draw.rect(self.screen, (0,255,0), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 90, self.dash_width, 10))
+        p.draw.rect(self.screen, (0,255,0), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 90, self.dash_width, 15))
+
+        # Experience bar
+        p.draw.rect(self.screen, (0,255,255), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 60, self.experience_width, 15))
         
-
         # Player UI 
-
         self.screen.blit(self.health_box, self.hp_box_rect)
         
         # Heart Icon
@@ -331,21 +341,21 @@ class Player:
 
             if p.time.get_ticks() - self.delay_increasing_dash > 2:
                 self.delay_attack_animation = p.time.get_ticks()
+                freq = 25 # Frequency of the dash
                 match self.dashing_direction:
                     case "up":
-                        self.y -= 15*dt*35
+                        self.y -= 15*dt*freq
                     case "down":
-                        self.y += 15*dt*35
+                        self.y += 15*dt*freq
                     case "right":
-                        self.x += 15*dt*35
+                        self.x += 15*dt*freq
                     case "left":
-                        self.x -= 15*dt*35
+                        self.x -= 15*dt*freq
 
         else:
             if p.time.get_ticks() - self.delay_increasing_dash > self.dash_cd / ((11 / 3) * 2):
                 self.dash_width += 180/((11 / 3) * 2)
                 self.delay_increasing_dash = p.time.get_ticks()
-
 
             if p.time.get_ticks() - self.last_dash_end > self.dash_cd:
                 self.dash_available = True
@@ -360,6 +370,7 @@ class Player:
             equiped.special_effect()
         
         
+        self.leveling()
         self.controls()
         self.health_bar()    
         if not self.inventory.show_menu:
@@ -390,19 +401,6 @@ class Player:
         else: # Player is looking at the inventory,therefore dont allow him to animate walking
             self.a_index = 0 # Play only first frame
 
-
-        ''' This needs a remake 
-        if self.dash:
-            self.dash_cooldown -= self.dash_cooldown/33.333 * dt * 1000 # This needs to be fixed
-            if self.Up or self.Down:
-                self.y += dash_vel + dash_vel * dt
-            elif self.Left or self.Right:
-                self.x += dash_vel + dash_vel * dt
-            if p.time.get_ticks() - self.dash_t > 50:
-                self.dash = False 
-        '''
-
-            
 
         ''' Animation '''
         player_pos = self.Rect[0], self.Rect[1] - 80

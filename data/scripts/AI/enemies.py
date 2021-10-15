@@ -6,7 +6,7 @@ from math import ceil
 
 class Enemy:
 
-    class Dummie:
+    class Dummy:
 
         def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100):
 
@@ -21,7 +21,7 @@ class Enemy:
 
             self.hp = hp
             self.MAX_HP = hp
-
+            self.xp_drop = 25
             self.endurance = 5
 
             self.damages_texts = []

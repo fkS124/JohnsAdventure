@@ -12,8 +12,7 @@ class LoadingScreen:
 
         # cat
         self.cat_spr_sh = load("data/sprites/mau_sheet.png")
-        self.cat_sprites = [scale(get_sprite(self.cat_spr_sh, 43 * i, 0, 43, 33), 2) for i in range(6)]
-
+        self.cat_sprites = [scale(get_sprite(self.cat_spr_sh, 43 * i, 0, 43, 33), 2) for i in range(3)]
         # colors
         self.bg_color = (0, 0, 0)
         self.font_color = (255, 255, 255)

@@ -74,7 +74,7 @@ class Chest:
 
         # show the key to press in order to interact
         if not self.opened and self.interact_rect.colliderect(player.Rect):
-            txt = self.font.render(pg.key.name(player.data["controls"][4]), True, (255, 255, 255))
+            txt = self.font.render(pg.key.name(player.data["controls"]["interact"]), True, (255, 255, 255))
             rct = txt.get_rect(center=(self.x-scroll[0],self.y-scroll[1]-75))
             
             if self.btn_a >= 13: self.btn_a = 0
