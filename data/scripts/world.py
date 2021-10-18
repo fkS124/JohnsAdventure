@@ -12,7 +12,7 @@ import pygame as pg
 from .backend import UI_Spritesheet
 from .PLAYER.player import *
 from .PLAYER.inventory import *
-from .AI.enemies import Enemy
+from .AI.enemies import Dummy
 from .sound_manager import SoundManager
 from .AI import npc
 from .UI.mainmenu import Menu
@@ -69,7 +69,7 @@ class Game:
         #------- Objects -----
         self.o_index = 0 # Index for the sublists below
         self.objects = [
-            [npc.NPCS.Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192), Enemy.Dummy(DISPLAY, (1050, 300)), Enemy.Dummy(DISPLAY, (1050, 600))], # John's Room
+            [npc.NPCS.Mau(150,530), pg.Rect(10,90, 430,360), pg.Rect(5,500, 72, 214), pg.Rect(450, 40, 410, 192), Dummy(DISPLAY, (1050, 300)), Dummy(DISPLAY, (1050, 600))], # John's Room
             [npc.NPCS.Cynthia(570, 220), Chest(960,175, 0),pg.Rect(20, 250, 250,350), pg.Rect(280,300, 64, 256), pg.Rect(10,0, 990, 230), pg.Rect(1020, 440, 256, 200)] # Kitchen Room
         ]
 
