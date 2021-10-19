@@ -6,6 +6,7 @@ Welcome to John's Adventure, my goal is to remake the existing https://gamejolt.
 
 
 Those who are here to help:
+
       Programmers:  You don't have to be a contributor to help, but please follow my only rule!
       Follow the KISS Principle in your code! (Keep It Simple Stupid). This rule is made for your own and only interest!
       
