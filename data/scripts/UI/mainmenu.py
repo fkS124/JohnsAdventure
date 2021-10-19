@@ -76,7 +76,8 @@ class Menu:
         # Load the GUI keys and Text surfaces based on the above data
         self.keybinds = [scale(ui.parse_sprite('keybind.png'), 5) for key in self.save["controls"]]
         self.settings_text = [self.f.render(f"{key}", True, (0, 0, 0)) for key in self.save["controls"]]
-
+        
+        self.start_game = False # if True, player click Play button
         
 
     ''' Utils '''
@@ -193,11 +194,15 @@ class Menu:
                 case p.QUIT:
                     raise SystemExit
                 case p.MOUSEBUTTONDOWN:
+                    if self.btns_rects[0].collidepoint(m):
+                       self.start_game = True
                     if self.btns_rects[1].collidepoint(m):
                         self.show_settings = True
+                    if self.btns_rects[2].collidepoint(m):
+                        raise SystemExit
+                       
                 case p.KEYDOWN:
                     if self.changing:
-                        
                         controls = list(self.save["controls"])
                         # Find Duplicate among keys (amongus ??!?!?)
                         for key, btn in self.save["controls"].items():

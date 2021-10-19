@@ -136,16 +136,13 @@ class Game:
             DISPLAY.fill((0, 0, 0))
             if self.Menu:
                 self.menu.update(mouse_p) # Show Menu Screen
-                # Position of the buttons
-                if self.menu.event.type == pg.MOUSEBUTTONDOWN and not self.menu.show_settings:
-                    if self.menu.btns_rects[0].collidepoint(mouse_p):  
-                        self.Menu = False
-                        self.loading = True
-                        self.loading_screen.start("PlayerRoom")
-                    if self.menu.btns_rects[2].collidepoint(mouse_p): 
-                        raise SystemExit
 
-            elif self.loading:
+                if self.menu.start_game:
+                   self.Menu = False
+                   self.loading = True
+                   self.loading_screen.start("PlayerRoom")
+            
+            elif self.loading: 
                 update_return = self.loading_screen.update()
                 if update_return is not None:
                     setattr(self, update_return["next_state"], True)
