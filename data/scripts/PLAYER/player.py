@@ -10,14 +10,14 @@ import pygame as p
 import math
 from random import random
 from ..sound_manager import SoundManager
-from ..utils import load, get_sprite, scale, flip_vertical
+from ..utils import load, get_sprite, scale, flip_vertical, resource_path
 from .inventory import Inventory
 from .player_stats import UpgradeStation
 
 
 p.font.init()
-font = p.font.Font("data/database/pixelfont.ttf", 16)
-debug_font = p.font.Font("data/database/pixelfont.ttf", 12)
+font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
+debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
 
 class Player:
     def __init__(self, x, y, screen, interface, data ,ui):
@@ -37,7 +37,7 @@ class Player:
         self.walking = False
 
         # Animation
-        self.sheet = load('data/sprites/john.png')
+        self.sheet = load(resource_path('data/sprites/john.png'))
            
         self.a_index = 0
           
@@ -116,7 +116,7 @@ class Player:
 
         
         '''  Combat System '''
-        self.crosshair,  self.attack_pointer = ui.parse_sprite("mouse_cursor"), load('data/ui/attack_pointer.png', True)
+        self.crosshair,  self.attack_pointer = ui.parse_sprite("mouse_cursor"), load(resource_path('data/ui/attack_pointer.png'), True)
 
         self.attacking = False
         self.current_combo = 0

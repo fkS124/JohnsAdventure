@@ -4,12 +4,24 @@
  Functions to reduce typing :rofl:
 
 '''
-import pygame
+import pygame, sys, os, pathlib
 
 try:
     from functools import lru_cache
 except ImportError:
     from backports.functools_lru_cache import lru_cache
+
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, str(pathlib.Path(relative_path)))
+
 
 @lru_cache(1000)
 def load(path, alpha = None):

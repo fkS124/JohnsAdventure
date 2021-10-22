@@ -1,5 +1,6 @@
 import pygame as pg
 
+from .utils import resource_path
 
 class SoundManager:
 
@@ -15,15 +16,15 @@ class SoundManager:
         self.volume = 0.5
 
         self.sounds = {
-            "letterSound": pg.mixer.Sound("data/sound/letter_sound.wav"),
-            "woodenSword": pg.mixer.Sound("data/sound/sword_slice.flac"),
-            "dummyHit": pg.mixer.Sound("data/sound/dummy_hit.wav")
+            "letterSound": pg.mixer.Sound(resource_path("data/sound/letter_sound.wav")),
+            "woodenSword": pg.mixer.Sound(resource_path("data/sound/sword_slice.flac")),
+            "dummyHit": pg.mixer.Sound(resource_path("data/sound/dummy_hit.wav"))
 
         } if not music_only else {}
 
         self.musics = {
-            "forest_theme": "data/sound/forest_theme_part1.flac",
-            "Select_UI": "data/sound/Select_UI.wav"
+            "forest_theme": resource_path("data/sound/forest_theme_part1.flac"),
+            "Select_UI": resource_path("data/sound/Select_UI.wav")
         } if not sound_only else {}
 
         

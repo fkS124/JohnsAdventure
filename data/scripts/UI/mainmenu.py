@@ -7,7 +7,7 @@ The Main menu, where the player start his adventure!
 
 import pygame as p
 import json
-from ..utils import scale, load
+from ..utils import scale, load, resource_path
 
 
 class Menu:
@@ -25,7 +25,7 @@ class Menu:
 
         # Background image
         self.bg_img = p.transform.scale(
-            load('data/ui/background.png'), 
+            load(resource_path('data/ui/background.png')), 
             (1280, 720) # Due to its less size, I am transforming it to 720p because its the default res
         )
 
@@ -38,7 +38,7 @@ class Menu:
             for i in range(3)
         ]
 
-        self.f = p.font.Font("data/database/pixelfont.ttf", 28)
+        self.f = p.font.Font(resource_path("data/database/pixelfont.ttf"), 28)
 
         self.btns_text = [
             self.f.render("Play", True, (255, 255, 255)),
@@ -71,7 +71,7 @@ class Menu:
         self.settings_bg = scale(ui.parse_sprite('catalog_button.png'), 11)
 
         # Load/Save Data
-        self.save = self.get_data('data/database/data.json')
+        self.save = self.get_data(resource_path('data/database/data.json'))
 
         # Load the GUI keys and Text surfaces based on the above data
         self.keybinds = [scale(ui.parse_sprite('keybind.png'), 5) for key in self.save["controls"]]
@@ -83,11 +83,11 @@ class Menu:
     ''' Utils '''
 
     def get_data(self, path):
-        with open(path, 'r') as f:
+        with open(resource_path(path), 'r') as f:
             return json.load(f)
 
     def save_data(self):
-        with open('data/database/data.json', 'w+') as f:
+        with open(resource_path('data/database/data.json'), 'w+') as f:
             return json.dump(self.save, f)
 
     # This function is for centering the keywords in control section

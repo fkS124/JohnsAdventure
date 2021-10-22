@@ -18,7 +18,7 @@ from .AI import npc
 from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
-
+from .utils import resource_path
 
 pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer 
 pg.init(), pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
@@ -39,8 +39,9 @@ framerate = pg.time.Clock()
 get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
 scroll = [0, 0]  # player "camera"
 dt = framerate.tick(35) / 1000 # Delta time :D
-font = pg.font.Font("data/database/pixelfont.ttf", 24)
-blacksword = pg.font.Font("data/database/Blacksword.otf", 113) # I use this only for the logo
+
+font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113) # I use this only for the logo
 pg.mouse.set_visible(True)
 
 
@@ -57,8 +58,8 @@ class Game:
         self.loading_screen = LoadingScreen(DISPLAY)
         #------- World -----
         self.worlds = [
-            pg.transform.scale(load('data/sprites/world/Johns_room.png'), (1280,720)), # 0 John's Room
-            pg.transform.scale(load('data/sprites/world/kitchen.png'), (1280,720))  # 1 Kitchen Room
+            pg.transform.scale(load(resource_path('data/sprites/world/Johns_room.png')), (1280,720)), # 0 John's Room
+            pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
         ]
         self.world = self.worlds[0]  # Current world      
         self.PlayerRoom = self.Kitchen = self.Forest = False  # Worlds

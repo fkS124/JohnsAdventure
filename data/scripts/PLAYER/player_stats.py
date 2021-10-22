@@ -1,7 +1,7 @@
 import pygame as pg
 from pygame import color
 from .items import Items, ItemSorter
-from ..utils import scale, get_sprite
+from ..utils import scale, get_sprite, resource_path
 from random import choice
 
 
@@ -19,7 +19,7 @@ class UpgradeStation:
         self.button_upgrade_station = scale(self.spr_sh.parse_sprite("level_status"), 5) # The button that launches the upgrade station
         self.bu_rect = self.button_upgrade_station.get_rect(right=self.w-10, y=12)
 
-        self.level_font = pg.font.Font("data/database/pixelfont.ttf", 38)
+        self.level_font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 38)
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
         self.rect_t_level = self.t_level.get_rect(top=self.bu_rect.top-40, centerx=self.bu_rect.centerx)
 
@@ -154,7 +154,7 @@ class StatHandler:
         self.optional_unit = optional_unit
         self.color = color
 
-        self.font = pg.font.Font("data/database/pixelfont.ttf", 16) 
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 16) 
         self.text = self.font.render(f"{self.name} : {int(self.value) if val_type is int else round(self.value, 2)}{optional_unit if optional_unit is not None else ''}", True, self.color)
         self.addition = self.font.render("", True, (0,0,0))
 

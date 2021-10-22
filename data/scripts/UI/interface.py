@@ -1,6 +1,6 @@
 import pygame as pg
 import json
-from ..utils import scale
+from ..utils import scale, resource_path
 
 class Interface:
     def __init__(self, screen, ui, f, dt):
@@ -8,8 +8,11 @@ class Interface:
         self.icon = scale(ui.parse_sprite('interface_button.png').convert(), 8)
         self.current_text_index = self.timer = 0
         self.text_pos = ( screen.get_width() // 2 - 420, screen.get_height() // 2 + 110) # Position of the first sentence
-        with open('data/database/language.json') as f: self.data = json.load(f); f.close() # Read Json and close it
-        self.sound = pg.mixer.Sound('data/sound/letter_sound.wav'); self.sound.set_volume(0.2) # Insert music and change sound
+        
+        with open(resource_path('data/database/language.json')) as f: 
+            self.data = json.load(f); f.close() # Read Json and close it
+        
+        self.sound = pg.mixer.Sound(resource_path('data/sound/letter_sound.wav')); self.sound.set_volume(0.2) # Insert music and change sound
         self.text_display = ['' for i in range(4)] # Create 4 empty text renders
         self.text_surfaces = [self.f.render(self.text_display[i], True, (0,0,0)) for i in range(4)] # font render each of them
 

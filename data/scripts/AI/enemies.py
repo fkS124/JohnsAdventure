@@ -1,6 +1,6 @@
 from types import coroutine
 import pygame as pg
-from ..utils import load, get_sprite, scale
+from ..utils import load, get_sprite, scale, resource_path
 from .damage_popups import DamagePopUp
 from math import ceil
 
@@ -16,7 +16,18 @@ class Enemy:
 
     def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100):
 
+<<<<<<< Updated upstream
         self.screen = screen  # unpack screen instance
+=======
+            self.attackable = True
+            self.screen = screen
+            
+            self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=True)
+            self.idle = scale(get_sprite(self.sheet, 0, 0, 34, 48), 4)
+            self.hit_anim = [scale(get_sprite(self.sheet, i * 34, 48, 34, 48), 4) for i in range(4)]
+            self.x, self.y = pos
+            self.Rect = self.idle.get_rect(topleft=pos)
+>>>>>>> Stashed changes
 
         self.dead = False  # dead or not
         self.attackable = True  # if false, player can't damage the enemy

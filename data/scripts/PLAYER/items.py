@@ -1,10 +1,10 @@
 from math import ceil
 import pygame as pg
-from ..utils import load, get_sprite, smooth_scale, scale
+from ..utils import load, get_sprite, smooth_scale, scale, resource_path
 
 class Chest:
     def __init__(self, x, y, index):
-        self.x, self.y, self.sheet = x, y, load('data/sprites/items/chest.png')
+        self.x, self.y, self.sheet = x, y, load(resource_path('data/sprites/items/chest.png'))
         self.img = [get_sprite(self.sheet,  74*i, 0, 74, 90) for i in range(4)]
         self.anim_counter = 0 # Animation counter
         self.Rect = self.img[self.anim_counter].get_rect(topleft=(x,y))
@@ -13,12 +13,12 @@ class Chest:
         self.interact_rect = pg.Rect(0, self.y, 148, 110)
         self.interact_rect.centerx=self.x
         self.animating_started = False
-        self.font = pg.font.Font("data/database/pixelfont.ttf", 16)
-        self.pu_font = pg.font.Font("data/database/pixelfont.ttf", 16)
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
+        self.pu_font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
         self.popup_txt = ""
         self.pu_render = self.pu_font.render(self.popup_txt, True, (0, 0, 0))
         self.delay_popup = 0      
-        self.UI_button = [ scale(get_sprite(load('data/ui/UI_spritesheet.png'), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
+        self.UI_button = [ scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
         
         self.reward_index = index # Index for the sublists below
         self.rewards = [
@@ -95,7 +95,7 @@ class Items:
     class NullItem:  # Reference Model
 
         def __init__(self):
-            font = pg.font.Font("data/database/pixelfont.ttf", 24)
+            font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
             self.text = font.render("NullItem", True, (0, 0, 0))
             self.image = pg.Surface((self.text.get_size()))
             self.image.fill((255, 204, 0))
@@ -115,7 +115,7 @@ class Weapon:
     def __init__(self, dmg:int, crit_chance:float):
             
         self.type = "Weapon"
-        self.font = pg.font.Font("data/database/pixelfont.ttf", 18)  
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 18)  
         self.text = self.font.render(self.__class__.__name__, True, (0, 0, 0))
         self.stat = self.font.render(" +1", True, (255, 0, 255))
         self.eq = self.font.render(">", True, (255, 0, 0))  # to replace with an image later on

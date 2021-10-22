@@ -6,7 +6,7 @@ This script contains our lovely npcs!
 
 '''
 import pygame as p
-from ..utils import load, get_sprite, flip_vertical, scale
+from ..utils import load, get_sprite, flip_vertical, scale, resource_path
 from ..backend import UI_Spritesheet
 
 class NPCS:
@@ -20,7 +20,7 @@ class NPCS:
             self.speed = 1.25
             self.Idle = self.is_talking = False # Conditions
             # Animation & Rects (Check out pygame.transform.smoothscale @fks)
-            self.sheet = load('data/sprites/mau_sheet.png')        
+            self.sheet = load(resource_path('data/sprites/mau_sheet.png'))        
             self.image, self.interact_animation = [], []       
             self.reverse_image,self.flipped_interaction = [], []
         
@@ -74,7 +74,7 @@ class NPCS:
     class Cynthia: 
         def __init__(self, x, y):
             self.x, self.y = x, y
-            self.img = load('data/sprites/npc_spritesheet.png')
+            self.img = load(resource_path('data/sprites/npc_spritesheet.png'))
             self.image = [scale(get_sprite(self.img, 2 + 26 * i, 1, 24, 42), 3) for i in range(3)]
             self.Rect = self.image[0].get_rect() 
             self.animation_counter = 0

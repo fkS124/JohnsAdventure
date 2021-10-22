@@ -9,10 +9,12 @@ This class is for takes a sprite from the sheet based on its coordinates from th
 
 import json, pygame
 
+from .utils import resource_path
+
 class UI_Spritesheet:
     def __init__(self, filename):
-        self.sprite_sheet = pygame.image.load(filename).convert()
-        with open('data/database/ui.json') as f:
+        self.sprite_sheet = pygame.image.load(resource_path(filename)).convert()
+        with open(resource_path('data/database/ui.json')) as f:
             self.data = json.load(f)
         f.close()
 
