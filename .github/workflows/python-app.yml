@@ -18,9 +18,9 @@ jobs:
 
     steps:
     - name: Install Python 3.10 in ${{ matrix.os }}
-    - uses: actions/setup-python@v2
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.10.0-alpha.1'
+          python-version: '3.10.0-alpha.1'
     - name: Upgrade PIP and install Pygame 2.0.2
       run: |
         py -m pip install --upgrade pip
