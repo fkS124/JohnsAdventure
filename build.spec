@@ -12,7 +12,7 @@ block_cipher = None
 
 a = Analysis(
     ['main.py'],
-    pathex=[],
+    pathex=['../Executables'],
     binaries=[],
     datas=[('data', 'data')],
     hiddenimports=[],
