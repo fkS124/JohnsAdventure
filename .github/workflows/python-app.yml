@@ -34,6 +34,9 @@ jobs:
     - name: Compile Johns Adventure for ${{ matrix.os }}
       run: |
         python -m PyInstaller build.spec
+        rm -rf build
+        cv /dist/main /Executables/John's Adventure ${{ matrix.os }}
+        
     - name: Commit changes 
       run: |
         git status
