@@ -17,6 +17,7 @@ jobs:
         os: [arch-latest, windows-latest, macOS-latest]
 
     steps:
+    - uses: actions/checkout@v2
     - name: Install Python 3.10 in ${{ matrix.os }}
       uses: actions/setup-python@v2
       with:
