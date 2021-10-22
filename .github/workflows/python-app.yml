@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [arch-latest, windows-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -27,9 +27,9 @@ jobs:
           
     - name: Upgrade PIP and install Pygame 2.0.2
       run: |
-        py -m pip install --upgrade pip
-        py -m pip install pyinstaller pygame==2.0.2
+        python -m pip install --upgrade pip
+        python -m pip install pyinstaller pygame==2.0.2
         
     - name: Compile Johns Adventure for ${{ matrix.os }}
       run: |
-        py -m PyInstaller build.spec
+        python -m PyInstaller build.spec
