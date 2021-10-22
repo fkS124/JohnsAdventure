@@ -35,7 +35,7 @@ jobs:
       run: |
         python -m PyInstaller build.spec
         rm -rf build
-        cv /dist/main /Executables/"Johns Adventure ${{ matrix.os }} 0.23"
+        cv /dist/main /Executables/"John's Adventure ${{ matrix.os }} 0.23"
         
     - name: Commit changes 
       run: |
