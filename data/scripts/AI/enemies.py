@@ -15,19 +15,13 @@ class Enemy:
     as it can be a bit complicated sometimes."""
 
     def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100):
-
-<<<<<<< Updated upstream
-        self.screen = screen  # unpack screen instance
-=======
-            self.attackable = True
-            self.screen = screen
-            
-            self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=True)
-            self.idle = scale(get_sprite(self.sheet, 0, 0, 34, 48), 4)
-            self.hit_anim = [scale(get_sprite(self.sheet, i * 34, 48, 34, 48), 4) for i in range(4)]
-            self.x, self.y = pos
-            self.Rect = self.idle.get_rect(topleft=pos)
->>>>>>> Stashed changes
+        self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=True)
+        self.attackable = True
+        self.screen = screen
+        self.idle = scale(get_sprite(self.sheet, 0, 0, 34, 48), 4)
+        self.hit_anim = [scale(get_sprite(self.sheet, i * 34, 48, 34, 48), 4) for i in range(4)]
+        self.x, self.y = pos
+        self.Rect = self.idle.get_rect(topleft=pos)
 
         self.dead = False  # dead or not
         self.attackable = True  # if false, player can't damage the enemy
@@ -284,7 +278,7 @@ class Dummy(Enemy):
     def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100):
         super().__init__(screen, pos, hp)
         self.load_animation(
-            "data/sprites/dummy.png",
+            resource_path("data/sprites/dummy.png"),
             idle="static",
             hit_anim="animated",
             idle_coo=[0, 0, 34, 48, 1, 4],

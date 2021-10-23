@@ -1,14 +1,14 @@
 import pygame as pg
 from copy import copy
 from random import randint
-
+from ..utils import resource_path
 
 class DamagePopUp:
 
     def __init__(self, screen: pg.Surface, rect:pg.Rect, value:int, dmg_type:str="default"):
 
         self.screen = screen
-        self.font = pg.font.Font("data/database/pixelfont.ttf", 25)
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 25)
         self.basic_rect = copy(rect)
 
         colors = {

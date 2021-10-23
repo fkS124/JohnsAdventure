@@ -1,21 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
-import os
-
-import data.scripts.utils.resource_path as path
+import platform
 
 _WINDOWS = "Windows"
 _LINUX = "Linux"
 _MAC = "Darwin"
 
 
+# OS of the host, if its Darwin, Change it to MacOS
+host_os = "MacOS" if platform.system() == _MAC else platform.system()
 
-# OS of the host that 
-host_os = os_system_str
+
+if host_os not in (_WINDOWS, _LINUX, _MAC):
+    txt = f"""
+    Unrecognized operating system: {host_os}
+    Μη αναγνωρισμένο λειτουργικό σύστημα: {host_os}
+    """
+    raise ValueError(txt)
+
 
 VERSION = "0.23"
-ICON_PATH_KEY = str(resource_path("data/ui/logo.ico"))
 
 
 print(f"""
@@ -63,12 +67,17 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    icon='{ICON_PATH_KEY}'
+    icon="data/ui/logo.ico",
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
 )
+
+app = BUNDLE(exe,
+         name=f"John's Adventure v{VERSION}",
+         icon="data/ui/logo.ico",
+         bundle_identifier=None)
 
 print("The game has been successfully compiled.")
