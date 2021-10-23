@@ -22,32 +22,21 @@ jobs:
           
       - name: Upgrade PIP,Building SDL2 and install Pygame 2.0.2
         run: |
-          sudo apt update
-          sudo apt install -y libsdl2-image-dev
-          sudo apt-get install \
-          python3-dev 
-          libsdl-mixer2-dev 
-          libsdl-ttf2.0-dev 
-          libsdl2-dev 
-          libsmpeg-dev 
-          python-numpy 
-          subversion 
-          libportmidi-dev 
-          ffmpeg 
-          libswscale-dev 
-          libavformat-dev 
-          libavcodec-dev 
-          libfreetype6-dev
-          
-          sudo apt upgrade
+          sudo apt-get update
+          sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libfreetype6-dev python3-setuptools python3-dev python3 libportmidi-dev
+          sudo apt-get build-dep libsdl2 libsdl2-image libsdl2-mixer libsdl2-ttf libfreetype6 python3 libportmidi0
+          git clone https://github.com/pygame/pygame.git
+          cd pygame
+          python3 setup.py -config -auto -sdl2
+          python3 setup.py install --user
           python -m pip install --upgrade pip
-          python -m pip install pyinstaller pygame==2.0.2
+          python -m pip install pyinstaller 
           
       - name: Compiling the game
         run: |
           python -m PyInstaller build.spec
           sudo rm -rf build
-          cv /dist/main /Executables/"John's Adventure Linux V0.23"
+          cv /dist/main /dist/"John's Adventure Linux V0.23"
 
       - name: Commit changes 
         run: |
