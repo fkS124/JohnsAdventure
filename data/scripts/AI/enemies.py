@@ -41,7 +41,7 @@ class Enemy:
 
         # ANIMATION
         self.current_sprite = None
-        self.Rect = None
+        #self.Rect = None
         self.id_anim = self.delay = 0
         self.hitted = False
         self.idling = False
@@ -185,6 +185,8 @@ class Enemy:
                                     self.id_anim += 1
                         self.delay = pg.time.get_ticks()
                         self.current_sprite = animation[self.id_anim] 
+
+                        # Update Enemy's Rect
                         self.Rect = self.current_sprite.get_rect(topleft=self.pos)  
 
     def deal_damage(self, value:int, crit:bool, endurance_ignorance:bool=False):
@@ -201,6 +203,7 @@ class Enemy:
             self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
         else:
             self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value), dmg_type="health"))
+        print(self.Rect)
         if self.hp <= 0:
             self.attackable = False
             self.dead = True
@@ -210,10 +213,14 @@ class Enemy:
     def life_bar(self):
 
         """Draw a life bar if the enemy is not at its max hp"""
-
         if self.MAX_HP != self.hp:
-            pg.draw.rect(self.screen, (0, 0, 0), [self.pos[0], self.pos[1]-20, self.current_sprite.get_width(), 15])
-            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1]-20, int((self.current_sprite.get_width()/self.MAX_HP)*self.hp), 15])
+            # Outline
+            pg.draw.rect(self.screen, (0, 0, 0), [self.pos[0], self.pos[1] - 20, self.current_sprite.get_width(), 18])
+            
+            # Health Bar
+            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0] + 2 , self.pos[1] - 18, int((self.current_sprite.get_width()/self.MAX_HP)*self.hp) - 2, 14])
+
+            pg.draw.rect(self.screen, (255,255,255), self.Rect, 1)
 
     def update_dmg_popups(self, scroll):
 
@@ -270,7 +277,7 @@ class Enemy:
 
         # call logic method
         self.logic()       
-        self.screen.blit(self.current_sprite, (self.x-scroll[0], self.y-scroll[1]))
+        self.screen.blit(self.current_sprite, self.pos)
 
 
 class Dummy(Enemy):
