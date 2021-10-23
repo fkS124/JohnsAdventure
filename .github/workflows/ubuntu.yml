@@ -22,6 +22,11 @@ jobs:
           
       - name: Installing SDL2 + Pygame from Source
         run: |
+            
+            # Change DNS server because Ubuntu and APT are Unreliable. 
+            
+            sudo echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+        
             # Install dependencies
             sudo apt-get install git python3-dev python3-numpy \
                 libsdl-image1.2-dev libsdl-mixer1.2-dev libsdl-ttf2.0-dev libsmpeg-dev \
