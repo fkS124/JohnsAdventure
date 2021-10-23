@@ -19,6 +19,10 @@ from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .utils import resource_path
+from .levels import (
+    PlayerRoom,
+    Kitchen
+)
 
 pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer 
 pg.init(), pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
@@ -48,7 +52,135 @@ pg.mouse.set_visible(True)
 ui = UI_Spritesheet("data/ui/UI_spritesheet.png")
 
 
-class Game:
+def main():
+    GameManager().update()
+
+
+class GameManager:
+
+    """Game class -> handles everything of the game.
+    """
+
+
+    # CONSTS
+    DISPLAY = DISPLAY
+    W = get_screen_w
+    H = get_screen_h
+    FPS = 35
+
+    # FONTS
+    font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+    blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
+
+    def __init__(self):
+
+        # ------------- SPRITESHEET ---------------
+        self.ui = UI_Spritesheet("data/ui/UI_spritesheet.png")
+
+        # ------------ FRAMERATE ------------------
+        self.framerate = pg.time.Clock()
+        self.dt = self.framerate.tick(self.FPS) / 1000
+
+        # ----------- GAME STATE VARIABLES --------
+        self.scroll = [0, 0]
+        self.menu = True
+        self.loading = False
+
+        # ---------- GAME MANAGERS ----------------
+        self.sound_manager = SoundManager()
+        self.loading_screen = LoadingScreen(self.DISPLAY)
+        self.menu_manager = Menu(self.DISPLAY, self.blacksword, self.ui)
+        self.interface = Interface(self.DISPLAY, self.ui, self.font, self.dt)   
+        self.player = Player(self.W//2, self.H//2, self.DISPLAY, self.interface, self.menu_manager.save, self.ui)
+
+        # ----------- GAME STATE ------------------  
+        self.state = "player_room"
+        self.state_manager = {
+            "player_room": PlayerRoom(self.DISPLAY, self.player),
+            "kitchen": Kitchen(self.DISPLAY, self.player)
+        }   
+
+    def collision_system(self):
+
+        current_objects = self.state_manager[self.state].objects
+
+        # REWORK
+
+    def pause(self):
+        
+        # REWORK NEEDED 
+
+        pass
+
+    def routine(self):
+
+        """Method called every frame of the game.
+        (Created to simplify the game loop)"""
+
+        self.dt = self.framerate.tick(self.FPS) / 1000
+
+        if not self.menu and not self.loading:  # if the game is playing
+            self.player.update(self.dt)
+            self.collision_system()
+            self.pause()
+            self.room_borders()
+
+        pg.display.update()
+    
+    def room_borders(self):
+
+        """Player's collisions with the border of the room.
+        Player can't go outside the screen.
+        """
+
+        # TODO : needs to be fixed, the player can actually go outside the borders on the right and at the bottom
+
+        up, down, left, right = 0, self.H, 0, self.W
+        if self.player.y < up + 150: 
+            self.player.y = up + 150
+        elif self.player.y > down - 40: 
+            self.player.y = down - 40
+        if self.player.x < left + 40: 
+            self.player.x = left + 40
+        elif self.player.x > right - 40: 
+            self.player.x = right - 40
+
+    def update(self):
+
+        while True:
+
+            if self.menu:  # menu playing
+
+                self.menu_manager.update(pg.mouse.get_pos())
+
+                if self.menu_manager.start_game:  # start the game
+                    self.menu = False
+                    self.loading = True
+                    self.loading_screen.start("player_room", duration=2500, main_loading=True, cat=True, text=False, key_end=True)
+
+            elif self.loading:  # update the loading screen
+
+                update_return = self.loading_screen.update()
+                if update_return is not None:
+                    self.state = update_return["next_state"]
+                    self.loading = False
+                    if update_return["next_music"] is not None:
+                        self.sound_manager.play_music(update_return["next_music"])
+
+            else:
+                self.DISPLAY.fill((0, 0, 0))
+                self.scroll += pg.Vector2(self.player.x - self.scroll[0] - self.W // 2, self.player.y - self.scroll[1] - self.H // 2)
+
+                update = self.state_manager[self.state].update(self.scroll)
+                if update is not None:  # if a change of state is detected
+                    self.loading = True  # start a loading screen (update="next_state_name")
+                    self.loading_screen.start(update, text=True, duration=750)
+
+            self.routine()
+
+
+
+"""class Game:
     def __init__(self):
         self.sound_manager = SoundManager()
         
@@ -190,3 +322,4 @@ class Game:
                 self.pause(mouse_p)  # Pause menu
             # General Function         
             pg.display.update()
+"""
