@@ -22,12 +22,13 @@ jobs:
           
       - name: Upgrade PIP,Building SDL2 and install Pygame 2.0.2
         run: |
+          sudo apt update
+          sudo apt install -y libsdl2-image-dev
           sudo apt-get install \
           python3-dev 
-          libsdl2-image-dev
           libsdl-mixer2-dev 
           libsdl-ttf2.0-dev 
-          libsdl1.2-dev 
+          libsdl2-dev 
           libsmpeg-dev 
           python-numpy 
           subversion 
@@ -38,6 +39,7 @@ jobs:
           libavcodec-dev 
           libfreetype6-dev
           
+          sudo apt upgrade
           python -m pip install --upgrade pip
           python -m pip install pyinstaller pygame==2.0.2
           
