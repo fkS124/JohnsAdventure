@@ -15,7 +15,7 @@ _MAC = "Darwin"
 host_os = os_system_str
 
 VERSION = "0.23"
-ICON_PATH_KEY = f"{resource_path("data/ui/logo.ico")}"
+ICON_PATH_KEY = str(resource_path("data/ui/logo.ico"))
 
 
 print(f"""
