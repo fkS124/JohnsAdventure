@@ -25,7 +25,6 @@ jobs:
       - name: Compiling the game
         run: |
           python -m PyInstaller build.spec
-          rm -rf build
           cv /dist/main /Executables/"John's Adventure Windows V0.23"
       - name: Commit changes 
         run: |
