@@ -26,7 +26,7 @@ jobs:
           sudo apt install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libfreetype6-dev python3-setuptools python3-dev python3 libportmidi-dev
           sudo apt-get build-dep libsdl2 libsdl2-image libsdl2-mixer libsdl2-ttf libfreetype6 python3 libportmidi0
           sudo cp /etc/apt/sources.list /etc/apt/sources.list~
-          sudo sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+          sudo sed -i~orig -e 's/# deb-src/deb-src/' /etc/apt/sources.list   
           sudo apt-get update
           sudo apt-get upgrade
           git clone https://github.com/pygame/pygame.git
