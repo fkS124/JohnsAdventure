@@ -6,10 +6,7 @@ _WINDOWS = "Windows"
 _LINUX = "Linux"
 _MAC = "Darwin"
 
-
-# OS of the host, if its Darwin, Change it to MacOS
-host_os = "MacOS" if platform.system() == _MAC else platform.system()
-
+host_os = platform.system()
 
 if host_os not in (_WINDOWS, _LINUX, _MAC):
     txt = f"""
@@ -17,7 +14,9 @@ if host_os not in (_WINDOWS, _LINUX, _MAC):
     Μη αναγνωρισμένο λειτουργικό σύστημα: {host_os}
     """
     raise ValueError(txt)
-
+    
+# OS of the host, if its Darwin, Change it to MacOS
+host_os = "MacOS" if platform.system() == _MAC else platform.system()
 
 VERSION = "0.23"
 
