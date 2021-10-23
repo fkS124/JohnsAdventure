@@ -1,7 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-print("""
-Compiling John's Adventures....
+
+import os
+
+import data.scripts.utils.resource_path as path
+
+_WINDOWS = "Windows"
+_LINUX = "Linux"
+_MAC = "Darwin"
+
+
+
+# OS of the host that 
+host_os = os_system_str
+
+VERSION = "0.23"
+ICON_PATH_KEY = f"{resource_path("data/ui/logo.ico")}"
+
+
+print(f"""
+Compiling John's Adventures for {host_os}....
 
 Pyinstaller config by @mariopapaz
 """)
@@ -37,7 +55,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='main',
+    name=f"John's Adventure v{VERSION} {host_os}",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -45,6 +63,7 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
+    icon='{ICON_PATH_KEY}'
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
