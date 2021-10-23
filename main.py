@@ -6,7 +6,7 @@
 '''
 
 
-from data.scripts.world import Game
+from data.scripts.world import main
 
 if __name__ == '__main__':
-    Game().update()
+    main()
