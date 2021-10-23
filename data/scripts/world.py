@@ -141,7 +141,7 @@ class Game:
                 if self.menu.start_game:
                    self.Menu = False
                    self.loading = True
-                   self.loading_screen.start("PlayerRoom")
+                   self.loading_screen.start("PlayerRoom", duration=2500, main_loading=True, cat=True, text=False, key_end=True)
             
             elif self.loading: 
                 update_return = self.loading_screen.update()
@@ -168,7 +168,7 @@ class Game:
                         if self.Player.InteractPoint == 2:
                             self.PlayerRoom, self.world, self.Player.x , self.Player.y, self.Player.is_interacting, self.o_index = False, self.worlds[1], 1120, 250, False, 1
                             self.loading = True
-                            self.loading_screen.start("Kitchen", text=False, cat=False, duration=1250)
+                            self.loading_screen.start("Kitchen", text=True, cat=False, duration=1250)
                      # End of John's Room
                 elif self.Kitchen:
                     self.Player.rooms_objects = self.objects[1]
@@ -181,7 +181,9 @@ class Game:
                     if self.Player.x >= 1005 and self.Player.y < 240 and self.Player.Interactable:
                         self.Player.is_interacting , self.Player.interact_text = True, 'stairs_up'
                         if self.Player.InteractPoint == 2:
-                            self.PlayerRoom, self.world, self.Kitchen, self.Player.x, self.Player.y, self.Player.is_interacting, self.o_index = True, self.worlds[0], False, 1080, 320, False, 0
+                            self.loading = True
+                            self.loading_screen.start("PlayerRoom", text=True, cat=False, duration=1250)
+                            self.world, self.Kitchen, self.Player.x, self.Player.y, self.Player.is_interacting, self.o_index = self.worlds[0], False, 1080, 320, False, 0
                 # Global stuff that all worlds share
                 self.Player.update(dt)  # Draw player
                 self.collision_system(self.o_index)
