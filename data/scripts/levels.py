@@ -36,7 +36,6 @@ class GameState:
         Bottom,
         Left,
         Right
-
         Checks for collision before input,
         else it will go throught the object and then do the calc
         """
@@ -64,6 +63,7 @@ class GameState:
 
         # display background
         self.display.blit(self.world, -camera.offset.xy)
+        self.scroll = camera.offset.xy
 
         """ Collision Algorithm and Entity Updater """
         for obj in self.objects:
@@ -71,16 +71,15 @@ class GameState:
             method.__code__.co_varnames -> ("arg1", "arg2", "var1", "var2", "var...") of the method
             so we remove self argument (useless) using [1:x]
             and we stop when we reach arguments' count gotten by : method.__code__.co_argcount
-
             get all the arguments of the func in a list -> the arguments must be found inside this class (GameState)
             for eg. : def update(self, screen, scroll)
             self is ignored, screen and scroll are found by getattr(self, "screen") and getattr(self, "scroll")
             """
-            pass
+            
             # Find the NPC
-            #if type(obj) is not pg.Rect:
-                #obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
-                #self.collision_system(obj.Rect)
+            if type(obj) is not pg.Rect:
+                obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
+                self.collision_system(obj.rect)
             # Its Furtniture or Borders
             #else:
                 #self.collision_system(obj)
@@ -101,7 +100,7 @@ class PlayerRoom(GameState):
         super().__init__(DISPLAY, player_instance)
 
         self.objects = [
-            #npc.NPCS.Mau(150,530),
+            npc.Mau((150,530), (300, 100)),
             #Rect(10,90, 430,360),
             #Rect(5,500, 72, 214),
             #Rect(450, 40, 410, 192),
@@ -122,7 +121,7 @@ class Kitchen(GameState):
 
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
         self.objects = [
-            npc.NPCS.Cynthia(570, 220),
+            npc.Cynthia((570, 220)),
             Chest(960,175, 0),
             Rect(20, 250, 250,350),
             Rect(280,300, 64, 256),
