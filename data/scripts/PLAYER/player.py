@@ -1,8 +1,6 @@
 '''
 Credits @Marios325346, @ƒkS124
-
 Here is john, our protagonist.
-
 '''
 
 
@@ -10,25 +8,22 @@ import pygame as p
 import math
 from random import random
 from ..sound_manager import SoundManager
-from ..utils import load, get_sprite, scale, flip_vertical, resource_path
+from ..utils import load, get_sprite, scale, flip_vertical, resource_path, l_path
 from .inventory import Inventory
 from .player_stats import UpgradeStation
-
+from .camera import Camera, Follow, Border, Auto
 
 p.font.init()
 font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
 debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
 
 class Player:
-    def __init__(self, x, y, screen, interface, data ,ui):
-        self.x, self.y = self.position = p.Vector2(x,y)
-        self.screen, self.InteractPoint, self.Interface = screen, 0, interface
+    def __init__(self, screen, font, ux, ui, data):
+        self.screen, self.InteractPoint, self.Interface = screen, 0, ux
         self.sound_manager = SoundManager(sound_only=True)
-       
-        self.Rect = p.Rect(self.x - 46, self.y, 64, 64)
-        self.speedX = self.speedY = 6 # Player's speed       
-        self.paused = self.click = self.Interactable = self.is_interacting = False #  Features       
-        self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement         
+        self.speedX = self.speedY = 0 # Player's speed
+        self.paused = self.click = self.Interactable = self.is_interacting = False #  Features
+        self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement
         self.interact_text =  '' # Debugging and Interaction
         self.data = data
         self.inventory = Inventory(self.screen, ui, font)
@@ -37,32 +32,89 @@ class Player:
         self.walking = False
 
         # Animation
-        self.sheet = load(resource_path('data/sprites/john.png'))
-           
+        self.sheet = l_path('data/sprites/john.png')
+
         self.a_index = 0
-          
-        self.walk_right = [scale(get_sprite(self.sheet, 46 * i, 0, 46, 52),3) for i in range(5)]
-        self.walk_left = [flip_vertical(image) for image in self.walk_right]
-        
-        self.walk_up = [scale(get_sprite(self.sheet, 46 * i, 52, 46, 52),3) for i in range(5)]
-        self.walk_down = [scale(get_sprite(self.sheet, 46 * i, 104, 46, 52),3) for i in range(5)]
-        
-        self.combo_1_3_up = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 52, 46, 52), 3) for i in range(5)]
-        self.combo_2_up = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 52, 46, 52), 3) for i in range(5)]
 
-        self.combo_1_3_down = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 52 * 2, 46, 52), 3) for i in range(5)]
-        self.combo_2_down = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 52 * 2, 46, 52), 3) for i in range(5)]
+        self.anim = {
+            # Right ANIMATION
+            'right': [],
+            'right_a_1': [],
+            'right_a_2': [],
+            # Up ANIMATION
+            'up': [],
+            'up_a_1': [],
+            'up_a_2': [],
+            # Down ANIMATION
+            'down': [],
+            'down_a_1': [],
+            'down_a_2': [],
 
-        self.combo_1_3_right = [scale(get_sprite(self.sheet, 46 * 5 + 46 * i, 0, 46, 52), 3) for i in range(5)]
-        self.combo_1_3_left = [flip_vertical(image) for image in self.combo_1_3_right]
-        
-        self.combo_2_right = [scale(get_sprite(self.sheet, 46 * 10 + 46 * i, 0, 46, 52), 3) for i in range(5)]
-        self.combo_2_left = [flip_vertical(image) for image in self.combo_2_right]
-        
-        self.dashing_right = [scale(get_sprite(self.sheet, 46 * i, 52*3, 46, 52),3) for i in range(5)]
-        self.dashing_left = [flip_vertical(image) for image in self.dashing_right]
-        self.dashing_up = [scale(get_sprite(self.sheet, 46 * i + 46 * 5, 52*3, 46, 52),3) for i in range(5)]
-        self.dashing_down = [scale(get_sprite(self.sheet, 46 * i + 46 * 10, 52*3, 46, 52),3) for i in range(5)]
+            # Dash ANIMATION
+            'dash_r': [],
+            'dash_u': [],
+            'dash_d': []
+        }
+
+        def get_j(row, col):
+            return scale(get_sprite(self.sheet, 46 * row, 52 * col, 46, 52),3)
+
+        # This for loop is reliable only for the current spritesheet
+        # W :46
+        # H: 52
+        x_gap = y_gap = 0
+        for key, value in self.anim.items():
+            temp_list = [] # Holds the 5 frames
+            for i in range(5):
+                temp_list.append(get_j(x_gap, y_gap))
+                x_gap += 1
+            self.anim[key] = temp_list # Update the item key
+            # It has reached the end of spritesheet
+            if x_gap > 13:
+                x_gap = 0
+                y_gap += 1
+
+        # Load the reverse frames to the dict for the left animation
+        self.anim['left'] = [
+            flip_vertical(sprite) for sprite in self.anim['right']
+        ]
+
+        self.anim['left_a_1'] = [
+            flip_vertical(sprite) for sprite in self.anim['right_a_1']
+        ]
+
+        self.anim['left_a_2'] = [
+            flip_vertical(sprite) for sprite in self.anim['right_a_2']
+        ]
+
+        #print(self.anim)
+
+        """
+
+            Player Content
+
+        """
+
+        self.rect = self.anim['right'][0].get_rect() # This gets changed later
+
+        # First spawn
+        self.rect.x = 510
+        self.rect.y = 290
+
+        """
+
+            Camera Settings
+
+        """
+        self.camera = Camera(self, screen)
+        self.camera_mode = {
+            "follow": Follow(self.camera, self),
+            "border": Border(self.camera, self),
+            "auto": Auto(self.camera, self)
+        }
+
+        # Default camera mod
+        self.camera.set_method(self.camera_mode['follow'])
 
         self.looking_down = False
         self.looking_up = False
@@ -72,8 +124,8 @@ class Player:
         self.index_attack_animation = 0
         self.delay_attack_animation = 0
         self.restart_animation = True
-        self.attacking_frame = self.combo_1_3_left[self.index_attack_animation]
-        
+        self.attacking_frame = self.anim['left_a_2'][self.index_attack_animation]
+
         ''' Stats'''
 
         # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width / max_hp * hp
@@ -101,35 +153,45 @@ class Player:
 
         # Levelling
         self.experience = 0 # XP
-        self.experience_width = 0 # This is for the UI 
+        self.experience_width = 0 # This is for the UI
         self.level_index = 1
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
-  
+
         self.upgrade_station = UpgradeStation(self.screen, ui, font, self)
-        
+
         ''' UI '''
         self.health_box = scale(ui.parse_sprite('health'),5)
         self.heart = scale(ui.parse_sprite('heart'), 4)
-        self.hp_box_rect = self.health_box.get_rect(topleft = (self.screen.get_width() - self.health_box.get_width() - 90, 20))
+        self.hp_box_rect = self.health_box.get_rect(
+            topleft = (
+                self.screen.get_width() - self.health_box.get_width() - 90,
+                20
+            )
+        )
 
-        
+
         '''  Combat System '''
-        self.crosshair,  self.attack_pointer = ui.parse_sprite("mouse_cursor"), load(resource_path('data/ui/attack_pointer.png'), True)
-
-        self.attacking = False
+        self.crosshair = ui.parse_sprite("mouse_cursor"),
+        self.attack_pointer = l_path('data/ui/attack_pointer.png', True)
+        self.attaxxxxcking = False
         self.current_combo = 0
-        self.last_attack = 3 # The number of attacks the player deals to the enemy, last is rewarding extra damage
-        self.last_attacking_click = 0  # ticks value in the future
-        self.attack_speed = 1150 # still to be determined  This is the cooldown of the last attack 
-        self.attack_cooldown = 450  # still to be determined
+        # The number of attacks, last is rewarding extra damage
+        self.last_attack = 3
+        # ticks value in the future
+        self.last_attacking_click = 0
+        # still to be determined  This is the cooldown of the last attack
+        self.attack_speed = 1150
+        # still to be determined
+        self.attack_cooldown = 450
         self.max_combo_multiplier = 1.025
         self.last_combo_hit_time = 0
         self.next_combo_available = True
-
+        self.attacking = False
         self.attacking_hitbox = None
-        self.attacking_hitbox_size = (self.Rect.height*2, self.Rect.width)  # reversed when up or down -> (100, 250)
+        # reversed when up or down -> (100, 250)
+        self.attacking_hitbox_size = (self.rect.height*2, self.rect.width)
         self.rooms_objects = []
 
     def leveling(self):
@@ -151,12 +213,12 @@ class Player:
 
     def check_for_hitting(self):
         '''
-        room_objects is a list containing only the enemies of the current environment, 
+        room_objects is a list containing only the enemies of the current environment,
         for each one, if they are attackable and player hits them, they will lose hp
         '''
         for obj in self.rooms_objects:
             if hasattr(obj, "attackable"):
-                if obj.attackable:  
+                if obj.attackable:
                     if self.attacking_hitbox.colliderect(obj.Rect):
                         self.sound_manager.play_sound("dummyHit") # This is where it will play the object's hit sound NOT THE SWORD
                         crit = self.get_crit()
@@ -165,10 +227,10 @@ class Player:
                     if obj.hp <= 0: # Check if its dead , give xp to the player
                         self.experience += obj.xp_drop
 
-    def attack(self):
+    def attack(self, pos):
 
         click_time = p.time.get_ticks()
-        
+
 
         if not self.attacking and self.inventory.get_equiped("Weapon") is not None:
             self.attacking = True
@@ -176,31 +238,27 @@ class Player:
             self.sound_manager.play_sound("woodenSword") # Play first hit
             self.current_combo += 1
             self.next_combo_available = False
-            self.update_attack()
+            self.update_attack(pos)
             self.check_for_hitting()
 
         else:
-            if not self.next_combo_available:
-                pass
-            else:
+            if self.next_combo_available:
                 if click_time - self.last_attacking_click > self.attack_speed:
                     self.attacking = False
                     self.current_combo = 0
-                else:                
+                else:
                     self.sound_manager.play_sound("woodenSword") # Play sound 2
                     self.restart_animation = True
                     self.current_combo += 1
                     self.last_attacking_click = click_time
-                    self.update_attack()
+                    self.update_attack(pos)
                     self.check_for_hitting()
                     self.next_combo_available = False
 
-                    if self.current_combo < self.last_attack:
-                        pass
-                    else:
+                    if self.current_combo > self.last_attack:
                         self.last_combo_hit_time = p.time.get_ticks()
 
-    def update_attack(self):
+    def update_attack(self, pos):
         ''' This function is for updating the players hitbox based on the mouse position and also updating his animation'''
 
         # print("Up:", self.looking_up, "Down:", self.looking_down, "Left:", self.looking_left, "Right:", self.looking_right)
@@ -208,42 +266,42 @@ class Player:
 
         if self.attacking:
 
-            # sets the attacking hitbox according to the direction 
+            # sets the attacking hitbox according to the direction
             if self.looking_up:
-                self.attacking_hitbox = p.Rect(self.Rect.x, self.Rect.y-2*self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(self.rect.x, self.rect.y-2*self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_down:
-                self.attacking_hitbox = p.Rect(self.Rect.x, self.Rect.y+self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(self.rect.x, self.rect.y+self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_left:
-                self.attacking_hitbox = p.Rect(self.Rect.x-self.attacking_hitbox_size[0], self.Rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+                self.attacking_hitbox = p.Rect(self.rect.x-self.attacking_hitbox_size[0], self.rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
             elif self.looking_right:
-                self.attacking_hitbox = p.Rect(self.Rect.x+self.attacking_hitbox_size[1], self.Rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+                self.attacking_hitbox = p.Rect(self.rect.x+self.attacking_hitbox_size[1], self.rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
 
             # animation delay of 100 ms
             if p.time.get_ticks() - self.delay_attack_animation > 100 and self.restart_animation:
-                
+
                 # select the animation list according to where the player's looking at
+                a = self.anim
                 if self.looking_right:
-                    curr_anim = self.combo_1_3_right if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_right
+                    curr_anim = a['right_a_1'] if self.current_combo == 1 or self.current_combo == 3 else a['right_a_2']
                 elif self.looking_left:
-                    curr_anim = self.combo_1_3_left if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_left
+                    curr_anim = a['left_a_1'] if self.current_combo == 1 or self.current_combo == 3 else a['left_a_2']
                 elif self.looking_down:
-                    curr_anim = self.combo_1_3_down if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_down
+                    curr_anim = a['down_a_1'] if self.current_combo == 1 or self.current_combo == 3 else a['down_a_2']
                 elif self.looking_up:
-                    curr_anim = self.combo_1_3_up if self.current_combo == 1 or self.current_combo == 3 else self.combo_2_up
+                    curr_anim = a['up_a_1'] if self.current_combo == 1 or self.current_combo == 3 else a['up_a_2']
 
                 if self.index_attack_animation + 1 < len(curr_anim):  # check if the animation didn't reach its end
                         self.delay_attack_animation = p.time.get_ticks()  # reset the delay
                         self.attacking_frame = curr_anim[self.index_attack_animation+1]  # change the current animation frame
                         self.index_attack_animation+=1  # increment the animation index
                 else:
-                    #print("ended animation")
                     self.restart_animation = False  # don't allow the restart of the animation until a next combo is reached
                     self.index_attack_animation = 0  # reset the animation index, without changing the frame in order to stay in "pause"
                     self.next_combo_available = True  # allow to attack again
 
 
             #p.draw.rect(self.screen, (255,255,255), self.Rect)
-            self.screen.blit(self.attacking_frame, (self.Rect[0], self.Rect[1] - 80))
+            self.screen.blit(self.attacking_frame, pos)
 
             # reset the whole thing if the combo reach his end and the animation of the last hit ended too
             if self.current_combo == self.last_attack and not self.restart_animation and not self.index_attack_animation:
@@ -252,42 +310,77 @@ class Player:
                 self.next_combo_available = True  # allow to attack again
                 self.restart_animation = True  # allow to restart an animation
 
-            # show hitbox
-            # p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox)
-
+            # p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox) show hitbox
             if p.time.get_ticks() - self.last_attacking_click > self.attack_speed:
                 self.attacking = False
                 self.current_combo = 0
                 self.next_combo_available = True
                 self.restart_animation = True
-
                 # RESET ANIMATION HERE
-        
-    # This is temporar because we will upgrade HP bar soon ;)
-    def health_bar(self):
+
+    def user_interface(self, m, player_pos):
+
         # Health bar
-        p.draw.rect(self.screen, (255,0,0), p.Rect(self.hp_box_rect.x,self.hp_box_rect.y  + 20, self.health, 25)) 
+        p.draw.rect(
+        self.screen, (255,0,0),
+        p.Rect(
+            self.hp_box_rect.x,self.hp_box_rect.y  + 20,
+            self.health, 25)
+        )
 
         # Dash Cooldown bar
-        p.draw.rect(self.screen, (0,255,0), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 90, self.dash_width, 15))
+        p.draw.rect(
+            self.screen, (0,255,0),
+            p.Rect(
+                self.hp_box_rect.x, self.hp_box_rect.y  + 90,
+                self.dash_width, 15)
+        )
 
         # Experience bar
-        p.draw.rect(self.screen, (0,255,255), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y  + 60, self.experience_width, 15))
-        
-        # Player UI 
+        p.draw.rect(
+            self.screen, (0,255,255),
+            p.Rect(
+                self.hp_box_rect.x, self.hp_box_rect.y  + 60,
+                self.experience_width, 15
+                )
+        )
+
+        # Player UI
         self.screen.blit(self.health_box, self.hp_box_rect)
-        
+
         # Heart Icon
-        self.screen.blit(self.heart, (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15))
+        self.screen.blit(
+            self.heart,
+            (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15)
+        )
 
          # Level status button goes here
         self.upgrade_station.update(self)
 
         # Inventory Icon
         self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
-    
-    def set_looking(self, dir_:str):
-        ''' This function is for coordinating the attacking hitbox '''
+
+        # recalculate the damages, considering the equiped weapon
+        self.modified_damages = self.damage + (
+            self.inventory.get_equiped("Weapon").damage \
+             if self.inventory.get_equiped("Weapon") is not None else 0
+        )
+        equiped = self.inventory.get_equiped("Weapon")
+        if hasattr(equiped, "special_effect"):
+            equiped.special_effect()
+
+        # if player presses interaction key and is in a interaction zone
+        if self.Interactable and self.is_interacting:
+            self.Interface.draw(self.interact_text)
+
+        # Crosshair
+        #self.screen.blit(self.crosshair, self.crosshair.get_rect(center=m))
+
+    def set_looking(self, dir_:str, pos):
+        '''
+            This function is for coordinating the hitbox
+            and also playing the looking animation
+        '''
         if dir_ == "up":
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = True, False, False, False
         elif dir_ == "down":
@@ -296,6 +389,11 @@ class Player:
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, False, True
         elif dir_ == "right":
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
+
+        if self.walking:
+                self.screen.blit(self.anim[dir_][self.a_index // 7], pos)
+        else:
+            self.screen.blit(self.anim[dir_][0], pos)
 
     def start_dash(self):
 
@@ -312,7 +410,6 @@ class Player:
                 self.dashing_direction = "right"
             else:
                 self.dashing_direction = "up"
-            
 
     def update_dash(self, dt):
 
@@ -331,9 +428,9 @@ class Player:
                         anim = self.dashing_down
                 self.index_dash_animation = (self.index_dash_animation + 1) % len(anim)
                 self.current_dashing_frame = anim[self.index_dash_animation]
-            self.screen.blit(self.current_dashing_frame, (self.Rect[0], self.Rect[1] - 80))
+            self.screen.blit(self.current_dashing_frame, (self.rect[0], self.rect[1] - 80))
 
-            if p.time.get_ticks() - self.dash_start > 75:
+            if p.time.get_ticks() - self.dash_start > 125:
                 self.dashing = False
                 self.last_dash_end = p.time.get_ticks()
                 self.delay_increasing_dash = self.last_dash_end
@@ -344,13 +441,13 @@ class Player:
                 freq = 25 # Frequency of the dash
                 match self.dashing_direction:
                     case "up":
-                        self.y -= 15*dt*freq
+                        self.rect.y -= 15*dt*freq
                     case "down":
-                        self.y += 15*dt*freq
+                        self.rect.y += 15*dt*freq
                     case "right":
-                        self.x += 15*dt*freq
+                        self.rect.x += 15*dt*freq
                     case "left":
-                        self.x -= 15*dt*freq
+                        self.rect.x -= 15*dt*freq
 
         else:
             if p.time.get_ticks() - self.delay_increasing_dash > self.dash_cd / ((11 / 3) * 2):
@@ -361,167 +458,150 @@ class Player:
                 self.dash_available = True
                 self.dash_width = 180
 
-    def update(self, dt): # delta time
+    def animation_handing(self, dt, m, pos):
+        self.update_attack(pos)
+        self.update_dash(dt)
 
-        # recalculate the damages, considering the equiped weapon
-        self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
-        equiped = self.inventory.get_equiped("Weapon")
-        if hasattr(equiped, "special_effect"):
-            equiped.special_effect()
-        
-        
-        self.leveling()
-        self.controls()
-        self.health_bar()    
-        if not self.inventory.show_menu:
-            
-            if not self.attacking: # if he is not attacking, allow him to move
-                ''' Movement '''
-                if self.Up: 
-                    self.y -= self.speedY 
-                    dash_vel = -25 
-                elif self.Down: 
-                    self.y += self.speedY   
-                    dash_vel = 25
-                
-                if self.Left: 
-                    self.x -= self.speedX   
-                    dash_vel = -25 if not self.Down else 25 # Diagonal
-                # Note: Add here a smoother diagonal dash if combat system demands it
-                elif self.Right: 
-                    self.x += self.speedX 
-                    dash_vel = 25 if not self.Up else -25 # Diagonal
-            
-            else: # He is attacking
-                dash_vel = 0
-                    
-            ''' Animation '''
-            if self.a_index >= 27: self.a_index = 0
-            self.a_index += 1
-        else: # Player is looking at the inventory,therefore dont allow him to animate walking
-            self.a_index = 0 # Play only first frame
+        if not self.attacking and not self.dashing:
+            if m[0] > 550 and m[0] < 750:
+                if m[1] < self.rect.y: # ? Up
+                    self.set_looking("up", pos)
+                else: # ? Down
+                    self.set_looking("down", pos)
 
+            else: # Left/Right
+                if m[0] <= self.rect.x: # ? Left
+                    self.set_looking("left", pos)
+                else: # ? Right
+                    self.set_looking("right", pos)
 
-        ''' Animation '''
-        player_pos = self.Rect[0], self.Rect[1] - 80
-        # ? Mouse position
-        mouse_p = p.mouse.get_pos()
-        
-        # ! Noooo you can't make calculations for silly stuff , haha  trig go brrrrrrr
-        angle = math.atan2(mouse_p[0] - self.Rect.midbottom[0], mouse_p[1] - self.Rect.midbottom[1]) 
-        x, y = player_pos[0] - math.cos(angle), player_pos[1] - math.sin(angle) + 10 # where the 50 is the distance around the player
+    def movement(self, m, pos):
+        # Draw the Ring
+        angle = math.atan2(
+            m[0] - self.rect.midbottom[0],
+            m[1] - self.rect.midbottom[1]
+        )
+        x, y = pos[0] - math.cos(angle), pos[1] - math.sin(angle) + 10
         image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
         ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
         self.screen.blit(image, ring_pos)
-        self.update_attack()
-        self.update_dash(dt)
 
-        # Player animation
-        if not self.attacking and not self.dashing:
-            if mouse_p[0] > 550 and mouse_p[0] < 750:
-                if mouse_p[1] < self.Rect.y: # ? Up
-                    self.set_looking("up")
-                    if self.walking:
-                            self.screen.blit(self.walk_up[self.a_index // 7], player_pos) 
-                    else:
-                        self.screen.blit(self.walk_up[0], player_pos)
-                else: # ? Down
-                    self.set_looking("down")
-                    if self.walking:
-                            self.screen.blit(self.walk_down[self.a_index // 7], player_pos) 
-                    else:
-                        self.screen.blit(self.walk_down[0], player_pos)
-            else: # Left/Right
-                if mouse_p[0] <= self.Rect.x: # ? Left
-                    self.set_looking("left")
-                    if self.walking:
-                            self.screen.blit(self.walk_left[self.a_index // 7], player_pos) 
-                    else:
-                        self.screen.blit(self.walk_left[0], player_pos)
-                else: # ? Right
-                    self.set_looking("right")
-                    if self.walking:
-                            self.screen.blit(self.walk_right[self.a_index // 7], player_pos) 
-                    else:
-                        self.screen.blit(self.walk_right[0], player_pos)
-                       
-            
+        if not self.inventory.show_menu:
+            if not self.attacking: # if he is not attacking, allow him to move
+                ''' Movement '''
+                if self.Up:
+                    self.rect.y -= self.speedY
+                    dash_vel = -25
+                elif self.Down:
+                    self.rect.y += self.speedY
+                    dash_vel = 25
+                if self.Left:
+                    self.rect.x -= self.speedX
+                    dash_vel = -25 if not self.Down else 25 # Diagonal
+                elif self.Right:
+                    self.rect.x += self.speedX
+                    dash_vel = 25 if not self.Up else -25 # Diagonal
+            else: # He is attacking
+                dash_vel = 0
+
+            ''' Animation '''
+            # fks will get rid of the frame paddding and use frame time
+            if self.a_index >= 27:
+                self.a_index = 0
+            self.a_index += 1
+       # Player is looking at the inventory, stop animation
+        else:
+            self.a_index = 0 # Play only first frame
+
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
-      
-        # if player presses interaction key and is in a interaction zone
-        if self.Interactable and self.is_interacting:
-            self.Interface.draw(self.interact_text)
-     
-        self.screen.blit(self.crosshair, self.crosshair.get_rect(center=mouse_p)) # Mouse Cursor
 
-    def controls(self):       
-        for event in p.event.get():   
+        # Update the camera: ALWAYS LAST LINE
+        self.camera.scroll()
+
+    def handler(self,dt):
+        player_p  = (
+        # 52 48 are players height and width
+        self.rect.x - 52 - self.camera.offset.x,
+        self.rect.y - self.camera.offset.y - 48
+        )
+        m = p.mouse.get_pos()
+
+        self.leveling()
+        self.controls(player_p)
+        self.movement(m , player_p)
+        self.animation_handing(dt, m, player_p)
+        self.user_interface(m, player_p)
+
+
+    def update(self, dt):
+        # Function that handles everything :brain:
+        self.handler(dt)
+
+    def controls(self, pos):
+        '''
+            Getting input from the user
+        '''
+        for e in p.event.get():
             keys = p.key.get_pressed()
-            if event.type == p.QUIT: 
-                p.quit(); raise SystemExit
+            self.click = False
+            a = self.data['controls']
 
-            if not self.inventory.show_menu: # if player is looking at the inventory dont allow him to press keys besides Inventory
-                self.Up, self.Down, self.Left, self.Right = keys[self.data["controls"]["up"]], keys[self.data["controls"]["down"]], keys[self.data["controls"]["left"]], keys[self.data["controls"]["right"]]      
-            self.speedX = self.speedY = 6 if not(self.paused) else 0 # If player pauses the game
-            
-                        
-            # ----- Keybinds -----         
-            if event.type == p.KEYDOWN:
-                ''' Toggle Fullscreen '''
-                if event.key == p.K_F12:  p.display.toggle_fullscreen()
-                
-                ''' Dash Ability'''
-                if event.key == self.data["controls"]["dash"]:             
-                    self.start_dash()
-                        
-                ''' Inventory '''
-                if event.key == self.data["controls"]["inventory"]:
-                    self.inventory.set_active()
+            if not self.inventory.show_menu:
+               self.Up = keys[a["up"]]
+               self.Down = keys[a["down"]]
+               self.Right = keys[a["left"]]
+               self.Left = keys[a["right"]]
 
-                if self.inventory.show_menu:
-                    if event.key == p.K_UP: # scroll up
-                        self.inventory.scroll_up()
-                    
-                    if event.key == p.K_DOWN: # scroll down
-                        self.inventory.scroll_down()
-                        self.srl_gap += 1
+            interact = a['interact']
+            dash = a['dash']
+            inv = a['inventory']
+            itr = a['interact']
+            self.speedX = -6 if not(self.paused) else 0
+            self.speedY = 6 if not(self.paused) else 0
 
-                ''' Interaction '''
-                if event.key == self.data["controls"]["interact"]: 
-                    self.Interactable = True 
-                    self.InteractPoint += 1 
+            # Reset Interaction
+            if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
+               self.walking = True
+               self.InteractPoint, self.Interactable = 0, False
+               self.is_interacting = False
+               self.Interface.reset()
 
-                # Reset Interaction
-                if self.Up or self.Down or self.Right or self.Left or self.InteractPoint == 3:
-                    self.walking = True                                
-                    self.InteractPoint, self.Interactable = 0, False
-                    self.is_interacting = False
-                    self.Interface.reset()
+            match e.type:
+                  case p.QUIT:
+                       raise SystemExit
 
-                '''Pause the game'''
-                if event.key == p.K_ESCAPE:
-                      if self.paused: self.paused = False                
-                      else: self.paused = True   
-            # ----- Mouse -----                       
-            if event.type == p.MOUSEBUTTONDOWN: 
-                if event.button == 1:
-                    self.inventory.handle_clicks(event.pos)
-                    self.upgrade_station.handle_clicks(event.pos)
+                  case p.KEYDOWN:
+                       match e.key:
+                             case p.K_F12:
+                                  p.display.toggle_fullscreen()
 
-                if self.inventory.show_menu:
-                    if event.button == 4:  # scroll up
-                        if self.inventory.im_rect.collidepoint(event.pos):  # check if the mouse is colliding with the rect
-                            self.inventory.scroll_up()
-                    if event.button == 5:  # scroll down
-                        if self.inventory.im_rect.collidepoint(event.pos):
-                            self.inventory.scroll_down()  
-                elif self.upgrade_station.show_menu:
-                    pass
-                else:
-                    if event.button == 1:
-                        self.attack()
+                       # Temporar until we get a smart python ver
+                       if e.key == inv:
+                          self.inventory.set_active()
 
-                self.click = True         
-            else: 
-                self.click = False
+                       elif e.key == dash:
+                            self.start_dash()
+
+                       elif itr:
+                            self.Interactable = True
+                            self.InteractPoint += 1
+
+                  case p.MOUSEBUTTONDOWN:
+                       match e.button:
+                             # left click
+                             case 1:
+                                  self.inventory.handle_clicks(e.pos)
+                                  self.upgrade_station.handle_clicks(e.pos)
+                                  # Attack only when player is not in inv
+                                  if not self.inventory.show_menu:
+                                     self.attack(pos)
+                                  self.click = True
+                             # scroll up
+                             case 4:
+                                  if self.inventory.show_menu:
+                                     self.inventory.scroll_up()
+                             # scroll down
+                             case 5:
+                                  if self.inventory.show_menu:
+                                     self.inventory.scroll_down()

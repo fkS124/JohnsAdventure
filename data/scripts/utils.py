@@ -22,6 +22,11 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, str(pathlib.Path(relative_path)))
 
+def l_path(relative_path, alpha = None):
+    ''' Upgraded load function for PyInstaller '''
+    if alpha:
+        return pygame.image.load(resource_path(relative_path)).convert_alpha()
+    return pygame.image.load(resource_path(relative_path)).convert()
 
 @lru_cache(1000)
 def load(path, alpha = None):
