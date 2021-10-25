@@ -33,6 +33,15 @@ class NPC:
                  move_up=None
                  ):
 
+        self.IDENTITY = "NPC"  # -> useful to check fastly the type of object we're dealing with
+
+        self.move_ability = {
+            "left": True,
+            "right": True,
+            "up": True,
+            "down": True
+        }
+
         # STATE
         self.state = "move" if moving else "idle"
         self.moving = moving
@@ -152,31 +161,46 @@ class MovingNPC(NPC):
     def move(self):
         match self.direction:
             case "left":
-                self.rect.x -= self.velocity[0]
+                self.rect.x -= self.velocity[0] if self.move_ability["left"] else 0
             case "right":
-                self.rect.x += self.velocity[0]
+                self.rect.x += self.velocity[0] if self.move_ability["right"] else 0
             case "down":
-                self.rect.y += self.velocity[1]
+                self.rect.y += self.velocity[1] if self.move_ability["up"] else 0
             case "up":
-                self.rect.y -= self.velocity[1]
+                self.rect.y -= self.velocity[1] if self.move_ability["down"] else 0
 
-    def switch_directions(self):
+    def switch_directions(self, blocked_direction=None):
         directions = ["left", "right", "down", "up"]
         directions.remove(self.direction)
+        if blocked_direction is not None and blocked_direction in directions:
+            directions.remove(blocked_direction)
 
         match self.movement:
             case "random":
                 self.direction = choice(directions)
             case "lateral":
-                self.direction = "left" if self.direction == "right" else "right"
+                if blocked_direction is not None :
+                    if self.direction == blocked_direction == "left":
+                        self.direction = "right"
+                    elif self.direction == blocked_direction == "right":
+                        self.direction = "left"
+                else:
+                    self.direction = "right" if self.direction == "left" else "left"
+
             case "vertical":
-                self.direction = "up" if self.direction == "down" else "down"
+                if blocked_direction is not None :
+                    if self.direction == blocked_direction == "up":
+                        self.direction = "down"
+                    elif self.direction == blocked_direction == "down":
+                        self.direction = "up"
+                else:
+                    self.direction = "up" if self.direction == "down" else "down"
 
     def logic(self):
         super().logic()
 
         if self.check_outside_rect():
-            
+
             self.switch_directions()
 
         self.move()
