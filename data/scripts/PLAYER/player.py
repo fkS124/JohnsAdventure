@@ -21,7 +21,14 @@ class Player:
     def __init__(self, screen, font, ux, ui, data):
         self.screen, self.InteractPoint, self.Interface = screen, 0, ux
         self.sound_manager = SoundManager(sound_only=True)
-        self.speedX = self.speedY = 0 # Player's speed
+        self.velocity = p.Vector2(0, 0) # Player's speed
+        self.direction = "left"
+        self.move_ability = {
+            "left": True,
+            "right": True,
+            "up": True,
+            "down": True
+        }
         self.paused = self.click = self.Interactable = self.is_interacting = False #  Features
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement
         self.interact_text =  '' # Debugging and Interaction
@@ -33,6 +40,13 @@ class Player:
 
         # Animation
         self.sheet = l_path('data/sprites/john.png')
+        self.lvl_up_ring_sheet = l_path('data/sprites/level_up_ring.png', alpha=True)  # W: 26 H:20 NFr:5
+
+        self.lvl_up_ring = [scale(get_sprite(self.lvl_up_ring_sheet, i*27, 0, 27, 20), 4) for i in range(5)]
+        self.ring_lu = False
+        self.delay_rlu = 0
+        self.id_rlu = 0
+        self.current_frame_ring = self.lvl_up_ring[0]
 
         self.a_index = 0
 
@@ -159,7 +173,7 @@ class Player:
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
 
-        self.upgrade_station = UpgradeStation(self.screen, ui, font, self)
+        self.upgrade_station = UpgradeStation(self.screen, ui, p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
 
         ''' UI '''
         self.health_box = scale(ui.parse_sprite('health'),5)
@@ -201,8 +215,9 @@ class Player:
             self.level += 1 # Increase the level
             self.experience = 0 # Reset XP
             self.level_index += 1 # a index for multiplying 180(width)
+            self.upgrade_station.new_level()
+            self.ring_lu = True
         self.experience_width = self.experience / self.level_index # Player needs more and more exp on each level, therefore we have to cut it
-        self.upgrade_station.new_level()
 
     def get_crit(self):
         crit = random()
@@ -219,7 +234,7 @@ class Player:
         for obj in self.rooms_objects:
             if hasattr(obj, "attackable"):
                 if obj.attackable:
-                    if self.attacking_hitbox.colliderect(obj.Rect):
+                    if self.attacking_hitbox.colliderect(obj.rect):
                         self.sound_manager.play_sound("dummyHit") # This is where it will play the object's hit sound NOT THE SWORD
                         crit = self.get_crit()
                         obj.deal_damage(self.modified_damages+crit, crit>0) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier+crit, crit>0)
@@ -477,29 +492,32 @@ class Player:
 
     def movement(self, m, pos):
         # Draw the Ring
+        
         angle = math.atan2(
-            m[0] - self.rect.midbottom[0],
-            m[1] - self.rect.midbottom[1]
+            m[1] - (self.rect.top + 95 - self.camera.offset.y),
+            m[0] - (self.rect.left + 10 - self.camera.offset.x),
         )
         x, y = pos[0] - math.cos(angle), pos[1] - math.sin(angle) + 10
-        image = p.transform.rotate(self.attack_pointer, math.degrees(angle))
+        angle = abs(math.degrees(angle))+90 if angle < 0 else 360-math.degrees(angle)+90
+        image = p.transform.rotate(self.attack_pointer, angle)
         ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
-        self.screen.blit(image, ring_pos)
+        if not self.ring_lu:
+            self.screen.blit(image, ring_pos)
 
         if not self.inventory.show_menu:
             if not self.attacking: # if he is not attacking, allow him to move
                 ''' Movement '''
-                if self.Up:
-                    self.rect.y -= self.speedY
+                if self.Up and self.move_ability["up"]:
+                    self.rect.y -= self.velocity[1]
                     dash_vel = -25
-                elif self.Down:
-                    self.rect.y += self.speedY
+                elif self.Down and self.move_ability["down"]:
+                    self.rect.y += self.velocity[1]
                     dash_vel = 25
-                if self.Left:
-                    self.rect.x -= self.speedX
+                if self.Left and self.move_ability["right"]:
+                    self.rect.x -= self.velocity[0]
                     dash_vel = -25 if not self.Down else 25 # Diagonal
-                elif self.Right:
-                    self.rect.x += self.speedX
+                elif self.Right and self.move_ability["left"]:
+                    self.rect.x += self.velocity[0]
                     dash_vel = 25 if not self.Up else -25 # Diagonal
             else: # He is attacking
                 dash_vel = 0
@@ -519,6 +537,19 @@ class Player:
         # Update the camera: ALWAYS LAST LINE
         self.camera.scroll()
 
+    def animate_level_up_ring(self):
+        if self.ring_lu:
+            if p.time.get_ticks() - self.delay_rlu > 150:
+                self.delay_rlu = p.time.get_ticks()
+                if self.id_rlu + 1 < len(self.lvl_up_ring):
+                    self.id_rlu += 1
+                else:
+                    self.ring_lu = False
+                    self.id_rlu = 0
+
+                self.current_frame_ring = self.lvl_up_ring[self.id_rlu]
+            self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(center=self.rect.topleft-self.camera.offset.xy+p.Vector2(15, 95)))
+
     def handler(self,dt):
         player_p  = (
         # 52 48 are players height and width
@@ -531,8 +562,8 @@ class Player:
         self.controls(player_p)
         self.movement(m , player_p)
         self.animation_handing(dt, m, player_p)
+        self.animate_level_up_ring()
         self.user_interface(m, player_p)
-
 
     def update(self, dt):
         # Function that handles everything :brain:
@@ -557,8 +588,7 @@ class Player:
             dash = a['dash']
             inv = a['inventory']
             itr = a['interact']
-            self.speedX = -6 if not(self.paused) else 0
-            self.speedY = 6 if not(self.paused) else 0
+            self.velocity = p.Vector2(-6, 6) if not(self.paused) else p.Vector2(0, 0)
 
             # Reset Interaction
             if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
@@ -568,40 +598,44 @@ class Player:
                self.Interface.reset()
 
             match e.type:
-                  case p.QUIT:
-                       raise SystemExit
+                case p.QUIT:
+                    raise SystemExit
 
-                  case p.KEYDOWN:
-                       match e.key:
-                             case p.K_F12:
-                                  p.display.toggle_fullscreen()
+                case p.KEYDOWN:
+                    match e.key:
+
+                        case p.K_a:
+                            self.ring_lu = True
+        
+                        case p.K_F12:
+                            p.display.toggle_fullscreen()
 
                        # Temporar until we get a smart python ver
-                       if e.key == inv:
-                          self.inventory.set_active()
+                    if e.key == inv:
+                        self.inventory.set_active()
 
-                       elif e.key == dash:
-                            self.start_dash()
+                    elif e.key == dash:
+                        self.start_dash()
 
-                       elif itr:
-                            self.Interactable = True
-                            self.InteractPoint += 1
+                    elif itr:
+                        self.Interactable = True
+                        self.InteractPoint += 1
 
-                  case p.MOUSEBUTTONDOWN:
-                       match e.button:
-                             # left click
-                             case 1:
-                                  self.inventory.handle_clicks(e.pos)
-                                  self.upgrade_station.handle_clicks(e.pos)
-                                  # Attack only when player is not in inv
-                                  if not self.inventory.show_menu:
-                                     self.attack(pos)
-                                  self.click = True
-                             # scroll up
-                             case 4:
-                                  if self.inventory.show_menu:
-                                     self.inventory.scroll_up()
-                             # scroll down
-                             case 5:
-                                  if self.inventory.show_menu:
-                                     self.inventory.scroll_down()
+                case p.MOUSEBUTTONDOWN:
+                    match e.button:
+                        # left click
+                        case 1:
+                            self.inventory.handle_clicks(e.pos)
+                            self.upgrade_station.handle_clicks(e.pos)
+                            # Attack only when player is not in inv
+                            if not self.inventory.show_menu:
+                                self.attack(pos)
+                            self.click = True
+                            # scroll up
+                        case 4:
+                            if self.inventory.show_menu:
+                                self.inventory.scroll_up()
+                            # scroll down
+                        case 5:
+                            if self.inventory.show_menu:
+                                self.inventory.scroll_down()

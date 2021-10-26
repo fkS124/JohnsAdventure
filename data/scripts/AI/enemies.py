@@ -15,13 +15,16 @@ class Enemy:
     as it can be a bit complicated sometimes."""
 
     def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100):
+
+        self.IDENTITY = "ENEMY"
+
         self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=True)
         self.attackable = True
         self.screen = screen
         self.idle = scale(get_sprite(self.sheet, 0, 0, 34, 48), 4)
         self.hit_anim = [scale(get_sprite(self.sheet, i * 34, 48, 34, 48), 4) for i in range(4)]
         self.x, self.y = pos
-        self.Rect = self.idle.get_rect(topleft=pos)
+        self.rect = self.idle.get_rect(topleft=pos)
 
         self.dead = False  # dead or not
         self.attackable = True  # if false, player can't damage the enemy
@@ -41,7 +44,7 @@ class Enemy:
 
         # ANIMATION
         self.current_sprite = None
-        #self.Rect = None
+        #self.rect = None
         self.id_anim = self.delay = 0
         self.hitted = False
         self.idling = False
@@ -186,8 +189,8 @@ class Enemy:
                         self.delay = pg.time.get_ticks()
                         self.current_sprite = animation[self.id_anim] 
 
-                        # Update Enemy's Rect
-                        self.Rect = self.current_sprite.get_rect(topleft=self.pos)  
+                        # Update Enemy's rect
+        self.rect = self.current_sprite.get_rect(topleft=self.pos)  
 
     def deal_damage(self, value:int, crit:bool, endurance_ignorance:bool=False):
 
@@ -200,10 +203,10 @@ class Enemy:
         self.hitted = True
         # -> crit : dmg_type="crit" -> health ; dmg_type="health" ...
         if not endurance_ignorance:
-            self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
+            self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
         else:
-            self.damages_texts.append(DamagePopUp(self.screen, self.Rect, ceil(value), dmg_type="health"))
-        print(self.Rect)
+            self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value), dmg_type="health"))
+        print(self.rect)
         if self.hp <= 0:
             self.attackable = False
             self.dead = True
@@ -220,7 +223,7 @@ class Enemy:
             # Health Bar
             pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0] + 2 , self.pos[1] - 18, int((self.current_sprite.get_width()/self.MAX_HP)*self.hp) - 2, 14])
 
-            pg.draw.rect(self.screen, (255,255,255), self.Rect, 1)
+            pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
     def update_dmg_popups(self, scroll):
 
