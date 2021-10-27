@@ -45,6 +45,7 @@ class NPC:
         # STATE
         self.state = "move" if moving else "idle"
         self.moving = moving
+        self.velocity = pg.Vector2(1, 1)
         self.interacting = False
         self.interactable = True
 
@@ -59,6 +60,8 @@ class NPC:
         self.idle = idle
         self.move_anim = move_anim
         self.direction = "left"
+        self.it_re_size = (100, 100)
+        self.interaction_rect = None
         
         self.move_manager = {
             "right": self.load_from_spritesheet(move_right) if self.move_anim else None,
@@ -110,13 +113,27 @@ class NPC:
             self.image = current_anim[self.anim_index]
             self.rect = self.image.get_rect(center=self.rect.center)
 
-    def logic(self):
+    def update_interaction_rect(self, scroll):
+        match self.direction:
+            case "left":
+                self.interaction_rect = pg.Rect(self.rect.x-self.it_re_size[0], self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+            case "right":
+                self.interaction_rect = pg.Rect(self.rect.right, self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+            case "up":
+                self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.y-self.it_re_size[1], *self.it_re_size)
+            case "down":
+                self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.bottom, *self.it_re_size)
+        self.interaction_rect.topleft-=scroll
+
+    def logic(self, scroll):
         self.state_manager()
         self.animate()
+        self.update_interaction_rect(scroll)
 
     def update(self, screen, scroll):
-        self.logic()
+        self.logic(scroll)
         screen.blit(self.image, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
+        pg.draw.rect(screen, (0, 0, 255), self.interaction_rect, 1)
 
 
 class MovingNPC(NPC):
@@ -196,8 +213,8 @@ class MovingNPC(NPC):
                 else:
                     self.direction = "up" if self.direction == "down" else "down"
 
-    def logic(self):
-        super().logic()
+    def logic(self, scroll):
+        super().logic(scroll)
 
         if self.check_outside_rect():
 
@@ -225,6 +242,7 @@ class Mau(MovingNPC):
             move_anim=True,
             move_right=[0, 0, 43, 33, 2, 3],
             move_left=[0, 0, 43, 33, 2, 3, "flip"])
+        self.it_re_size = (75, 100)
 
 
 class Cynthia(NPC):
@@ -240,6 +258,7 @@ class Cynthia(NPC):
         self.direction = "right"
         self.state = "idle"
         self.anim_duration = 750
+        self.it_re_size = (100, 125)
 
 
 """
