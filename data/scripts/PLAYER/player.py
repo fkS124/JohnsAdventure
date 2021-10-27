@@ -6,6 +6,7 @@ Here is john, our protagonist.
 
 import pygame as p
 import math
+from copy import copy
 from random import random
 from ..sound_manager import SoundManager
 from ..utils import load, get_sprite, scale, flip_vertical, resource_path, l_path
@@ -205,7 +206,7 @@ class Player:
         self.attacking = False
         self.attacking_hitbox = None
         # reversed when up or down -> (100, 250)
-        self.attacking_hitbox_size = (self.rect.height*2, self.rect.width)
+        self.attacking_hitbox_size = (self.rect.height, self.rect.width)
         self.rooms_objects = []
 
     def leveling(self):
@@ -282,14 +283,19 @@ class Player:
         if self.attacking:
 
             # sets the attacking hitbox according to the direction
+            rect = p.Rect(self.rect.x - self.camera.offset.x - 50, self.rect.y - self.camera.offset.y - 40, *self.rect.size)
             if self.looking_up:
-                self.attacking_hitbox = p.Rect(self.rect.x, self.rect.y-2*self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(rect.x, rect.y-self.attacking_hitbox_size[0], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_down:
-                self.attacking_hitbox = p.Rect(self.rect.x, self.rect.y+self.attacking_hitbox_size[1], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(rect.x, rect.bottom, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_left:
-                self.attacking_hitbox = p.Rect(self.rect.x-self.attacking_hitbox_size[0], self.rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+                self.attacking_hitbox = p.Rect(rect.x-self.attacking_hitbox_size[1], rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_right:
-                self.attacking_hitbox = p.Rect(self.rect.x+self.attacking_hitbox_size[1], self.rect.y, self.attacking_hitbox_size[0], self.attacking_hitbox_size[1])
+                self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+            #self.attacking_hitbox.topleft -= self.camera.offset.xy
+
+            p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
+            p.draw.rect(self.screen, (0, 255, 0), rect, 2)
 
             # animation delay of 100 ms
             if p.time.get_ticks() - self.delay_attack_animation > 100 and self.restart_animation:
@@ -406,7 +412,7 @@ class Player:
             self.looking_up, self.looking_down, self.looking_right, self.looking_left = False, False, True, False
 
         if self.walking:
-                self.screen.blit(self.anim[dir_][self.a_index // 7], pos)
+            self.screen.blit(self.anim[dir_][self.a_index // 7], pos)
         else:
             self.screen.blit(self.anim[dir_][0], pos)
 
@@ -478,17 +484,19 @@ class Player:
         self.update_dash(dt)
 
         if not self.attacking and not self.dashing:
-            if m[0] > 550 and m[0] < 750:
-                if m[1] < self.rect.y: # ? Up
-                    self.set_looking("up", pos)
-                else: # ? Down
-                    self.set_looking("down", pos)
-
-            else: # Left/Right
-                if m[0] <= self.rect.x: # ? Left
-                    self.set_looking("left", pos)
-                else: # ? Right
-                    self.set_looking("right", pos)
+            angle = math.atan2(
+                m[1] - (self.rect.top + 95 - self.camera.offset.y),
+                m[0] - (self.rect.left + 10 - self.camera.offset.x),
+            )
+            angle = abs(math.degrees(angle)) if angle < 0 else 360-math.degrees(angle)
+            if 135 >= angle > 45:
+                self.set_looking("up", pos)
+            elif 225 >= angle > 135:
+                self.set_looking("left", pos)
+            elif 315 >= angle > 225:
+                self.set_looking("down", pos)
+            else:
+                self.set_looking("right", pos)
 
     def movement(self, m, pos):
         # Draw the Ring
