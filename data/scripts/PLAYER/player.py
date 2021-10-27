@@ -41,9 +41,8 @@ class Player:
 
         # Animation
         self.sheet = l_path('data/sprites/john.png')
-        self.lvl_up_ring_sheet = l_path('data/sprites/level_up_ring.png', alpha=True)  # W: 26 H:20 NFr:5
 
-        self.lvl_up_ring = [scale(get_sprite(self.lvl_up_ring_sheet, i*27, 0, 27, 20), 4) for i in range(5)]
+        self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i*27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.delay_rlu = 0
         self.id_rlu = 0
@@ -102,7 +101,9 @@ class Player:
             flip_vertical(sprite) for sprite in self.anim['right_a_2']
         ]
 
-        #print(self.anim)
+        self.anim['dash_l'] = [
+            flip_vertical(sprite) for sprite in self.anim['dash_r']
+        ]
 
         """
 
@@ -214,10 +215,10 @@ class Player:
         # PLAY THE SOUND OF THE LEVEL UPGRADING
         if self.experience >= 180: # <- The max width of the bar
             self.level += 1 # Increase the level
-            self.experience = 0 # Reset XP
-            self.level_index += 1 # a index for multiplying 180(width)
+            self.experience = self.experience - 180 # Do the maths in case the exp is more than 180, else its 0
+            self.level_index += 1 # a index for multiplying 180(width)    
             self.upgrade_station.new_level()
-            self.ring_lu = True
+            self.ring_lu = True # Level UP UI starts
         self.experience_width = self.experience / self.level_index # Player needs more and more exp on each level, therefore we have to cut it
 
     def get_crit(self):
@@ -292,7 +293,6 @@ class Player:
                 self.attacking_hitbox = p.Rect(rect.x-self.attacking_hitbox_size[1], rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_right:
                 self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
-            #self.attacking_hitbox.topleft -= self.camera.offset.xy
 
             p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
             p.draw.rect(self.screen, (0, 255, 0), rect, 2)
@@ -497,6 +497,9 @@ class Player:
                 self.set_looking("down", pos)
             else:
                 self.set_looking("right", pos)
+        
+        # Level UP ring
+        self.animate_level_up_ring()
 
     def movement(self, m, pos):
         # Draw the Ring
@@ -556,7 +559,7 @@ class Player:
                     self.id_rlu = 0
 
                 self.current_frame_ring = self.lvl_up_ring[self.id_rlu]
-            self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(center=self.rect.topleft-self.camera.offset.xy+p.Vector2(15, 95)))
+            self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(center=self.rect.topleft-self.camera.offset.xy+p.Vector2(15, 80)))
 
     def handler(self,dt):
         player_p  = (
@@ -570,8 +573,7 @@ class Player:
         self.controls(player_p)
         self.movement(m , player_p)
         self.animation_handing(dt, m, player_p)
-        self.animate_level_up_ring()
-        self.user_interface(m, player_p)
+        self.user_interface(m, player_p)   
 
     def update(self, dt):
         # Function that handles everything :brain:
@@ -612,9 +614,6 @@ class Player:
                 case p.KEYDOWN:
                     match e.key:
 
-                        case p.K_a:
-                            self.ring_lu = True
-        
                         case p.K_F12:
                             p.display.toggle_fullscreen()
 

@@ -22,6 +22,7 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, str(pathlib.Path(relative_path)))
 
+@lru_cache(1000)
 def l_path(relative_path, alpha = None):
     ''' Upgraded load function for PyInstaller '''
     if alpha:

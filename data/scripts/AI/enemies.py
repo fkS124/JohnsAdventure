@@ -14,7 +14,7 @@ class Enemy:
     There are a lot of docstrings to ease the comprehension of it, 
     as it can be a bit complicated sometimes."""
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100):
+    def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100, xp_drop = int):
 
         self.IDENTITY = "ENEMY"
 
@@ -35,7 +35,7 @@ class Enemy:
 
         # LIFE
         self.hp = self.MAX_HP = hp
-        self.xp_drop = 0
+        self.xp_drop = xp_drop
         self.endurance = 0
         self.show_life_bar = True
 
@@ -206,7 +206,6 @@ class Enemy:
             self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
         else:
             self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value), dmg_type="health"))
-        print(self.rect)
         if self.hp <= 0:
             self.attackable = False
             self.dead = True
@@ -285,8 +284,8 @@ class Enemy:
 
 class Dummy(Enemy):
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100):
-        super().__init__(screen, pos, hp)
+    def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100, xp_drop = 9000):
+        super().__init__(screen, pos, hp=100, xp_drop=210)
         self.load_animation(
             resource_path("data/sprites/dummy.png"),
             idle="static",
@@ -294,3 +293,4 @@ class Dummy(Enemy):
             idle_coo=[0, 0, 34, 48, 1, 4],
             hit_coo=[0, 48, 34, 48, 4, 4]
         )
+        self.xp_drop = xp_drop
