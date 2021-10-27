@@ -56,6 +56,9 @@ class GameState:
             ]
         }
 
+        self.spawn = {}
+        # previous_state : coords
+
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
         this function detects the collision between
@@ -182,6 +185,10 @@ class PlayerRoom(GameState):
             "kitchen": pg.Rect(self.W // 2 + 353, 150, 155, 130)
         }
 
+        self.spawn = {
+            "kitchen": (self.exit_rects["kitchen"].bottomleft+pg.Vector2(0, 50))
+        }
+
 
 class Kitchen(GameState):
 
@@ -201,4 +208,8 @@ class Kitchen(GameState):
 
         self.exit_rects = {
             "player_room": pg.Rect(1005, 0, 1280-1005, 240)
+        }
+
+        self.spawn = {
+            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(25, 50))
         }
