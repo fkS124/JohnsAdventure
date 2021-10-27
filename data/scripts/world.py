@@ -164,5 +164,7 @@ class GameManager:
                 if update is not None:  # if a change of state is detected
                     self.loading = True  # start a loading screen (update="next_state_name")
                     self.loading_screen.start(update, text=True, duration=750)
+                    if self.state in self.state_manager[update].spawn:
+                        self.player.rect.topleft = self.state_manager[update].spawn[self.state]
 
             self.routine()
