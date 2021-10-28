@@ -214,10 +214,10 @@ class Chest(Prop):
                 self.animation_ended = True
 
     def on_interaction(self, player_instance=None):
-        self.interaction_time = pg.time.get_ticks()
         return super().on_interaction(player_instance=player_instance)
 
     def interact(self, player_instance=None):
+        self.interaction_time = pg.time.get_ticks()
         self.player = player_instance
 
     def update_popup_button(self, screen, scroll):
