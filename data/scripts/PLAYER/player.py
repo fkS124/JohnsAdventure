@@ -476,15 +476,15 @@ class Player:
 
             if p.time.get_ticks() - self.delay_dash_animation > 50:
                 self.delay_dash_animation = p.time.get_ticks()
-                match self.dashing_direction:
-                    case "left":
+                match self.dashing_direction: # lgtm [py/syntax-error]
+                    case "left": 
                         anim = self.dashing_left
-                    case "right":
+                    case "right": 
                         anim = self.dashing_right
-                    case "up":
+                    case "up": 
                         anim = self.dashing_up
                     case "down":
-                        anim = self.dashing_down
+                        anim = self.dashing_down 
                 self.index_dash_animation = (self.index_dash_animation + 1) % len(anim)
                 self.current_dashing_frame = anim[self.index_dash_animation]
             self.screen.blit(self.current_dashing_frame, (self.rect[0], self.rect[1] - 80))
@@ -498,7 +498,7 @@ class Player:
             if p.time.get_ticks() - self.delay_increasing_dash > 2:
                 self.delay_attack_animation = p.time.get_ticks()
                 freq = 25 # Frequency of the dash
-                match self.dashing_direction:
+                match self.dashing_direction: # lgtm [py/syntax-error]
                     case "up":
                         self.rect.y -= 15*dt*freq
                     case "down":
@@ -649,7 +649,7 @@ class Player:
                     if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
                         obj.being_interacted = False
                         break # Stop the for loop to save calculations                   
-            match e.type:
+            match e.type: # lgtm [py/syntax-error]
                 case p.QUIT:
                     raise SystemExit
 

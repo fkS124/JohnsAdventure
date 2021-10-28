@@ -180,7 +180,7 @@ class PlayerRoom(GameState):
             Rect(5,500, 72, 214),
             Rect(450, 40, 410, 192),
             Dummy(DISPLAY, (1050, 300)),
-            Chest((930, 131), {"coins": 50, "items":Training_Sword()})
+            Chest((750, 250), {"coins": 50, "items":Training_Sword()})
         ]
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/Johns_room.png')), (1280, 720))
 

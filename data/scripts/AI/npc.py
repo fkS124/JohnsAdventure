@@ -120,7 +120,7 @@ class NPC:
             self.rect = self.image.get_rect(center=self.rect.center)
 
     def update_interaction_rect(self, scroll):
-        match self.direction:
+        match self.direction: # lgtm [py/syntax-error]
             case "left":
                 self.interaction_rect = pg.Rect(self.rect.x-self.it_re_size[0], self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
             case "right":

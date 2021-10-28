@@ -123,6 +123,7 @@ class Border(CamScroll):
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player)
 
+
     def scroll(self):
         '''
         Formula to follow the player
@@ -132,7 +133,6 @@ class Border(CamScroll):
         position.
         '''
 
-    def scroll(self):
         self.camera.offset_float.x += (self.player.rect.x - self.camera.offset_float.x + self.camera.CONST.x)
         self.camera.offset_float.y += (self.player.rect.y - self.camera.offset_float.y + self.camera.CONST.y)
         self.camera.offset.x, self.camera.offset.y = int(self.camera.offset_float.x), int(self.camera.offset_float.y)
