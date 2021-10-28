@@ -1,16 +1,8 @@
-'''
-Credits @Marios325346, @ƒkS124
-
-This script contains our lovely npcs!
-
-
-'''
-
 from .PLAYER.items import Chest
-import sys, json
+import json
 import pygame as pg
 from .backend import UI_Spritesheet
-from .PLAYER.player import *
+from .PLAYER.player import Player
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .sound_manager import SoundManager
@@ -25,39 +17,6 @@ from .levels import (
     Kitchen
 )
 
-'''
-
-Anything related to pygame window below will move to main.py for organization
-
-'''
-pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer
-pg.init(), pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
-DISPLAY = pg.display.set_mode((1280, 720), flags= p.SRCALPHA)
-
-#  Uncomment the below when you stop debugging
-#DISPLAY = pg.display.set_mode((1280, 720), flags=pg.RESIZABLE | pg.SCALED)  # pg.NOFRAME for linux :penguin:
-#pg.display.toggle_fullscreen()
-
-if '--debug' in sys.argv:
-    print("Oh you sussy you're trying to debug me huh?")
-    debug = True
-else:
-    debug = False
-
-# INITIALIZE
-framerate = pg.time.Clock()
-get_screen_w, get_screen_h = DISPLAY.get_width(), DISPLAY.get_height()
-scroll = [0, 0]  # player "camera"
-dt = framerate.tick(35) / 1000 # Delta time :D
-
-font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
-blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113) # I use this only for the logo
-pg.mouse.set_visible(True)
-
-
-ui = UI_Spritesheet("data/ui/UI_spritesheet.png")
-
-
 def main():
     GameManager().update()
 
@@ -69,16 +28,19 @@ class GameManager:
     Game class -> handles everything of the game.
 
     """
-    
-    # CONSTS
-    DISPLAY = DISPLAY
-    W = get_screen_w
-    H = get_screen_h
-    FPS = 35
+    pg.init()
 
     # FONTS
-    font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
-    blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
+
+    pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer
+    pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
+    pg.mouse.set_visible(True)
+    # CONSTS
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland 
+    W, H = DISPLAY.get_size()
+    
+    FPS = 35
+
 
     def __init__(self):
 
@@ -90,9 +52,12 @@ class GameManager:
         self.dt = self.framerate.tick(self.FPS) / 1000
 
         # ----------- GAME STATE VARIABLES --------
-        self.scroll = [0, 0]
         self.menu = True
         self.loading = False
+
+        # 
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+        self.blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
 
         # ---------- GAME MANAGERS ----------------
         self.sound_manager = SoundManager()
@@ -104,7 +69,7 @@ class GameManager:
         # ------------- PLAYER ----------------
         self.player = Player(
         self.DISPLAY, # Screen surface
-        font, # Font
+        self.font, # Font
         self.interface,
         self.ui, # Other UI like Inventory
         self.menu_manager.save, # controls

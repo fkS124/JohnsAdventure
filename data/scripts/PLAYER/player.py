@@ -20,7 +20,7 @@ debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
 
 class Player:
     def __init__(self, screen, font, ux, ui, data):
-        self.screen, self.InteractPoint, self.Interface = screen, 0, ux
+        self.screen, self.InteractPoint = screen, 0
         self.sound_manager = SoundManager(sound_only=True)
         self.velocity = p.Vector2(0, 0) # Player's speed
         self.direction = "left"
@@ -30,9 +30,18 @@ class Player:
             "up": True,
             "down": True
         }
+
+
+        # For displaying npc text
+        self.npc_catalog = ux
+
+        # content display (it gets updated by the npcs)
+        self.interact_text =  '' 
+
+
         self.paused = self.click = self.Interactable = self.is_interacting = False #  Features
         self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement
-        self.interact_text =  '' # Debugging and Interaction
+        
         self.data = data
         self.inventory = Inventory(self.screen, ui, font)
 
@@ -228,6 +237,35 @@ class Player:
             return self.modified_damages*crit_chance
         return 0
 
+    # This should belong in collision system >:(((
+    def check_for_npcs(self, pos):
+        position = (self.rect.topleft - self.camera.offset.xy)
+        itr_box = p.Rect(*position, self.rect.w//2, self.rect.h//2)
+        # Manual Position tweaks
+        itr_box.x -= 17
+        itr_box.y += 45
+
+        p.draw.rect(self.screen, (255,255,255), itr_box, 1)
+        for obj in self.rooms_objects:
+            if hasattr(obj, "IDENTITY"):
+                if obj.IDENTITY == "NPC":
+                    if itr_box.colliderect(obj.interaction_rect):
+                       
+                       # If player clicks Interaction key
+                       if self.Interactable:
+                           # Stop the npcs from moving
+                           obj.being_interacted = True
+
+                           # Turn on interact zone
+                           self.is_interacting = True
+
+                           # Get npc's text
+                           self.npc_text = obj.tell_story
+
+                           # Stop browsing to reduce calcs
+                           break 
+
+
     def check_for_hitting(self):
         '''
         room_objects is a list containing only the enemies of the current environment,
@@ -392,7 +430,7 @@ class Player:
 
         # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
-            self.Interface.draw(self.interact_text)
+            self.npc_catalog.draw(self.npc_text)
 
         # Crosshair
         #self.screen.blit(self.crosshair, self.crosshair.get_rect(center=m))
@@ -604,9 +642,13 @@ class Player:
             if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
                self.walking = True
                self.InteractPoint, self.Interactable = 0, False
-               self.is_interacting = False
-               self.Interface.reset()
-
+               self.is_interacting = False   
+               self.npc_catalog.reset()
+               # It finds for that one NPC that the player interacted with and it goes back to walking
+               for obj in self.rooms_objects:
+                    if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
+                        obj.being_interacted = False
+                        break # Stop the for loop to save calculations                   
             match e.type:
                 case p.QUIT:
                     raise SystemExit
@@ -621,11 +663,12 @@ class Player:
                     if e.key == inv:
                         self.inventory.set_active()
 
-                    elif e.key == dash:
+                    if e.key == dash:
                         self.start_dash()
 
-                    elif itr:
+                    if e.key == itr:
                         self.Interactable = True
+                        self.check_for_npcs(pos)
                         self.InteractPoint += 1
 
                 case p.MOUSEBUTTONDOWN:
