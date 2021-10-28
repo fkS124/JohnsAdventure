@@ -179,7 +179,8 @@ class PlayerRoom(GameState):
             Rect(10,90, 430,360),
             Rect(5,500, 72, 214),
             Rect(450, 40, 410, 192),
-            Dummy(DISPLAY, (1050, 300))
+            Dummy(DISPLAY, (1050, 300)),
+            Chest((930, 131), {"coins": 50, "items":Training_Sword()})
         ]
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/Johns_room.png')), (1280, 720))
 
@@ -201,7 +202,6 @@ class Kitchen(GameState):
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
         self.objects = [
             npc.Cynthia((570, 220)),
-            Chest((930, 131), {"coins": 50, "items":Training_Sword()}),
             Rect(20, 250, 250,350),
             Rect(280,300, 64, 256),
             Rect(10,0, 990, 230),

@@ -1,8 +1,6 @@
 import pygame as pg
-from pygame import color
 from .items import Items, ItemSorter
 from ..utils import scale, get_sprite, resource_path
-from random import choice
 
 
 class UpgradeStation:

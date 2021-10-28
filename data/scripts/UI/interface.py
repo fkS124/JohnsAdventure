@@ -25,7 +25,7 @@ class Interface:
         
         try: # I want something from the json file
             text = self.data[path]['text'] # Import from Json the AI/UI 's text
-        except: # I make my own text
+        except PathNotFound: # I make my own text
             text = path
 
         self.timer += self.dt # Speed of text/delta_time

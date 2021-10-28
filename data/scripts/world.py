@@ -1,5 +1,3 @@
-from .PLAYER.items import Chest
-import json
 import pygame as pg
 from .backend import UI_Spritesheet
 from .PLAYER.player import Player
@@ -10,7 +8,7 @@ from .AI import npc
 from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
-from .utils import resource_path
+from .utils import resource_path, l_path
 
 from .levels import (
     PlayerRoom,
@@ -34,6 +32,8 @@ class GameManager:
 
     pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer
     pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
+    #logo = l_path("data/ui/logo.png").convert()
+    #pg.display.set_icon(logo)
     pg.mouse.set_visible(True)
     # CONSTS
     DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland 
