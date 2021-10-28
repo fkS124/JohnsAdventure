@@ -92,15 +92,18 @@ class Prop:
         Passing the player as an argument can for instance be helpful to give him 
         objects."""
 
-        self.state = "interaction"  # start animation
-        self.index_anim = 0
-
         if self.interaction_type == "unique":
             if not self.has_interacted:
+                self.state = "interaction"  # start animation
+                self.index_anim = 0
+
                 self.has_interacted = True
 
                 self.interact(player_instance=player_instance)
         else:
+            self.state = "interaction"  # start animation
+            self.index_anim = 0
+
             self.interact(player_instance=player_instance)
 
     def interact(self, player_instance=None):
