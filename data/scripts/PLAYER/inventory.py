@@ -26,8 +26,7 @@ class Inventory:
         self.show_menu = False # Inventory is shown if it's True
 
         # Player's items:
-        self.items = [ItemSorter.weapons["Knight_Sword"](),
-                      ItemSorter.weapons["Training_Sword"](),] # items.Weapons.BasicSword()
+        self.items = [ItemSorter.weapons["Knight_Sword"](),] # items.Weapons.BasicSword()
         self.index_scroll = 0 # Useful to track the scrolling
         self.font = font
 
