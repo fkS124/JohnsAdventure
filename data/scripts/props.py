@@ -6,6 +6,8 @@ from .backend import UI_Spritesheet
 
 class Prop:
 
+    """Motionless thing like tree, chest, fence..."""
+
     def __init__(self,
                  pos: pg.Vector2 | tuple[int, int],
                  image_path:str="",
@@ -19,6 +21,7 @@ class Prop:
                  ):
         
         self.IDENTITY = "PROP"
+        self.name = "default"
         if image_path == sprite_sheet == "":
             return ValueError("Prop must at least include an image or a spritesheet")
 
@@ -63,7 +66,7 @@ class Prop:
         self.delay_bt_frames = 100
 
         # ---------------- SPRITES AND RECT --------------------------
-        self.static_image = not image_path != ""
+        self.static_image = image_path != ""
         if image_path != "":
             self.current_frame = l_path(image_path)
         else:
@@ -90,18 +93,17 @@ class Prop:
         objects."""
 
         self.state = "interaction"  # start animation
+        self.index_anim = 0
 
         if self.interaction_type == "unique":
             if not self.has_interacted:
                 self.has_interacted = True
 
-                self.interaction(player_instance=player_instance)
-
+                self.interact(player_instance=player_instance)
         else:
+            self.interact(player_instance=player_instance)
 
-            self.interaction(player_instance=player_instance)
-
-    def interaction(self, player_instance=None):
+    def interact(self, player_instance=None):
         
         # WRITE THE INTERACTION HERE -> including sounds, etc
         
@@ -154,19 +156,61 @@ class Chest(Prop):
             type_of_interaction="unique"
         )  
 
-
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+        # ------------- INTERACTION -------------
         self.name = "chest"
-        self.rewards = rewards
-        self.opened = False
 
         # form :
         # {"coins": int, "items": [Item1, Item2, ...] or Item}
+        self.rewards = rewards        
+        self.interaction_time = 0
 
+        # ------------ ANIMATION ----------------
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+        self.animation_ended = False
+        self.dy = 0
+        self.dy_max = 50
+        self.delay_dy = 0
+
+        self.coin = l_path("data/sprites/items/coin1.png", alpha=True)
         self.ui = UI_Spritesheet('data/ui/UI_spritesheet.png')
         self.item_bg = scale(self.ui.parse_sprite('reward.png'),3)
+        self.new = self.font.render("NEW !", True, (255, 255, 0))
 
-        self.coin_txt = self.font.render(f"self.rewards['coins']", True, (255,255,255))
+        self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255,255,255))   
+
+    def animate_new_items(self, screen, scroll):
+
+        if self.has_interacted:
+
+            if pg.time.get_ticks()-self.delay_dy>25 and self.dy <= self.dy_max:
+                self.delay_dy = pg.time.get_ticks()
+                self.dy += 1
+
+            # gets a real rect for the player
+            r = pg.Rect(*self.player.rect.topleft-scroll-pg.Vector2(50, 40), *self.player.rect.size)
+            dep_x = r.centerx - (len(self.rewards)*2-1)*self.item_bg.get_width()//2
+            for i, key in enumerate(self.rewards):
+                pos = (dep_x+(2*i)*(self.item_bg.get_width()), r.y-self.dy)
+                screen.blit(self.item_bg, pos)  # blit a background image
+            
+                if self.rewards[key].__class__.__name__ not in [item.__class__.__name__ for item in self.player.inventory.items] and key != "coins":  # show up a new item
+                    screen.blit(self.new, self.new.get_rect(topleft=(pos+pg.Vector2(0, self.item_bg.get_height()))))
+
+                if key == "coins":  # shows a special display if it's coin ("coin_log"+"n_coins")
+                    screen.blit(self.coin_txt, self.coin_txt.get_rect(x=pos[0],centery=pos[1]+self.item_bg.get_height()//2))
+                    screen.blit(self.coin, self.coin.get_rect(x=pos[0]+self.coin_txt.get_width(), centery=pos[1]+self.item_bg.get_height()//2))
+                else:  # shows tje icon of the item
+                    screen.blit(self.rewards[key].icon, self.rewards[key].icon.get_rect(center=pg.Rect(*pos, *self.item_bg.get_size()).center))
+
+            if pg.time.get_ticks() - self.interaction_time > 4000:  # after x seconds, end the animation
+                self.animation_ended = True
+
+    def on_interaction(self, player_instance=None):
+        self.interaction_time = pg.time.get_ticks()
+        return super().on_interaction(player_instance=player_instance)
+
+    def interact(self, player_instance=None):
+        self.player = player_instance
 
     def update(self, screen, scroll):
         
@@ -176,24 +220,25 @@ class Chest(Prop):
         # Debug interact rect
         pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
 
-        # Check if the player gave input
-        if self.opened:
-            print("Chest is opened")
-            super().animate()
+        if not self.animation_ended:
+            self.animate_new_items(screen, scroll)
+        else:  # fill the inventory with the rewards 
+            for reward in self.rewards:
+                if reward == "coins":
+                    self.player.data['coins'] += self.rewards[reward]
+                else:
+                    if type(self.rewards[reward]) is list:
+                        for item in self.rewards[reward]:
+                            self.player.inventory.items.append(item)
+                    else:
+                        self.player.inventory.items.append(self.rewards[reward])   
+            self.rewards = {}
 
-            # How many items there are in the chest
-            x = 610
-            y = 285
-            match len(self.rewards):
-                # Find blit the images on top of the player
-                # Also there is layering issue
-                case 1:
-                    screen.blit(self.item_bg, (x + 670-60//2, y))
-                    print("Chest has 1 item, blit 1 UI image")
-                case 2:               
-                    screen.blit(self.item_bg, (x, y))
-                    screen.blit(self.item_bg, (x + 60, y))
-                    print("Chest has 2 items, blit two UI images")
+                
+
+        
+        
+            
 
 
 
