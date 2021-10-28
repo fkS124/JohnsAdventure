@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame import sprite
 from .utils import *
+from .backend import UI_Spritesheet
 
 
 class Prop:
@@ -112,9 +113,9 @@ class Prop:
             if pg.time.get_ticks() - self.delay > self.delay_bt_frames:
                 self.delay = pg.time.get_ticks()
                 if current_anim[1] == "loop":
-                    self.index_anim = (self.index_anim + 1) % len(current_anim)
+                    self.index_anim = (self.index_anim + 1) % len(current_anim[0])
                 else:
-                    if self.index_anim + 1 < len(current_anim):
+                    if self.index_anim + 1 < len(current_anim[0]):
                         self.index_anim += 1
                     else:
                         if self.state == "interaction":
@@ -122,7 +123,7 @@ class Prop:
                                 self.state = "idle"
                                 self.index_anim = 0
 
-            self.current_frame = current_anim[self.index_anim]
+            self.current_frame = current_anim[0][self.index_anim]
 
     def update(self, screen, scroll):
         if not self.static_image:
@@ -138,6 +139,7 @@ class Prop:
         return [scale(get_sprite(self.sprite_sheet, coords[0]+coords[2]*i, coords[1], coords[2], coords[3]), coords[4]) for i in range(coords[5])]
 
 
+
 class Chest(Prop):
 
     def __init__(self, pos, rewards):
@@ -150,26 +152,49 @@ class Chest(Prop):
             interaction_direction="down",
             interaction_rect_size=(100, 50),
             type_of_interaction="unique"
-        )
+        )  
 
+
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+        self.name = "chest"
         self.rewards = rewards
+        self.opened = False
+
         # form :
         # {"coins": int, "items": [Item1, Item2, ...] or Item}
 
-    def interaction(self, player_instance=None):
+        self.ui = UI_Spritesheet('data/ui/UI_spritesheet.png')
+        self.item_bg = scale(self.ui.parse_sprite('reward.png'),3)
 
-        # START ANIMATION INFORMING ON WHAT YOU GOT FROM THE CHEST
+        self.coin_txt = self.font.render(f"self.rewards['coins']", True, (255,255,255))
 
-        for reward in self.rewards:
-            if reward == "coins":
-                player_instance.data['coins'] += self.rewards[reward]
-            elif reward == "items":
-                if type(self.rewards[reward]) is list:
-                    for item in self.rewards[reward]:
-                        player_instance.inventory.items.append(item)
-                else:
-                    player_instance.inventory.items.append(self.rewards[reward])
-        
     def update(self, screen, scroll):
+        
+        # Draw and move Chest
+        super().update(screen, scroll)
+
+        # Debug interact rect
         pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
-        return super().update(screen, scroll)
+
+        # Check if the player gave input
+        if self.opened:
+            print("Chest is opened")
+            super().animate()
+
+            # How many items there are in the chest
+            x = 610
+            y = 285
+            match len(self.rewards):
+                # Find blit the images on top of the player
+                # Also there is layering issue
+                case 1:
+                    screen.blit(self.item_bg, (x + 670-60//2, y))
+                    print("Chest has 1 item, blit 1 UI image")
+                case 2:               
+                    screen.blit(self.item_bg, (x, y))
+                    screen.blit(self.item_bg, (x + 60, y))
+                    print("Chest has 2 items, blit two UI images")
+
+
+
+        

@@ -7,7 +7,7 @@ from .PLAYER.player import *
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .AI import npc
-from .utils import resource_path, load
+from .utils import resource_path, load, l_path
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
 
@@ -85,7 +85,7 @@ class GameState:
         if type(col_obj) is not pg.Rect:
             col_rect = copy(col_obj.rect)
             if hasattr(col_obj, "IDENTITY"):
-                if col_obj.IDENTITY == "NPC":
+                if col_obj.IDENTITY in ["NPC", "PROP"]:
                     col_rect.topleft -= self.scroll  # apply scroll to NPCs because it's not defaultly applied to rect
             # apply a few modifications from the original player's rect to fit better to the collision system
             if type(col_obj) is Player:
@@ -182,7 +182,7 @@ class PlayerRoom(GameState):
             Dummy(DISPLAY, (1050, 300)),
             Chest((750, 250), {"coins": 50, "items":Training_Sword()})
         ]
-        self.world = pg.transform.scale(load(resource_path('data/sprites/world/Johns_room.png')), (1280, 720))
+        self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
 
         self.exit_rects = {
             "kitchen": pg.Rect(self.W // 2 + 353, 150, 155, 130)

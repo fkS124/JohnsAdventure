@@ -238,7 +238,7 @@ class Player:
         return 0
 
     # This should belong in collision system >:(((
-    def check_for_npcs(self, pos):
+    def check_content(self, pos):
         position = (self.rect.topleft - self.camera.offset.xy)
         itr_box = p.Rect(*position, self.rect.w//2, self.rect.h//2)
         # Manual Position tweaks
@@ -264,6 +264,12 @@ class Player:
 
                            # Stop browsing to reduce calcs
                            break 
+                elif obj.IDENTITY == "PROP":
+                    if itr_box.colliderect(obj.interaction_rect) and obj.name == "chest":
+                       obj.opened = True # Run Chest opening 
+
+
+                     
 
 
     def check_for_hitting(self):
@@ -668,7 +674,7 @@ class Player:
 
                     if e.key == itr:
                         self.Interactable = True
-                        self.check_for_npcs(pos)
+                        self.check_content(pos)
                         self.InteractPoint += 1
 
                 case p.MOUSEBUTTONDOWN:

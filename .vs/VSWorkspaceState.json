@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\build",
+    "\\data",
+    "\\data\\scripts",
+    "\\data\\scripts\\AI",
+    "\\data\\scripts\\PLAYER",
+    "\\data\\scripts\\UI",
+    "\\dist"
+  ],
+  "SelectedNode": "\\data\\scripts\\world.py",
+  "PreviewInSolutionExplorer": false
+}

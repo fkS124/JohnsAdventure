@@ -11,3 +11,4 @@ data/scripts/__pycache__/world.cpython-39.pyc
 *.pyc
 *.pyc
 *.pyc
+.vs/slnx.sqlite
