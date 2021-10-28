@@ -97,7 +97,7 @@ class Menu:
         y_gap = 8 # Y coords for the text
         x_gap = pos[0]//2
         # Check its length and tweak X coords
-        match len(txt):
+        match len(txt): # lgtm [py/syntax-error]
             case 1:
                 x_gap -= 12
             case 5:
