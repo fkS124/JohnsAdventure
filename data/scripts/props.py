@@ -165,7 +165,12 @@ class Chest(Prop):
         self.interaction_time = 0
 
         # ------------ ANIMATION ----------------
+        self.UI_button = [scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
+        self.id_button = 0
+        self.delay_button = 0
+
         self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+        self.font2 = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 14)
         self.animation_ended = False
         self.dy = 0
         self.dy_max = 50
@@ -212,10 +217,25 @@ class Chest(Prop):
     def interact(self, player_instance=None):
         self.player = player_instance
 
-    def update(self, screen, scroll):
+    def update_popup_button(self, screen, scroll):
+        position = (self.player.rect.topleft - scroll)
+        itr_box = pg.Rect(*position, self.player.rect.w//2, self.player.rect.h//2)
+
+        if self.interaction_rect.colliderect(itr_box) and not self.has_interacted:
+            if pg.time.get_ticks() - self.delay_button > 500:
+                self.id_button = (self.id_button + 1) % len(self.UI_button)
+                self.delay_button = pg.time.get_ticks()
+
+            screen.blit(self.UI_button[self.id_button], self.UI_button[self.id_button].get_rect(center=self.rect.center-scroll-pg.Vector2(0, 75)))
+            txt = self.font2.render(pg.key.name(self.player.data["controls"]["interact"]), True, (255, 255, 255))
+            screen.blit(txt, txt.get_rect(center=self.UI_button[self.id_button].get_rect(center=self.rect.center-scroll-pg.Vector2(0, 78-((self.id_button)*2))).center))
+
+    def update(self, screen, scroll, player):
+        self.player = player
         
         # Draw and move Chest
         super().update(screen, scroll)
+        self.update_popup_button(screen, scroll)
 
         # Debug interact rect
         pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
