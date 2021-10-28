@@ -2,12 +2,14 @@ import pygame as pg
 from pygame import Rect
 from copy import copy
 
-from .PLAYER.items import Chest
+#from .PLAYER.items import Chest
 from .PLAYER.player import *
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load
+from .props import Chest
+from .PLAYER.items import Training_Sword, Knight_Sword
 
 
 class GameState:
@@ -199,7 +201,7 @@ class Kitchen(GameState):
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
         self.objects = [
             npc.Cynthia((570, 220)),
-            Chest(960,175, 0),
+            Chest((930, 131), {"coins": 50, "items":Training_Sword()}),
             Rect(20, 250, 250,350),
             Rect(280,300, 64, 256),
             Rect(10,0, 990, 230),
