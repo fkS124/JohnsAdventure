@@ -87,6 +87,8 @@ class Chest:
             pu_rect = self.pu_render.get_rect(center=(player.rect.centerx, player.rect.y-100))
             pg.draw.rect(screen, (255, 255, 255), pu_rect)
             screen.blit(self.pu_render, pu_rect)
+
+        pg.draw.rect(screen, (0, 0, 255), self.interact_rect, 1)
                 
 
 class Items:
