@@ -251,25 +251,22 @@ class Player:
                 if obj.IDENTITY == "NPC":
                     if itr_box.colliderect(obj.interaction_rect):
                        
-                       # If player clicks Interaction key
-                       if self.Interactable:
-                           # Stop the npcs from moving
-                           obj.being_interacted = True
+                        # If player clicks Interaction key
+                        if self.Interactable:
+                            # Stop the npcs from moving
+                            obj.being_interacted = True
 
-                           # Turn on interact zone
-                           self.is_interacting = True
+                            # Turn on interact zone
+                            self.is_interacting = True
 
-                           # Get npc's text
-                           self.npc_text = obj.tell_story
+                            # Get npc's text
+                            self.npc_text = obj.tell_story
 
-                           # Stop browsing to reduce calcs
-                           break 
+                            # Stop browsing to reduce calcs
+                            break 
                 elif obj.IDENTITY == "PROP":
                     if itr_box.colliderect(obj.interaction_rect) and obj.name == "chest":
-                       obj.opened = True # Run Chest opening 
-
-
-                     
+                        obj.on_interaction(self) # Run Chest opening                      
 
 
     def check_for_hitting(self):

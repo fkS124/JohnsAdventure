@@ -1,6 +1,6 @@
 from math import ceil
 import pygame as pg
-from ..utils import load, get_sprite, smooth_scale, scale, resource_path           
+from ..utils import l_path, load, get_sprite, smooth_scale, scale, resource_path           
 
 class Items:
     """This class will contain all the objects"""
@@ -26,7 +26,8 @@ class Items:
 class Weapon:
 
     def __init__(self, dmg:int, crit_chance:float):
-            
+        
+        self.icon = pg.Surface((25, 25))
         self.type = "Weapon"
         self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 18)  
         self.text = self.font.render(self.__class__.__name__, True, (0, 0, 0))
@@ -82,6 +83,7 @@ class Training_Sword(Weapon):
 
     def __init__(self):
         super().__init__(dmg=5, crit_chance=0.1)
+        self.icon = l_path("data/sprites/items/wooden_sword_item.png", alpha=True)
 
 
 class Knight_Sword(Weapon):
