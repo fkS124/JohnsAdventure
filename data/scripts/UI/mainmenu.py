@@ -182,7 +182,7 @@ class Menu:
             self.buttons_menu(mouse)
 
         self.controls(mouse)
-        self.screen.blit(self.mouse_icon,mouse)
+        self.screen.blit(self.mouse_icon,p.mouse.get_pos())
 
         
     def controls(self, m):
