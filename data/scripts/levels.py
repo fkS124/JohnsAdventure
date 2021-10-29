@@ -9,8 +9,7 @@ from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import Chest
-from .PLAYER.items import Training_Sword, Knight_Sword
-
+from .PLAYER.items import Training_Sword
 
 class GameState:
 
