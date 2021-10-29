@@ -32,8 +32,9 @@ class GameManager:
 
     pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer
     pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
-    pg.mouse.set_visible(True)
+    pg.mouse.set_visible(False)
     # CONSTS
+   
     DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland 
     pg.display.set_icon(l_path("data/ui/logo.png"))
     W, H = DISPLAY.get_size()

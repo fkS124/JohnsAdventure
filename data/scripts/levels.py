@@ -175,13 +175,21 @@ class PlayerRoom(GameState):
         super().__init__(DISPLAY, player_instance)
 
         self.objects = [
+            # Wall borders
+            Rect(0,0, 1280,133), # Left
+            Rect(1270,134,10,586), # Right
+            Rect(0,0,1280,133), # Up
+            Rect(0,711, 1280,9), # Down
+            #################
             npc.Mau((150,530), (300, 100)),
             Rect(10,90, 430,360),
             Rect(5,500, 72, 214),
             Rect(450, 40, 410, 192),
+            Rect(36,400, 77,94), 
             Dummy(DISPLAY, (1050, 300)),
             Chest((750, 250), {"items":Training_Sword(), "coins": 50})
         ]
+
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
 
         self.exit_rects = {
@@ -201,6 +209,12 @@ class Kitchen(GameState):
 
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
         self.objects = [
+            # Wall borders
+            Rect(0,0, 1280,133), # Left
+            Rect(1270,134,10,586), # Right
+            Rect(0,0,1280,133), # Up
+            Rect(0,711, 1280,9), # Down
+            #################
             npc.Cynthia((570, 220)),
             Rect(20, 250, 250,350),
             Rect(280,300, 64, 256),

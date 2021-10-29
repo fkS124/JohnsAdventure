@@ -31,6 +31,9 @@ class Player:
             "down": True
         }
 
+        # Mouse icon for the inventory and some other things
+        self.mouse_icon = ui.parse_sprite("mouse.png")
+        self.show_mouse = False
 
         # For displaying npc text
         self.npc_catalog = ux
@@ -78,7 +81,7 @@ class Player:
             'dash_u': [],
             'dash_d': []
         }
-
+        
         def get_j(row, col):
             return scale(get_sprite(self.sheet, 46 * row, 52 * col, 46, 52),3)
 
@@ -200,7 +203,7 @@ class Player:
         '''  Combat System '''
         self.crosshair = ui.parse_sprite("mouse_cursor"),
         self.attack_pointer = l_path('data/ui/attack_pointer.png', True)
-        self.attaxxxxcking = False
+        self.attacking = False
         self.current_combo = 0
         # The number of attacks, last is rewarding extra damage
         self.last_attack = 3
@@ -267,7 +270,6 @@ class Player:
                 elif obj.IDENTITY == "PROP":
                     if itr_box.colliderect(obj.interaction_rect) and obj.name == "chest":
                         obj.on_interaction(self) # Run Chest opening                      
-
 
     def check_for_hitting(self):
         '''
@@ -435,8 +437,9 @@ class Player:
         if self.Interactable and self.is_interacting:
             self.npc_catalog.draw(self.npc_text)
 
-        # Crosshair
-        #self.screen.blit(self.crosshair, self.crosshair.get_rect(center=m))
+        #if not self.inventory
+        if self.show_mouse:
+            self.screen.blit(self.mouse_icon, self.mouse_icon.get_rect(center=m))
 
     def set_looking(self, dir_:str, pos):
         '''
@@ -473,7 +476,7 @@ class Player:
             else:
                 self.dashing_direction = "up"
 
-    def update_dash(self, dt):
+    def update_dash(self, dt, pos):
 
         if self.dashing:
 
@@ -481,18 +484,18 @@ class Player:
                 self.delay_dash_animation = p.time.get_ticks()
                 match self.dashing_direction: # lgtm [py/syntax-error]
                     case "left": 
-                        anim = self.dashing_left
+                        anim = self.anim['dash_l']
                     case "right": 
-                        anim = self.dashing_right
+                        anim = self.anim['dash_r']
                     case "up": 
-                        anim = self.dashing_up
+                        anim = self.anim['dash_u']
                     case "down":
-                        anim = self.dashing_down 
+                        anim = self.anim['dash_d'] 
                 self.index_dash_animation = (self.index_dash_animation + 1) % len(anim)
                 self.current_dashing_frame = anim[self.index_dash_animation]
-            self.screen.blit(self.current_dashing_frame, (self.rect[0], self.rect[1] - 80))
+            self.screen.blit(self.current_dashing_frame, pos)
 
-            if p.time.get_ticks() - self.dash_start > 125:
+            if p.time.get_ticks() - self.dash_start > 200:
                 self.dashing = False
                 self.last_dash_end = p.time.get_ticks()
                 self.delay_increasing_dash = self.last_dash_end
@@ -503,15 +506,17 @@ class Player:
                 freq = 25 # Frequency of the dash
                 match self.dashing_direction: # lgtm [py/syntax-error]
                     case "up":
-                        self.rect.y -= 15*dt*freq
+                        self.rect.y -= dt*freq + 12 # 12 = players speed(2) * 2
                     case "down":
-                        self.rect.y += 15*dt*freq
+                        self.rect.y += dt*freq + 12
                     case "right":
-                        self.rect.x += 15*dt*freq
+                        self.rect.x += dt*freq + 12
                     case "left":
-                        self.rect.x -= 15*dt*freq
+                        self.rect.x -= dt*freq + 12
 
         else:
+            #  Update the  UI
+            
             if p.time.get_ticks() - self.delay_increasing_dash > self.dash_cd / ((11 / 3) * 2):
                 self.dash_width += 180/((11 / 3) * 2)
                 self.delay_increasing_dash = p.time.get_ticks()
@@ -522,7 +527,7 @@ class Player:
 
     def animation_handing(self, dt, m, pos):
         self.update_attack(pos)
-        self.update_dash(dt)
+        self.update_dash(dt, pos)
 
         if not self.attacking and not self.dashing:
             angle = math.atan2(
@@ -664,7 +669,10 @@ class Player:
 
                        # Temporar until we get a smart python ver
                     if e.key == inv:
+                        self.show_mouse = True
                         self.inventory.set_active()
+                        if not self.inventory.show_menu:
+                           self.show_mouse = False
 
                     if e.key == dash:
                         self.start_dash()
@@ -683,6 +691,7 @@ class Player:
                             # Attack only when player is not in inv
                             if not self.inventory.show_menu:
                                 self.attack(pos)
+                                self.show_mouse = False
                             self.click = True
                             # scroll up
                         case 4:

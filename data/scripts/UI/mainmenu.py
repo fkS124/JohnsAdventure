@@ -29,6 +29,7 @@ class Menu:
             (1280, 720) # Due to its less size, I am transforming it to 720p because its the default res
         )
 
+        self.mouse_icon = ui.parse_sprite("mouse.png") # Mouse cannot be scaled
         # Buttons
         self.btns = [
             [
@@ -181,6 +182,7 @@ class Menu:
             self.buttons_menu(mouse)
 
         self.controls(mouse)
+        self.screen.blit(self.mouse_icon,mouse)
 
         
     def controls(self, m):

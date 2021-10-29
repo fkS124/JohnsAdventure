@@ -176,7 +176,7 @@ class Chest(Prop):
         self.font2 = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 14)
         self.animation_ended = False
         self.dy = 0
-        self.dy_max = 50
+        self.dy_max = 30
         self.delay_dy = 0
 
         self.coin = l_path("data/sprites/items/coin1.png", alpha=True)
@@ -190,12 +190,12 @@ class Chest(Prop):
 
         if self.has_interacted:
 
-            if pg.time.get_ticks()-self.delay_dy>25 and self.dy <= self.dy_max:
+            if pg.time.get_ticks()-self.delay_dy>20 and self.dy <= self.dy_max:
                 self.delay_dy = pg.time.get_ticks()
                 self.dy += 1
 
             # gets a real rect for the player
-            r = pg.Rect(*self.player.rect.topleft-scroll-pg.Vector2(50, 40), *self.player.rect.size)
+            r = pg.Rect(*self.player.rect.topleft-scroll-pg.Vector2(48, 70), *self.player.rect.size)
             dep_x = r.centerx - (len(self.rewards)*2-1)*self.item_bg.get_width()//2
             for i, key in enumerate(self.rewards):
                 pos = (dep_x+(2*i)*(self.item_bg.get_width()), r.y-self.dy)
@@ -241,7 +241,7 @@ class Chest(Prop):
         self.update_popup_button(screen, scroll)
 
         # Debug interact rect
-        pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
+        #pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
 
         if not self.animation_ended:
             self.animate_new_items(screen, scroll)
