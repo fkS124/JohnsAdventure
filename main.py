@@ -7,6 +7,13 @@
 
 
 from data.scripts.world import main
+import sys
 
 if __name__ == '__main__':
-    main()
+
+    if "--debug" in sys.argv:
+        debug=True
+    else:
+        debug=False
+
+    main(debug=debug)
