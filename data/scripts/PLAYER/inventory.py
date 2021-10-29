@@ -84,6 +84,7 @@ class Inventory:
         # check if the inventory button is clicked if the inventory is not active
         if not self.show_menu and self.bi_rect.collidepoint(pos) or self.show_menu and not self.im_rect.collidepoint(pos):
             self.set_active()
+            return "changed_activity"
         
         if self.show_menu:
             pos -= pg.Vector2(*self.im_rect.topleft) # get the pos of the click on the surface

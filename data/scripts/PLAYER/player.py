@@ -257,7 +257,7 @@ class Player:
                         # If player clicks Interaction key
                         if self.Interactable:
                             # Stop the npcs from moving
-                            obj.being_interacted = True
+                            obj.interacting = True
 
                             # Turn on interact zone
                             self.is_interacting = True
@@ -504,15 +504,16 @@ class Player:
             if p.time.get_ticks() - self.delay_increasing_dash > 2:
                 self.delay_attack_animation = p.time.get_ticks()
                 freq = 25 # Frequency of the dash
-                match self.dashing_direction: # lgtm [py/syntax-error]
-                    case "up":
-                        self.rect.y -= dt*freq + 12 # 12 = players speed(2) * 2
-                    case "down":
-                        self.rect.y += dt*freq + 12
-                    case "right":
-                        self.rect.x += dt*freq + 12
-                    case "left":
-                        self.rect.x -= dt*freq + 12
+                if self.move_ability[self.dashing_direction]:
+                    match self.dashing_direction: # lgtm [py/syntax-error]
+                        case "up":
+                            self.rect.y -= dt*freq + 12 # 12 = players speed(2) * 2
+                        case "down":
+                            self.rect.y += dt*freq + 12
+                        case "right":
+                            self.rect.x += dt*freq + 12
+                        case "left":
+                            self.rect.x -= dt*freq + 12
 
         else:
             #  Update the  UI
@@ -655,7 +656,7 @@ class Player:
                # It finds for that one NPC that the player interacted with and it goes back to walking
                for obj in self.rooms_objects:
                     if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
-                        obj.being_interacted = False
+                        obj.interacting = False
                         break # Stop the for loop to save calculations                   
             match e.type: # lgtm [py/syntax-error]
                 case p.QUIT:
@@ -666,6 +667,8 @@ class Player:
 
                         case p.K_F12:
                             p.display.toggle_fullscreen()
+                        case p.K_ESCAPE:
+                            self.paused = True
 
                        # Temporar until we get a smart python ver
                     if e.key == inv:
@@ -686,10 +689,10 @@ class Player:
                     match e.button:
                         # left click
                         case 1:
-                            self.inventory.handle_clicks(e.pos)
-                            self.upgrade_station.handle_clicks(e.pos)
+                            click_result1 = self.inventory.handle_clicks(e.pos)
+                            click_result2 = self.upgrade_station.handle_clicks(e.pos)
                             # Attack only when player is not in inv
-                            if not self.inventory.show_menu:
+                            if not self.inventory.show_menu and not self.upgrade_station.show_menu and click_result1 != "changed_activity" and click_result2 != "changed_activity":
                                 self.attack(pos)
                                 self.show_mouse = False
                             self.click = True

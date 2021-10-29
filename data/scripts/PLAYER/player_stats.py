@@ -115,6 +115,7 @@ class UpgradeStation:
         # check if the inventory button is clicked if the inventory is not active
         if not self.show_menu and self.bu_rect.collidepoint(pos) or self.show_menu and not self.us_rect.collidepoint(pos):
             self.set_active()
+            return "changed_activity"
         
         if self.new_points_available > 0 and self.show_menu:
             pos -= pg.Vector2(*self.us_rect.topleft) # get the pos of the click on the surface
