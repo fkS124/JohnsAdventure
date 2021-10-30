@@ -205,8 +205,11 @@ class Chest(Prop):
                     screen.blit(self.new, self.new.get_rect(topleft=(pos+pg.Vector2(0, self.item_bg.get_height()))))
 
                 if key == "coins":  # shows a special display if it's coin ("coin_log"+"n_coins")
-                    screen.blit(self.coin_txt, self.coin_txt.get_rect(x=pos[0],centery=pos[1]+self.item_bg.get_height()//2))
-                    screen.blit(self.coin, self.coin.get_rect(x=pos[0]+self.coin_txt.get_width(), centery=pos[1]+self.item_bg.get_height()//2))
+                    # Coin Image
+                    screen.blit(self.coin, self.coin.get_rect(x=pos[0]+self.coin_txt.get_width()//2, centery=pos[1]+self.item_bg.get_height()//3))
+
+                    # Coin Text
+                    screen.blit(self.coin_txt, self.coin_txt.get_rect(x=pos[0] + self.coin_txt.get_width()//2, centery= pos[1] + 33))
                 else:  # shows tje icon of the item
                     screen.blit(self.rewards[key].icon, self.rewards[key].icon.get_rect(center=pg.Rect(*pos, *self.item_bg.get_size()).center))
 

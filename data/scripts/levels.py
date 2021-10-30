@@ -22,6 +22,7 @@ class GameState:
         # ------- SCREEN -----------------
         self.display, self.screen = DISPLAY, DISPLAY
         self.W, self.H = self.display.get_size()
+        self.dt = 0  # wil be updated in update method
 
         # -------- WORLD's OBJECTS ----------
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
@@ -126,10 +127,11 @@ class GameState:
                         obj_moving.switch_directions(blocked_direction=direction)  # switch NPCs direction for eg.
                     break
 
-    def update(self, camera):
+    def update(self, camera, dt):
 
         # update the game values
-        self.player.rooms_objects = self.objects   # ain't it useless now ?
+        self.player.rooms_objects = self.objects 
+        self.dt = dt
 
         # display background
         self.display.blit(self.world, -camera.offset.xy)
@@ -186,13 +188,12 @@ class PlayerRoom(GameState):
             Rect(450, 40, 410, 192),
             Rect(36,400, 77,94), 
             Dummy(DISPLAY, (1050, 300)),
-            Chest((750, 250), {"items":Training_Sword(), "coins": 50})
         ]
 
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
 
         self.exit_rects = {
-            "kitchen": pg.Rect(self.W // 2 + 353, 150, 155, 130)
+            "kitchen": pg.Rect(1008,148,156,132)
         }
 
         self.spawn = {
@@ -218,11 +219,12 @@ class Kitchen(GameState):
             Rect(20, 250, 250,350),
             Rect(280,300, 64, 256),
             Rect(10,0, 990, 230),
-            Rect(1020, 440, 256, 200)
+            Rect(1020, 440, 256, 200),
+            Chest((910,140), {"items":Training_Sword(), "coins": 50})
         ]
 
         self.exit_rects = {
-            "player_room": pg.Rect(1005, 0, 1280-1005, 240)
+            "player_room": pg.Rect(1054,68,138,119)
         }
 
         self.spawn = {
