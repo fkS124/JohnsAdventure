@@ -141,7 +141,7 @@ class NPC:
     def update(self, screen, scroll):
         self.logic(scroll)
         screen.blit(self.image, (self.rect.x-scroll[0], self.rect.y-scroll[1]))
-        pg.draw.rect(screen, (0, 0, 255), self.interaction_rect, 1)
+        #pg.draw.rect(screen, (0, 0, 255), self.interaction_rect, 1)
 
 
 class MovingNPC(NPC):
