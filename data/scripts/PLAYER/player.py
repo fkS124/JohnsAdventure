@@ -136,13 +136,32 @@ class Player:
         """
         self.camera = Camera(self, screen)
         self.camera_mode = {
+
+            # Follows the player
             "follow": Follow(self.camera, self),
+
+            # Camera Stops moving, player is free 
             "border": Border(self.camera, self),
+
+            # Camera moves on its own without user's input
             "auto": Auto(self.camera, self)
         }
 
-        # Default camera mod
-        self.camera.set_method(self.camera_mode['follow'])
+        # Default camera mode
+        self.set_camera_to('auto')
+
+
+        ''' 
+            How to get the status of the camera 
+
+            do: self.camera_mode[key_name].status
+
+
+            How to change the camera
+
+            self.set_camera_to(_KEY) # ['follow', 'border', 'auto']
+        
+        '''
 
         self.looking_down = False
         self.looking_up = False
@@ -163,7 +182,6 @@ class Player:
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
         self.xp = 0 # wtf leveling system in john's adventures!??!?
-
 
         # Code for Dash Ability goes here
         self.dash_width = 180 # the pixel width for bars
@@ -199,7 +217,6 @@ class Player:
             )
         )
 
-
         '''  Combat System '''
         self.crosshair = ui.parse_sprite("mouse_cursor"),
         self.attack_pointer = l_path('data/ui/attack_pointer.png', True)
@@ -221,6 +238,14 @@ class Player:
         # reversed when up or down -> (100, 250)
         self.attacking_hitbox_size = (self.rect.height, self.rect.width)
         self.rooms_objects = []
+
+    def set_camera_to(self, _KEY):
+        '''
+            Look above for "Player's Camera Settings" for more info!
+        '''
+        self.camera.set_method(self.camera_mode[_KEY])
+
+
 
     def leveling(self):
 
@@ -248,7 +273,8 @@ class Player:
         itr_box.x -= 17
         itr_box.y += 45
 
-        p.draw.rect(self.screen, (255,255,255), itr_box, 1)
+        # Interact Rect for debugging
+        #p.draw.rect(self.screen, (255,255,255), itr_box, 1)
         for obj in self.rooms_objects:
             if hasattr(obj, "IDENTITY"):
                 if obj.IDENTITY == "NPC":
@@ -665,7 +691,9 @@ class Player:
 
                 case p.KEYDOWN:
                     match e.key:
-
+                        
+                        #case p.K_1:
+                             
                         case p.K_F12:
                             p.display.toggle_fullscreen()
                         case p.K_ESCAPE:

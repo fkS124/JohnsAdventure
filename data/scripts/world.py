@@ -63,8 +63,9 @@ class GameManager:
 
         # pygame powered
         self.pygame_logo = l_path("data/sprites/pygame_powered.png", alpha=True)
+        self.start_logo_time = pg.time.get_ticks()
         self.pg_logo = False
-        self.start_scale = 4
+        self.start_scale = 1
         self.current_scale = 0
         self.delay_scaling = 0
 
@@ -143,10 +144,14 @@ class GameManager:
             if pg.time.get_ticks() - self.delay_scaling > 25 and self.start_scale - self.current_scale > 0.75:
                 self.delay_scaling = pg.time.get_ticks()
                 self.current_scale += 0.1
-
+            
+            
             scale_ = self.start_scale - self.current_scale
             img = scale(self.pygame_logo, scale_)
             self.DISPLAY.blit(img, img.get_rect(center=(self.W//2, self.H//2)))  
+
+            if pg.time.get_ticks() - self.start_logo_time > 700:
+                self.DISPLAY.blit(self.font.render("@Copyright Logo by www.pygame.org", True, (0,0,0)), img.get_rect(topleft=(self.W//2 - 320, self.H//2 + 230)))
 
             self.framerate.tick(self.FPS)
             pg.display.update()

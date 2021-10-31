@@ -20,6 +20,7 @@ class Camera:
             The Player is given a upgraded camera system,
             to make the gameplay look better
         '''
+
         self.player = player
 
         # The gap between the player and camera
@@ -28,7 +29,10 @@ class Camera:
         # We use float to get the precice location
         self.offset_float = vec(0,0)
 
-        # Sceen Surface
+        # Screen Surface
+        self.display = screen
+        
+        # Screen Size
         self.screen = screen.get_size()
 
         # Keep track of the Player
@@ -67,9 +71,10 @@ class CamScroll(ABC):
       '''
          Camera Movement
       '''
-      def __init__(self, camera, player):
+      def __init__(self, camera, player, status):
           self.camera = camera
           self.player = player
+          self.status = status
 
       @abstractmethod
       def scroll(self):
@@ -82,7 +87,7 @@ class CamScroll(ABC):
 
 class Follow(CamScroll):
     def __init__(self, camera, player):
-        CamScroll.__init__(self, camera, player)
+        CamScroll.__init__(self, camera, player, status="Follow")
 
     def scroll(self):
         '''
@@ -121,7 +126,7 @@ class Border(CamScroll):
 
     '''
     def __init__(self, camera, player):
-        CamScroll.__init__(self, camera, player)
+        CamScroll.__init__(self, camera, player, status="Border")
 
 
     def scroll(self):
@@ -150,11 +155,34 @@ class Auto(CamScroll):
     Screen moves independently
     '''
     def __init__(self, camera, player):
-        CamScroll.__init__(self, camera, player)
+        CamScroll.__init__(self, camera, player, status="Auto")
+        self.screen = camera.display
+        self.camera_speed = 10 # Camera speeds that we multiply with dt
+
+        sur = pygame.Surface((camera.screen[0], 92)) 
+        sur.fill((0,0,0))
+        self.cinema_bar = sur
+
+        # Bar Y position before the camera
+        self.bar_y = -self.cinema_bar.get_height()
+        
+        self.bar_speed = 64
 
     def scroll(self):
         '''
         Moving the camera
-        (coords will be tweaked later)
-        '''
-        self.camera.offset.x += 1
+
+        We have to somehow find a way to put x, y cords and dt and then use them to move the camera 
+        ''' 
+        dt = pygame.time.Clock().tick(35)/1000
+
+        if self.bar_y < 0:
+           self.bar_y += self.bar_speed * dt 
+
+        # Top Cinema Bar
+        self.screen.blit(self.cinema_bar, (0, self.bar_y))
+
+
+        # Bottom Cinema Bar
+        b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
+        self.screen.blit(self.cinema_bar, (0, b_pos))
