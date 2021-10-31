@@ -1,5 +1,6 @@
 # Load Pygame
 import pygame
+import random, math
 
 # Abstract method
 from abc import ABC, abstractmethod
@@ -157,8 +158,8 @@ class Auto(CamScroll):
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player, status="Auto")
         self.screen = camera.display
-        self.camera_speed = 10 # Camera speeds that we multiply with dt
 
+        self.W, self.H = self.screen.get_size()
         sur = pygame.Surface((camera.screen[0], 92)) 
         sur.fill((0,0,0))
         self.cinema_bar = sur
@@ -168,6 +169,46 @@ class Auto(CamScroll):
         
         self.bar_speed = 64
 
+        self.dx, self.dy = (0, 0)
+        self.target = (0, 0)
+        self.looking_at = (0, 0)
+        self.delay_mvt = 0
+        self.moving_cam = False
+
+        self.font = pygame.font.Font("data/database/pixelfont.ttf", 20)
+        self.text = ""
+
+        self.start = 0
+        self.duration = 0
+
+    def look_at(self, pos):
+        self.camera.offset.xy = [pos[0]-self.screen.get_width()//2, pos[1]-self.screen.get_height()//2]
+
+    def set_text(self, txt:str):
+        self.text = txt
+
+    def go_to(self, pos, duration=1000):
+        
+        self.start = pygame.time.get_ticks()
+        self.duration = duration
+
+        if not duration:
+            self.looking_at = pos
+            return self.look_at(self.looking_at)
+
+        angle = math.atan2(
+            pos[1]-self.looking_at[1],
+            pos[0]-self.looking_at[0]
+        )
+
+        distx, disty = abs(pos[0]-self.looking_at[0]), abs(pos[1]-self.looking_at[1])
+        self.dx = math.cos(angle)*abs((distx) / (duration / 20 * math.cos(angle)))
+        self.dy = math.sin(angle)*abs((disty) / (duration / 20 * math.sin(angle)))
+        self.delay_mvt = pygame.time.get_ticks()
+        self.target = pos
+
+        self.moving_cam = True
+        
     def scroll(self):
         '''
         Moving the camera
@@ -180,9 +221,38 @@ class Auto(CamScroll):
            self.bar_y += self.bar_speed * dt 
 
         # Top Cinema Bar
-        self.screen.blit(self.cinema_bar, (0, self.bar_y))
+        self.screen.blit(self.cinema_bar, (0, self.bar_y))      
 
+        self.look_at(self.looking_at)
 
+        if self.moving_cam:
+                        
+            dx, dy = self.target[0]-self.looking_at[0], self.target[1]-self.looking_at[1]
+            if pygame.time.get_ticks() - self.delay_mvt > 20:
+                self.delay_mvt = pygame.time.get_ticks()
+                if abs(dx) < abs(self.dx) or abs(dy) < abs(self.dy):
+                    self.looking_at += vec(dx, dy)
+                
+                else:
+                    self.looking_at += vec(self.dx, self.dy)
+
+            if -3 < dx < 3 and -3 < dy < 3:
+                self.moving_cam = False
+                self.looking_at = self.target
+
+            print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
+        
         # Bottom Cinema Bar
         b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
         self.screen.blit(self.cinema_bar, (0, b_pos))
+        render = self.font.render(self.text, True, (255, 255, 255))
+        if self.bar_y > 0:
+            self.screen.blit(render, render.get_rect(center=(self.W//2, self.H-self.cinema_bar.get_height()//2)))
+        """ Debug:
+        pygame.draw.line(self.screen, (255, 255, 255), (0, 0), (self.W, self.H))
+        pygame.draw.line(self.screen, (255, 255, 255), (self.W, 0), (0, self.H))
+        pygame.draw.circle(self.screen, (255, 255, 0), self.target-self.camera.offset.xy, 6)
+        """
+        
+        
+    

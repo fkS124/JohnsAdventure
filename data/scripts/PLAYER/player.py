@@ -148,7 +148,8 @@ class Player:
         }
 
         # Default camera mode
-        self.set_camera_to('auto')
+        self.camera_status = 'auto'
+        self.set_camera_to(self.camera_status)
 
 
         ''' 
@@ -351,7 +352,7 @@ class Player:
         # print("Up:", self.looking_up, "Down:", self.looking_down, "Left:", self.looking_left, "Right:", self.looking_right)
         # print("Current combo :", self.current_combo, "Time elapsed :", p.time.get_ticks()-self.last_attacking_click, "Cooldown :", p.time.get_ticks()-self.last_attacking_click>self.attack_cooldown, "Index :", self.index_attack_animation)
 
-        if self.attacking:
+        if self.attacking and self.camera_status != "auto":
 
             # sets the attacking hitbox according to the direction
             rect = p.Rect(self.rect.x - self.camera.offset.x - 50, self.rect.y - self.camera.offset.y - 40, *self.rect.size)
@@ -410,46 +411,46 @@ class Player:
                 # RESET ANIMATION HERE
 
     def user_interface(self, m, player_pos):
-
-        # Health bar
-        p.draw.rect(
-        self.screen, (255,0,0),
-        p.Rect(
-            self.hp_box_rect.x,self.hp_box_rect.y  + 20,
-            self.health, 25)
-        )
-
-        # Dash Cooldown bar
-        p.draw.rect(
-            self.screen, (0,255,0),
+        if self.camera_status != "auto":
+            # Health bar
+            p.draw.rect(
+            self.screen, (255,0,0),
             p.Rect(
-                self.hp_box_rect.x, self.hp_box_rect.y  + 90,
-                self.dash_width, 15)
-        )
+                self.hp_box_rect.x,self.hp_box_rect.y  + 20,
+                self.health, 25)
+            )
 
-        # Experience bar
-        p.draw.rect(
-            self.screen, (0,255,255),
-            p.Rect(
-                self.hp_box_rect.x, self.hp_box_rect.y  + 60,
-                self.experience_width, 15
-                )
-        )
+            # Dash Cooldown bar
+            p.draw.rect(
+                self.screen, (0,255,0),
+                p.Rect(
+                    self.hp_box_rect.x, self.hp_box_rect.y  + 90,
+                    self.dash_width, 15)
+            )
 
-        # Player UI
-        self.screen.blit(self.health_box, self.hp_box_rect)
+            # Experience bar
+            p.draw.rect(
+                self.screen, (0,255,255),
+                p.Rect(
+                    self.hp_box_rect.x, self.hp_box_rect.y  + 60,
+                    self.experience_width, 15
+                    )
+            )
 
-        # Heart Icon
-        self.screen.blit(
-            self.heart,
-            (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15)
-        )
+            # Player UI
+            self.screen.blit(self.health_box, self.hp_box_rect)
 
-         # Level status button goes here
-        self.upgrade_station.update(self)
+            # Heart Icon
+            self.screen.blit(
+                self.heart,
+                (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15)
+            )
 
-        # Inventory Icon
-        self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
+            # Level status button goes here
+            self.upgrade_station.update(self)
+
+            # Inventory Icon
+            self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (
@@ -554,6 +555,19 @@ class Player:
                 self.dash_width = 180
 
     def animation_handing(self, dt, m, pos):
+
+        # Draw the Ring
+        angle = math.atan2(
+            m[1] - (self.rect.top + 95 - self.camera.offset.y),
+            m[0] - (self.rect.left + 10 - self.camera.offset.x),
+        )
+        x, y = pos[0] - math.cos(angle), pos[1] - math.sin(angle) + 10
+        angle = abs(math.degrees(angle))+90 if angle < 0 else 360-math.degrees(angle)+90
+        image = p.transform.rotate(self.attack_pointer, angle)
+        ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
+        if not self.ring_lu:
+            self.screen.blit(image, ring_pos)
+
         self.update_attack(pos)
         self.update_dash(dt, pos)
 
@@ -576,18 +590,6 @@ class Player:
         self.animate_level_up_ring()
 
     def movement(self, m, pos):
-        # Draw the Ring
-        
-        angle = math.atan2(
-            m[1] - (self.rect.top + 95 - self.camera.offset.y),
-            m[0] - (self.rect.left + 10 - self.camera.offset.x),
-        )
-        x, y = pos[0] - math.cos(angle), pos[1] - math.sin(angle) + 10
-        angle = abs(math.degrees(angle))+90 if angle < 0 else 360-math.degrees(angle)+90
-        image = p.transform.rotate(self.attack_pointer, angle)
-        ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
-        if not self.ring_lu:
-            self.screen.blit(image, ring_pos)
 
         if not self.inventory.show_menu:
             if not self.attacking: # if he is not attacking, allow him to move
@@ -619,9 +621,6 @@ class Player:
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
 
-        # Update the camera: ALWAYS LAST LINE
-        self.camera.scroll()
-
     def animate_level_up_ring(self):
         if self.ring_lu:
             if p.time.get_ticks() - self.delay_rlu > 150:
@@ -645,13 +644,24 @@ class Player:
 
         self.leveling()
         self.controls(player_p)
-        self.movement(m , player_p)
         self.animation_handing(dt, m, player_p)
-        self.user_interface(m, player_p)   
+        if type(self.camera.method) is not type(self.camera_mode["auto"]):
+            self.movement(m , player_p)
+        self.user_interface(m, player_p)  
+      
+        # Update the camera: ALWAYS LAST LINE
+        self.update_camera_status()
+        self.camera.scroll() 
 
     def update(self, dt):
         # Function that handles everything :brain:
         self.handler(dt)
+
+    def update_camera_status(self):
+        for key, cam_mode in self.camera_mode.items():
+            if type(self.camera.method) is type(cam_mode):
+                self.camera_status = key
+                return
 
     def controls(self, pos):
         '''
@@ -700,13 +710,13 @@ class Player:
                             self.paused = True
 
                        # Temporar until we get a smart python ver
-                    if e.key == inv:
+                    if e.key == inv and self.camera_status != "auto":
                         self.show_mouse = True
                         self.inventory.set_active()
                         if not self.inventory.show_menu:
                            self.show_mouse = False
 
-                    if e.key == dash:
+                    if e.key == dash and self.camera_status != "auto":
                         self.start_dash()
 
                     if e.key == itr:
