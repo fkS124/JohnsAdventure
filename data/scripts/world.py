@@ -141,7 +141,7 @@ class GameManager:
         pg.display.update()
 
     def pg_loading_screen(self):
-        while pg.time.get_ticks()<100:
+        while pg.time.get_ticks()<3000:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
@@ -177,7 +177,7 @@ class GameManager:
                 if self.menu_manager.start_game:  # start the game
                     self.menu = False
                     self.loading = True
-                    self.loading_screen.start("player_room", duration=100, main_loading=True, cat=True, text=False, key_end=False)
+                    self.loading_screen.start("player_room", duration=2500, main_loading=True, cat=True, text=False, key_end=False)
 
             elif self.loading:  # update the loading screen
 
