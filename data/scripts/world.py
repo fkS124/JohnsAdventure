@@ -61,6 +61,13 @@ class GameManager:
         self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
         self.blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
 
+        # pygame powered
+        self.pygame_logo = l_path("data/sprites/pygame_powered.png", alpha=True)
+        self.pg_logo = False
+        self.start_scale = 4
+        self.current_scale = 0
+        self.delay_scaling = 0
+
         # ---------- GAME MANAGERS ----------------
         self.sound_manager = SoundManager()
         self.loading_screen = LoadingScreen(self.DISPLAY)
@@ -124,7 +131,29 @@ class GameManager:
 
         pg.display.update()
 
+    def pg_loading_screen(self):
+        while pg.time.get_ticks()<4000:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    raise SystemExit
+
+            self.DISPLAY.fill((255, 255, 255))
+
+            if pg.time.get_ticks() - self.delay_scaling > 25 and self.start_scale - self.current_scale > 0.75:
+                self.delay_scaling = pg.time.get_ticks()
+                self.current_scale += 0.1
+
+            scale_ = self.start_scale - self.current_scale
+            img = scale(self.pygame_logo, scale_)
+            self.DISPLAY.blit(img, img.get_rect(center=(self.W//2, self.H//2)))  
+
+            self.framerate.tick(self.FPS)
+            pg.display.update()
+
     def update(self):
+        
+        self.pg_loading_screen()
 
         while True:
 
