@@ -96,6 +96,14 @@ class GameManager:
         self.debug = debug
         self.debugger = Debugging(self.DISPLAY, self)
 
+        # -------- CAMERA SRC HANDLER -------------
+        self.s_duration = 0
+        self.s_next_cam = None
+        self.scripting = False
+        self.s_dt_to_wait_on_end = 0
+        self.end = 0
+        self.ended = False
+
     def pause(self):
         if self.player.paused:
             self.pause_menu.init_pause()
@@ -133,7 +141,7 @@ class GameManager:
         pg.display.update()
 
     def pg_loading_screen(self):
-        while pg.time.get_ticks()<4000:
+        while pg.time.get_ticks()<100:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
@@ -169,7 +177,7 @@ class GameManager:
                 if self.menu_manager.start_game:  # start the game
                     self.menu = False
                     self.loading = True
-                    self.loading_screen.start("player_room", duration=2500, main_loading=True, cat=True, text=False, key_end=True)
+                    self.loading_screen.start("player_room", duration=100, main_loading=True, cat=True, text=False, key_end=False)
 
             elif self.loading:  # update the loading screen
 
@@ -193,8 +201,56 @@ class GameManager:
                     self.loading_screen.start(update, text=True, duration=750, key_end=False)
                     if self.state in self.state_manager[update].spawn:
                         self.player.rect.topleft = self.state_manager[update].spawn[self.state]
+                if not self.state_manager[self.state].ended_script:
+                    self.camera_script_handler()
 
             self.routine()
+
+    def start_new_src_part(self):
+        c_level = self.state_manager[self.state]
+        cam_script = c_level.camera_script
+        src_index = c_level.cam_index
+        
+        self.player.set_camera_to("auto")
+        self.scripting = True
+        self.ended = False
+
+        cur_script = cam_script[src_index]
+        self.player.camera.method.go_to(cur_script["pos"], duration=cur_script["duration"])
+        self.s_next_cam = cur_script["next_cam_status"] if "next_cam_status" in cur_script else None
+        self.player.camera.method.set_text(cur_script["text"] if "text" in cur_script else "")
+        self.s_dt_to_wait_on_end = cur_script["waiting_end"] if "waiting_end" in cur_script else 0
+
+        print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
+
+    def camera_script_handler(self):
+        c_level = self.state_manager[self.state]
+        cam_script = c_level.camera_script
+        src_index = c_level.cam_index
+        camera = self.player.camera
+
+        if not self.scripting:
+            if src_index + 1 < len(cam_script):
+                self.state_manager[self.state].cam_index += 1
+                self.start_new_src_part()
+            else:
+                self.state_manager[self.state].ended_script = True
+                return
+            
+        if not camera.method.moving_cam and not self.ended:
+            self.end = pg.time.get_ticks()
+            self.ended = True
+
+        if self.ended:
+            if self.s_dt_to_wait_on_end != 0:
+                if pg.time.get_ticks() - self.end > self.s_dt_to_wait_on_end:
+                    self.scripting = False
+                    if self.s_next_cam is not None:
+                        self.player.set_camera_to(self.s_next_cam)
+            else:
+                self.scripting = False
+                if self.s_next_cam is not None:
+                    self.player.set_camera_to(self.s_next_cam)
 
 
 class Debugging:

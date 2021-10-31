@@ -61,6 +61,26 @@ class GameState:
         self.spawn = {}
         # previous_state : coords
 
+        # camera script :
+        self.cam_index = -1
+        self.ended_script = False
+        self.camera_script = []
+        """
+        ** = optional
+        [
+        {
+            "pos": (x, y),
+            "duration": (int) ms, -> (can be null -> will just use func look_at)
+            ** -> "text": str,  (can be empty) 
+            ** -> "wainting_end": (int) ms,
+            ** -> "next_cam_status": cam_status
+        },
+        {
+            ... -> same shape : will be played directly after it
+        }
+        ]
+        """
+
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
         this function detects the collision between
@@ -199,6 +219,27 @@ class PlayerRoom(GameState):
         self.spawn = {
             "kitchen": (self.exit_rects["kitchen"].bottomleft+pg.Vector2(0, 50))
         }
+
+        self.camera_script = [
+            {
+                "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20), 
+                "duration": 0, 
+                "text": "Hello John ! This is a test text.",
+                "waiting_end": 4000,
+            },
+            {
+                "pos": (1100, 225),
+                "duration": 1000,
+                "waiting_end": 1000,
+                "text": "Hurry up ! Go meet your sister downstairs !"
+            },
+            {
+                "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20),
+                "duration": 750,
+                "waiting_end": 250,
+                "next_cam_status": "follow"
+            }
+        ]
 
 
 class Kitchen(GameState):
