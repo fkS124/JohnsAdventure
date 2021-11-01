@@ -224,14 +224,14 @@ class PlayerRoom(GameState):
             {
                 "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20), 
                 "duration": 0, 
-                "text": "Hello John ! This is a test text.",
+                "text": f"Hello Player. Welcome to John's Adventure.",
                 "waiting_end": 4000,
             },
             {
                 "pos": (1100, 225),
                 "duration": 1000,
                 "waiting_end": 1000,
-                "text": "Hurry up ! Go meet your sister downstairs !"
+                "text": "Your quest is waiting for you downstairs."
             },
             {
                 "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20),
@@ -269,5 +269,5 @@ class Kitchen(GameState):
         }
 
         self.spawn = {
-            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(25, 50))
+            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(75, 0))
         }

@@ -40,7 +40,7 @@ class LoadingScreen:
         self.ended_loading = False
 
         # big text "John's adventure"
-        self.font2 = pg.font.Font("data/database/Blacksword.otf", 75)  # font
+        self.font2 = pg.font.Font(resource_path("data/database/Blacksword.otf"), 75)  # font
         self.john_text = self.font2.render("John's Adventure", True, (255, 255, 255))  # rendering of John's adventure
         self.txt_jhn = copy(self.john_text)  # copy the text in order to reblit it every frame
         self.txt_jhn_bg = copy(self.john_text)  # copy it once more, in order to blit it with a lower alpha as a background
@@ -55,7 +55,7 @@ class LoadingScreen:
         self.has_to_kill = False  # indicates if the loading screen has to be killed
 
     def get_key(self):
-        with open("data/database/data.json", "r") as f:
+        with open(resource_path("data/database/data.json"), "r") as f:
             return json.load(f)["controls"]["interact"]
 
     def start(self, next_state:str, end_music:str=None, text:bool=True, cat:bool=True, duration:int=0, main_loading:bool=False, key_end:bool=True):

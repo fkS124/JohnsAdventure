@@ -365,8 +365,8 @@ class Player:
             elif self.looking_right:
                 self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
 
-            p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
-            p.draw.rect(self.screen, (0, 255, 0), rect, 2)
+            #p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
+            #p.draw.rect(self.screen, (0, 255, 0), rect, 2)
 
             # animation delay of 100 ms
             if p.time.get_ticks() - self.delay_attack_animation > 100 and self.restart_animation:

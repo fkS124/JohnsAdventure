@@ -2,6 +2,8 @@
 import pygame
 import random, math
 
+from ..utils import resource_path
+
 # Abstract method
 from abc import ABC, abstractmethod
 
@@ -175,7 +177,7 @@ class Auto(CamScroll):
         self.delay_mvt = 0
         self.moving_cam = False
 
-        self.font = pygame.font.Font("data/database/pixelfont.ttf", 20)
+        self.font = pygame.font.Font(resource_path("data/database/pixelfont.ttf"), 20)
         self.text = ""
 
         self.start = 0

@@ -37,8 +37,9 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland 
-    pg.display.set_icon(l_path("data/ui/logo.png"))
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN) # Add no frame for linux wayland
+
+    pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
     
     FPS = 35
@@ -221,7 +222,7 @@ class GameManager:
         self.player.camera.method.set_text(cur_script["text"] if "text" in cur_script else "")
         self.s_dt_to_wait_on_end = cur_script["waiting_end"] if "waiting_end" in cur_script else 0
 
-        print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
+        #print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
 
     def camera_script_handler(self):
         c_level = self.state_manager[self.state]
@@ -268,7 +269,7 @@ class Debugging:
             "exit_rect": (255, 255, 0)
         }
 
-        self.font = pg.font.Font("data/database/pixelfont.ttf", 15)
+        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 15)
 
     def draw_text(self, txt, color, pos, bottomleft=False):
         text = self.font.render(txt, True, color)

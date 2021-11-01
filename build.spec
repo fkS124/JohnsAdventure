@@ -65,8 +65,8 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
-    icon="data/ui/logo.ico",
+    console=True,
+    icon="data/ui/application.ico",
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
@@ -76,7 +76,7 @@ exe = EXE(
 
 app = BUNDLE(exe,
          name=f"John's Adventure v{VERSION}",
-         icon="data/ui/logo.ico",
+         icon="data/ui/application.ico",
          bundle_identifier=None)
 
 print("The game has been successfully compiled.")

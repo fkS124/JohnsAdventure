@@ -223,7 +223,7 @@ class Enemy:
             # Health Bar
             pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12, int((self.current_sprite.get_width()/self.MAX_HP)*self.show_hp) - 2, 8])
 
-            pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
+            #pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
     def update_dmg_popups(self, scroll):
 
@@ -287,7 +287,7 @@ class Enemy:
 
 class Dummy(Enemy):
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100, xp_drop = 9000):
+    def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100, xp_drop = 210):
         super().__init__(screen, pos, hp=100, xp_drop=210)
         self.load_animation(
             resource_path("data/sprites/dummy.png"),

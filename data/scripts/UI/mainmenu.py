@@ -25,7 +25,12 @@ class Menu:
 
         # Background image
         self.bg_img = p.transform.scale(
-            load(resource_path('data/ui/background.png')), 
+            load(resource_path('data/ui/main_menu/background1.png')), 
+            (1280, 720) # Due to its less size, I am transforming it to 720p because its the default res
+        )
+
+        self.bg_img2 = p.transform.scale(
+            load(resource_path('data/ui/main_menu/background2.png')), 
             (1280, 720) # Due to its less size, I am transforming it to 720p because its the default res
         )
 
@@ -78,7 +83,9 @@ class Menu:
         self.keybinds = [scale(ui.parse_sprite('keybind.png'), 5) for key in self.save["controls"]]
         self.settings_text = [self.f.render(f"{key}", True, (0, 0, 0)) for key in self.save["controls"]]
         
-        self.start_game = False # if True, player click Play button
+        self.start_game = False # if True, player click Play button]
+
+        self.start_time = p.time.get_ticks()
         
 
     ''' Utils '''
@@ -135,7 +142,6 @@ class Menu:
     
 
     def settings_menu(self, m):
-        self.screen.blit(self.bg_img,(0,0)) # Background
         ''' Settings '''
         if self.show_settings:
             self.screen.blit(self.settings_bg, (self.half_w - self.settings_bg.get_width()//2, self.half_h - self.settings_bg.get_height()//2))
@@ -173,7 +179,17 @@ class Menu:
 
     def update(self, mouse):
         # Menu background
-        self.screen.blit(self.bg_img, (0,0))
+
+
+        if p.time.get_ticks() - self.start_time < 4500:
+
+            if p.time.get_ticks() - self.start_time < 2250:
+                self.screen.blit(self.bg_img2, (0,0))
+            else:
+                self.screen.blit(self.bg_img, (0,0))
+
+        else:
+            self.start_time = p.time.get_ticks()
 
         ''' User interact with Settings button'''
         if self.show_settings:
