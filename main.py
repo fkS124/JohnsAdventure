@@ -10,10 +10,4 @@ from data.scripts.world import main
 import sys
 
 if __name__ == '__main__':
-
-    if "--debug" in sys.argv:
-        debug=True
-    else:
-        debug=False
-
-    main(debug=debug)
+    main(debug=("--debug" in sys.argv))
