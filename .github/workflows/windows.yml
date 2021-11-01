@@ -20,20 +20,13 @@ jobs:
       - name: Upgrade PIP and install Pygame 2.0.2
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pyinstaller pygame==2.0.2
+          python -m pip install --upgrade pyinstaller 
+          python -m pip install pygame==2.0.3
           
       - name: Compiling the game
         run: |
           python -m PyInstaller build.spec
+          
       - name: Commit changes 
         run: |
           git status
-          git add -A
-          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git commit -m "Executable for Windows 11"
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.TOKEN }}
-          branch: ${{ github.ref }}
