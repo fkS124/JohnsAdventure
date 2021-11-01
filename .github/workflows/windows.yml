@@ -29,4 +29,6 @@ jobs:
           
       - name: Commit changes 
         run: |
+          git add dist/*
           git status
+          
