@@ -27,8 +27,16 @@ jobs:
           python -m pip install pyinstaller pygame==2.0.3
           python -m PyInstaller build.spec
 
-    - name: Commit changes 
+    - name: Commit Changes
       run: |          
-          git add dist/*
-          git status
+        git add dist/*
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git commit -m "Executable for MacOS"
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.TOKEN }}
+        branch: ${{ github.ref }}
       
