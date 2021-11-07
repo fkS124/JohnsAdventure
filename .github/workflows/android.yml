@@ -1,5 +1,5 @@
 # DISCLAIMER: THE GAME IS NOT GETTING ANDROID SUPPORT, THIS IS JUST FOR FLEX (ATLEAST WAIT FOR FURTHER INFO)
-name: Android Application
+name: Compile for Android
 
 on:
   push:
@@ -69,7 +69,7 @@ jobs:
     
     - name: Commit Changes
       run: |          
-        git add -A
+        git add /bin/*
         git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         git commit -m "Executable for Android"
