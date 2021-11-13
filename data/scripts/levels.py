@@ -9,7 +9,7 @@ from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import Chest
-from .PLAYER.items import Training_Sword
+from .PLAYER.items import Training_Sword, Knight_Sword
 
 class GameState:
 
@@ -261,7 +261,7 @@ class Kitchen(GameState):
             Rect(280,300, 64, 256),
             Rect(10,0, 990, 230),
             Rect(1020, 440, 256, 200),
-            Chest((910,140), {"items":Training_Sword(), "coins": 50})
+            Chest((910,140), {"items":Knight_Sword(), "coins": 50})
         ]
 
         self.exit_rects = {
