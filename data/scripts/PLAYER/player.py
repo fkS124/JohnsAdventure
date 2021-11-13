@@ -295,8 +295,9 @@ class Player:
                             # Stop browsing to reduce calcs
                             break 
                 elif obj.IDENTITY == "PROP":
-                    if itr_box.colliderect(obj.interaction_rect) and obj.name == "chest":
-                        obj.on_interaction(self) # Run Chest opening                      
+                    if obj.name == "chest":  # MUST BE BEFORE checking collision to avoid attribute errors
+                        if itr_box.colliderect(obj.interaction_rect):
+                            obj.on_interaction(self) # Run Chest opening                      
 
     def check_for_hitting(self):
         '''
