@@ -38,7 +38,7 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN) # Add no frame for linux wayland
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
