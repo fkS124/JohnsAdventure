@@ -14,7 +14,8 @@ from .utils import resource_path, l_path
 
 from .levels import (
     PlayerRoom,
-    Kitchen
+    Kitchen,
+    JohnsGarden
 )
 
 def main(debug=False):
@@ -37,7 +38,7 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN) # Add no frame for linux wayland
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF) # Add no frame for linux wayland
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
@@ -90,7 +91,8 @@ class GameManager:
         self.state = "player_room"
         self.state_manager = {
             "player_room": PlayerRoom(self.DISPLAY, self.player),
-            "kitchen": Kitchen(self.DISPLAY, self.player)
+            "kitchen": Kitchen(self.DISPLAY, self.player),
+            "johns_garden": JohnsGarden(self.DISPLAY, self.player)
         }
 
         # ------------ DEBUG ----------------------
@@ -178,7 +180,7 @@ class GameManager:
                 if self.menu_manager.start_game:  # start the game
                     self.menu = False
                     self.loading = True
-                    self.loading_screen.start("player_room", duration=2500, main_loading=True, cat=True, text=False, key_end=False)
+                    self.loading_screen.start(self.state, duration=2500, main_loading=True, cat=True, text=False, key_end=False)
 
             elif self.loading:  # update the loading screen
 
