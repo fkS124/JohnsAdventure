@@ -8,7 +8,9 @@ from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load, l_path
-from .props import Chest
+from .props import (
+    Chest, Box, JohnsHouse, Carpet, Bush, Fences
+)
 from .PLAYER.items import Training_Sword, Knight_Sword
 
 class GameState:
@@ -157,6 +159,7 @@ class GameState:
         self.display.blit(self.world, -camera.offset.xy)
         self.scroll = camera.offset.xy
 
+        props = []
         """ Collision Algorithm and Entity Updater """
         self.changes = {}  # reset the changes
         for obj in self.objects:
@@ -171,15 +174,31 @@ class GameState:
 
             if type(obj) is not pg.Rect:
                 obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
-            
+                if hasattr(obj, "IDENTITY"):
+                    if obj.IDENTITY == "PROP":
+                        props.append(obj)
+
             if hasattr(obj, "move_ability"):
                 objects = copy(self.objects)  # gets all objects
                 objects.remove(obj)  # remove the object that we are currently checking for collisions
                 objects.append(self.player)  # add the player in the object list bc it's still a collider 
+                for obj_ in copy(objects):
+                    if hasattr(obj_, "IDENTITY"):
+                        if obj_.IDENTITY == "PROP":
+                            if not obj_.collidable:
+                                objects.remove(obj_)
                 self.collision_system(obj, objects)  # handle collisions
         
         # handle collisions for the player
-        self.collision_system(self.player, self.objects)
+        objects = copy(self.objects)
+        for obj_ in copy(objects):
+            if hasattr(obj_, "IDENTITY"):
+                if obj_.IDENTITY == "PROP":
+                    if not obj_.collidable:
+                        objects.remove(obj_)
+        self.collision_system(self.player, objects)
+
+        self.screen.blits([(prop.current_frame, prop.rect.topleft-self.scroll) for prop in props])
 
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
@@ -265,9 +284,39 @@ class Kitchen(GameState):
         ]
 
         self.exit_rects = {
-            "player_room": pg.Rect(1054,68,138,119)
+            "player_room": pg.Rect(1054,68,138,119),
+            "johns_garden": pg.Rect(591, 678, 195, 99)
         }
 
         self.spawn = {
-            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(75, 0))
+            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(75, 0)),
+            "johns_garden": (self.exit_rects["johns_garden"].topleft+pg.Vector2(0, -200))
+        }
+
+
+class JohnsGarden(GameState):
+
+    def __init__(self, DISPLAY:pg.Surface, player_instance):
+
+        super().__init__(DISPLAY, player_instance)
+        self.world = pg.Surface((2000, 2000))
+        self.world.fill((0, 100, 0))
+        self.objects = [
+            Box((200, 1200)),
+            JohnsHouse((396, 60)),
+            Carpet((750, 840)),
+            Bush((1200, 1200)),
+            Fences.Fence1((24, 250)),
+            Fences.Fence2((54, 250)),
+            Fences.Fence3((54, 1024)),
+            Fences.Fence4((885, 1024)),
+            Fences.Fence5((1602, 250)),
+            Fences.Fence6((1203, 250)),
+        ]
+
+        self.exit_rects = {
+            "kitchen": pg.Rect(750, 840, 99, 51)
+        }
+        self.spawn = {
+            "kitchen": (self.exit_rects["kitchen"].bottomleft+pg.Vector2(0, 10))
         }

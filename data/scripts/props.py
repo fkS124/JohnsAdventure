@@ -1,12 +1,11 @@
 import pygame as pg
-from pygame import sprite
 from .utils import *
 from .backend import UI_Spritesheet
 
 
 class Prop:
 
-    """Motionless thing like tree, chest, fence..."""
+    """Motionless thing like tree, chest, fences..."""
 
     def __init__(self,
                  pos: pg.Vector2 | tuple[int, int],
@@ -18,9 +17,11 @@ class Prop:
                  interaction_rect_size:tuple[int,int]=(100,100),
                  interaction_animation_coord:tuple=None,
                  type_of_interaction:str="unique",  # unique or several
+                 collision:bool=True
                  ):
         
         self.IDENTITY = "PROP"
+        self.collidable = collision
         self.name = "default"
         if image_path == sprite_sheet == "":
             return ValueError("Prop must at least include an image or a spritesheet")
@@ -144,7 +145,6 @@ class Prop:
         return [scale(get_sprite(self.sprite_sheet, coords[0]+coords[2]*i, coords[1], coords[2], coords[3]), coords[4]) for i in range(coords[5])]
 
 
-
 class Chest(Prop):
 
     def __init__(self, pos, rewards):
@@ -261,11 +261,63 @@ class Chest(Prop):
             self.rewards = {}
 
                 
-
-        
+class Box(Prop):
+    def __init__(self, pos):
+        super().__init__(
+            pos=pos,sprite_sheet='data/sprites/world/world_sheet.png',
+            idle_coord=[96, 229, 38, 45, 3, 1], interaction=False)
         
             
+class JohnsHouse(Prop):
+    def __init__(self, pos):
+        super().__init__(
+            pos=pos,
+            sprite_sheet='data/sprites/world/world_sheet.png',
+            idle_coord=[381, 21, 269, 257, 3, 1], interaction=False)
 
 
+class Carpet(Prop):
+    def __init__(self, pos):
+        super().__init__(
+            pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
+            idle_coord=[499, 280, 34, 18, 3, 1],
+            interaction=False, collision=False)
 
-        
+
+class Bush(Prop):
+    def __init__(self, pos):
+        super().__init__(
+            pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
+            idle_coord=[224, 264, 16, 18, 6, 1], interaction=False)
+
+
+class Fences:
+    class Fence(Prop):
+        def __init__(self, pos, coords):
+            super().__init__(
+                pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
+                idle_coord=coords, interaction=False)
+
+    class Fence1(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [257, 67, 10, 292, 3, 1])
+
+    class Fence2(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [267, 68, 114, 34, 3, 1])
+
+    class Fence3(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [267, 324, 224, 35, 3, 1])
+
+    class Fence4(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [545, 324, 239, 34, 3, 1])
+
+    class Fence5(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [785, 67, 9, 291, 3, 1])
+
+    class Fence6(Fence):
+        def __init__(self, pos):
+            super().__init__(pos, [651, 68, 133, 34, 3, 1])
