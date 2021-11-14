@@ -248,8 +248,8 @@ class Chest(Prop):
 
         if not self.animation_ended:
             self.animate_new_items(screen, scroll)
-        else:  # fill the inventory with the rewards 
             for reward in self.rewards:
+                # Browse though the chest and add items
                 if reward == "coins":
                     self.player.data['coins'] += self.rewards[reward]
                 else:
@@ -257,10 +257,11 @@ class Chest(Prop):
                         for item in self.rewards[reward]:
                             self.player.inventory.items.append(item)
                     else:
-                        self.player.inventory.items.append(self.rewards[reward])   
-            self.rewards = {}
+                        self.player.inventory.items.append(self.rewards[reward])  
 
-                
+            # Empty out Chest
+            self.rewards = {}
+        
 class Box(Prop):
     def __init__(self, pos):
         super().__init__(
@@ -282,14 +283,6 @@ class Carpet(Prop):
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
             idle_coord=[499, 280, 34, 18, 3, 1],
             interaction=False, collision=False)
-
-
-class Bush(Prop):
-    def __init__(self, pos):
-        super().__init__(
-            pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[224, 264, 16, 18, 6, 1], interaction=False)
-
 
 class Fences:
     class Fence(Prop):

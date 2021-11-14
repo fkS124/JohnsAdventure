@@ -38,7 +38,7 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN) # Add no frame for linux wayland
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
@@ -169,7 +169,17 @@ class GameManager:
 
     def update(self):
         
-        self.pg_loading_screen()
+        '''
+
+            FOR DEBUGGING MEASURES, ELSE RUN THE GAME NORMAL
+        
+        '''
+        if not self.debug:
+            self.pg_loading_screen()
+        else:
+            self.menu = False
+            self.loading = False 
+
 
         while True:
 
@@ -204,12 +214,17 @@ class GameManager:
                     self.loading_screen.start(update, text=True, duration=750, key_end=False)
                     if self.state in self.state_manager[update].spawn:
                         self.player.rect.topleft = self.state_manager[update].spawn[self.state]
-                if not self.state_manager[self.state].ended_script:
+
+                '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''
+                if not self.state_manager[self.state].ended_script and not self.debug:
                     self.camera_script_handler()
+                else:
+                    self.player.set_camera_to("follow")
 
             self.routine()
 
     def start_new_src_part(self):
+
         c_level = self.state_manager[self.state]
         cam_script = c_level.camera_script
         src_index = c_level.cam_index
@@ -307,12 +322,13 @@ class Debugging:
                             col_rect.topleft -= scroll
                         pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
+            
             exit_rects = self.game.state_manager[self.game.state].exit_rects
             for exit_rect in exit_rects:
-                r = copy(exit_rects[exit_rect])
+                r = copy(exit_rects[exit_rect][0])
                 r.topleft -= scroll
                 pg.draw.rect(self.screen, self.colors["exit_rect"], r, 2)
-                self.draw_text(str('To:'+exit_rect), self.colors["exit_rect"], r.topleft, bottomleft=True)
+                self.draw_text(str('To:'+exit_rect[0]), self.colors["exit_rect"], r.topleft, bottomleft=True)
 
             pl_col_rect = copy(self.player.rect)
             pl_col_rect.topleft -= scroll

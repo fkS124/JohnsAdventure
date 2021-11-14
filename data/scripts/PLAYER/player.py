@@ -166,7 +166,7 @@ class Player:
 
         self.looking_down = False
         self.looking_up = False
-        self.looking_right = False
+        self.looking_right = True
         self.looking_left = False
 
         self.index_attack_animation = 0
@@ -225,12 +225,16 @@ class Player:
         self.current_combo = 0
         # The number of attacks, last is rewarding extra damage
         self.last_attack = 3
+
         # ticks value in the future
         self.last_attacking_click = 0
-        # still to be determined  This is the cooldown of the last attack
-        self.attack_speed = 1150
+        
         # still to be determined
-        self.attack_cooldown = 450
+        self.attack_cooldown = 350
+
+        # still to be determined  This is the cooldown of the last attack
+        self.attack_speed = self.attack_cooldown * 2  - 25/100
+
         self.max_combo_multiplier = 1.025
         self.last_combo_hit_time = 0
         self.next_combo_available = True
@@ -245,7 +249,6 @@ class Player:
             Look above for "Player's Camera Settings" for more info!
         '''
         self.camera.set_method(self.camera_mode[_KEY])
-
 
 
     def leveling(self):
@@ -331,7 +334,8 @@ class Player:
             self.check_for_hitting()
 
         else:
-            if self.next_combo_available:
+            # if its time to show the next combo, make sure player isn't moving else cancel
+            if self.next_combo_available and not True in [self.Up, self.Down, self.Left, self.Right]:
                 if click_time - self.last_attacking_click > self.attack_speed:
                     self.attacking = False
                     self.current_combo = 0
@@ -357,14 +361,21 @@ class Player:
 
             # sets the attacking hitbox according to the direction
             rect = p.Rect(self.rect.x - self.camera.offset.x - 50, self.rect.y - self.camera.offset.y - 40, *self.rect.size)
+
+            
+            # Some tweaks to attacking sprite
+            temp = pos
+
             if self.looking_up:
                 self.attacking_hitbox = p.Rect(rect.x, rect.y-self.attacking_hitbox_size[0], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_down:
                 self.attacking_hitbox = p.Rect(rect.x, rect.bottom, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_left:
                 self.attacking_hitbox = p.Rect(rect.x-self.attacking_hitbox_size[1], rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                temp = pos[0] - 2, pos[1] # Fix Image position
             elif self.looking_right:
                 self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                temp = pos[0] + 2, pos[1] # Fix Image position
 
             #p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
             #p.draw.rect(self.screen, (0, 255, 0), rect, 2)
@@ -394,7 +405,10 @@ class Player:
 
 
             #p.draw.rect(self.screen, (255,255,255), self.Rect)
-            self.screen.blit(self.attacking_frame, pos)
+
+            # ----- Blit Animation ------
+
+            self.screen.blit(self.attacking_frame, temp)
 
             # reset the whole thing if the combo reach his end and the animation of the last hit ended too
             if self.current_combo == self.last_attack and not self.restart_animation and not self.index_attack_animation:
@@ -404,7 +418,10 @@ class Player:
                 self.restart_animation = True  # allow to restart an animation
 
             # p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox) show hitbox
+
+            # End of the attack animation
             if p.time.get_ticks() - self.last_attacking_click > self.attack_speed:
+                print("attack ended")
                 self.attacking = False
                 self.current_combo = 0
                 self.next_combo_available = True
@@ -566,26 +583,34 @@ class Player:
         angle = abs(math.degrees(angle))+90 if angle < 0 else 360-math.degrees(angle)+90
         image = p.transform.rotate(self.attack_pointer, angle)
         ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
-        if not self.ring_lu:
+
+        # Blit attack ring only on this condition
+        if not self.ring_lu and self.camera_status != "auto":
             self.screen.blit(image, ring_pos)
 
         self.update_attack(pos)
-        self.update_dash(dt, pos)
-
+           
         if not self.attacking and not self.dashing:
             angle = math.atan2(
                 m[1] - (self.rect.top + 95 - self.camera.offset.y),
                 m[0] - (self.rect.left + 10 - self.camera.offset.x),
             )
             angle = abs(math.degrees(angle)) if angle < 0 else 360-math.degrees(angle)
-            if 135 >= angle > 45:
-                self.set_looking("up", pos)
-            elif 225 >= angle > 135:
-                self.set_looking("left", pos)
-            elif 315 >= angle > 225:
-                self.set_looking("down", pos)
+
+            if self.camera_status != "auto":
+                if 135 >= angle > 45:
+                    self.set_looking("up", pos)
+                elif 225 >= angle > 135:
+                    self.set_looking("left", pos)
+                elif 315 >= angle > 225:
+                    self.set_looking("down", pos)
+                else:
+                    self.set_looking("right", pos)
             else:
+                "we will put a str from camera instead of 'right' later on."
                 self.set_looking("right", pos)
+        
+        self.update_dash(dt, pos)
         
         # Level UP ring
         self.animate_level_up_ring()
@@ -717,7 +742,7 @@ class Player:
                         if not self.inventory.show_menu:
                            self.show_mouse = False
 
-                    if e.key == dash and self.camera_status != "auto":
+                    if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu:
                         self.start_dash()
 
                     if e.key == itr:

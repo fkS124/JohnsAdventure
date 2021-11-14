@@ -9,7 +9,7 @@ from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import (
-    Chest, Box, JohnsHouse, Carpet, Bush, Fences
+    Chest, Box, JohnsHouse, Carpet, Fences
 )
 from .PLAYER.items import Training_Sword, Knight_Sword
 
@@ -202,11 +202,17 @@ class GameState:
 
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
-            exit_rect = pg.Rect(exit_rect.x, exit_rect.y, *exit_rect.size)
-            if self.player.rect.colliderect(exit_rect):
-                if self.player.InteractPoint == 2:
-                    return exit_state
-
+            
+            exit_rect = pg.Rect(exit_rect[0].x, exit_rect[0].y, *exit_rect[0].size), exit_rect[1]
+            if self.player.rect.colliderect(exit_rect[0]):
+                match self.player.InteractPoint:
+                    case 1:
+                        # Open UI interaction
+                        self.player.is_interacting = True
+                        self.player.npc_text = exit_rect[1]
+                    case 2:
+                        # Send the player to next level
+                        return exit_state
 
 class PlayerRoom(GameState):
 
@@ -232,11 +238,11 @@ class PlayerRoom(GameState):
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
 
         self.exit_rects = {
-            "kitchen": pg.Rect(1008,148,156,132)
+            "kitchen": (pg.Rect(1008,148,156,132), "Go down?")
         }
 
         self.spawn = {
-            "kitchen": (self.exit_rects["kitchen"].bottomleft+pg.Vector2(0, 50))
+            "kitchen": (self.exit_rects["kitchen"][0].bottomleft+pg.Vector2(0, 50))
         }
 
         self.camera_script = [
@@ -280,17 +286,17 @@ class Kitchen(GameState):
             Rect(280,300, 64, 256),
             Rect(10,0, 990, 230),
             Rect(1020, 440, 256, 200),
-            Chest((910,140), {"items":Knight_Sword(), "coins": 50})
+            Chest((910,140), {"items":Training_Sword(), "coins": 50})
         ]
 
         self.exit_rects = {
-            "player_room": pg.Rect(1054,68,138,119),
-            "johns_garden": pg.Rect(591, 678, 195, 99)
+            "player_room": (pg.Rect(1054,68,138,119),  "Back to your room?"),
+            "johns_garden": (pg.Rect(591, 678, 195, 99), "Go outside?")
         }
 
         self.spawn = {
-            "player_room": (self.exit_rects["player_room"].bottomleft+pg.Vector2(75, 0)),
-            "johns_garden": (self.exit_rects["johns_garden"].topleft+pg.Vector2(0, -200))
+            "player_room": (self.exit_rects["player_room"][0].bottomleft+pg.Vector2(75, 0)),
+            "johns_garden": (self.exit_rects["johns_garden"][0].topleft+pg.Vector2(0, -200))
         }
 
 
@@ -305,18 +311,17 @@ class JohnsGarden(GameState):
             Box((200, 1200)),
             JohnsHouse((396, 60)),
             Carpet((750, 840)),
-            Bush((1200, 1200)),
             Fences.Fence1((24, 250)),
             Fences.Fence2((54, 250)),
             Fences.Fence3((54, 1024)),
             Fences.Fence4((885, 1024)),
             Fences.Fence5((1602, 250)),
-            Fences.Fence6((1203, 250)),
+            Fences.Fence6((1203, 249)),
         ]
 
         self.exit_rects = {
-            "kitchen": pg.Rect(750, 840, 99, 51)
+            "kitchen": (pg.Rect(750, 840, 99, 51), "Go back to your house?")
         }
         self.spawn = {
-            "kitchen": (self.exit_rects["kitchen"].bottomleft+pg.Vector2(0, 10))
+            "kitchen": (self.exit_rects["kitchen"][0].bottomleft+pg.Vector2(0, 10))
         }

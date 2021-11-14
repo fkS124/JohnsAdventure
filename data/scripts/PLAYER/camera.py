@@ -242,7 +242,7 @@ class Auto(CamScroll):
                 self.moving_cam = False
                 self.looking_at = self.target
 
-            print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
+            #print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
         
         # Bottom Cinema Bar
         b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
