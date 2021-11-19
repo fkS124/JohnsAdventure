@@ -698,6 +698,14 @@ class Player:
             self.click = False
             a = self.data['controls']
 
+
+            if keys[p.K_1]:
+                self.camera.fov.xy += p.math.Vector2(15,15)
+            if keys[p.K_2]:
+                self.camera.fov.xy -= p.math.Vector2(15,15)
+
+
+
             if not self.inventory.show_menu:
                self.Up = keys[a["up"]]
                self.Down = keys[a["down"]]

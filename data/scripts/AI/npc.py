@@ -247,13 +247,13 @@ class Mau(MovingNPC):
             movement="lateral", 
             range_rect=pg.Rect(*dep_pos, *range_),
             velocity=pg.Vector2(1.25, 1.25),
-            sprite_sheet_path='data/sprites/mau_sheet.png',
+            sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True, 
-            idle_right=[43*3, 0, 43, 33, 2, 3],
-            idle_left=[43*3, 0, 43, 33, 2, 3, "flip"],
+            idle_right=[132 - 4, 49, 43, 33, 2, 3],
+            idle_left=[132 - 4, 49, 33, 33, 2, 3, "flip"],
             move_anim=True,
-            move_right=[0, 0, 43, 33, 2, 3],
-            move_left=[0, 0, 43, 33, 2, 3, "flip"],
+            move_right=[3+ 39, 49, 43, 33, 2, 3],
+            move_left=[3 + 39, 49, 43, 33, 2, 3, "flip"],
             tell_story='mau'
         )
 

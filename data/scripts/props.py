@@ -1,7 +1,7 @@
 import pygame as pg
 from .utils import *
 from .backend import UI_Spritesheet
-
+import json
 
 class Prop:
 
@@ -20,6 +20,10 @@ class Prop:
                  collision:bool=True
                  ):
         
+        # Take spritesheet location data (Will be used soon)
+        with open(resource_path('data/database/open_world.json')) as f:
+            self.data = json.load(f)
+
         self.IDENTITY = "PROP"
         self.collidable = collision
         self.name = "default"

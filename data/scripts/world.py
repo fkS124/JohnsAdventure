@@ -196,7 +196,7 @@ class GameManager:
 
                 update_return = self.loading_screen.update()
                 if update_return is not None:
-                    print(update_return["next_state"])
+                    #print(update_return["next_state"])
                     if update_return["next_state"] != "menu":
                         self.state = update_return["next_state"]
                         self.loading = False

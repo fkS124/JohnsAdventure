@@ -30,6 +30,8 @@ class GameState:
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
 
         self.objects = []
+
+        # This might be the reason why players blit at top left for a nano second when you boot the game
         self.world = pg.Surface((1, 1))  # set default values for world -> supposed to be replaced
 
         # eg. -> "next_state_name" : pg.Rect(0, 0, 100, 100)
@@ -108,7 +110,7 @@ class GameState:
             col_rect = copy(col_obj.rect)
             if hasattr(col_obj, "IDENTITY"):
                 if col_obj.IDENTITY in ["NPC", "PROP"]:
-                    col_rect.topleft -= self.scroll  # apply scroll to NPCs because it's not defaultly applied to rect
+                    col_rect.topleft -= self.scroll  # apply scroll to NPCs because it's not applied
             # apply a few modifications from the original player's rect to fit better to the collision system
             if type(col_obj) is Player:
                 col_rect.topleft -= self.scroll
@@ -155,8 +157,18 @@ class GameState:
         self.player.rooms_objects = self.objects 
         self.dt = dt
 
+        world_rect = self.world.get_rect()
         # display background
-        self.display.blit(self.world, -camera.offset.xy)
+        self.display.blit(
+            
+            pg.transform.scale(self.world, 
+            (world_rect.x + self.player.camera.fov.x * 2, world_rect.x + self.player.camera.fov.y)
+            
+            ), 
+            -camera.offset.xy
+        )
+
+        
         self.scroll = camera.offset.xy
 
         props = []

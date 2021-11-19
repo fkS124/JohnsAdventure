@@ -16,7 +16,6 @@ class UI_Spritesheet:
         self.sprite_sheet = pygame.image.load(resource_path(filename)).convert()
         with open(resource_path('data/database/ui.json')) as f:
             self.data = json.load(f)
-        f.close()
 
     def get_sprite(self, x, y, w, h):  # Data from the json file
         sprite = pygame.Surface((w, h))

@@ -29,6 +29,10 @@ class Camera:
         # The gap between the player and camera
         self.offset = vec(0,0)
 
+        # Field of view
+        self.fov = vec(0,0) 
+        self.changing = False # Event when fov changing occurs
+
         # We use float to get the precice location
         self.offset_float = vec(0,0)
 
