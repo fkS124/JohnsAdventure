@@ -8,9 +8,7 @@ from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .AI import npc
 from .utils import resource_path, load, l_path
-from .props import (
-    Chest, Box, JohnsHouse, Carpet, Fences
-)
+from .props import PROP_OBJECTS, Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
 
 class GameState:
@@ -157,21 +155,19 @@ class GameState:
         self.player.rooms_objects = self.objects 
         self.dt = dt
 
-        world_rect = self.world.get_rect()
-        # display background
+        """world_rect = self.world.get_rect()
+        # display background                         # TODO : fix this zoom effect pls (not urgent)
         self.display.blit(
             
             pg.transform.scale(self.world, 
-            (world_rect.x + self.player.camera.fov.x * 2, world_rect.x + self.player.camera.fov.y)
-            
+            #(world_rect.x + self.player.camera.fov.x * 2, world_rect.x + self.player.camera.fov.y)
             ), 
             -camera.offset.xy
-        )
-
+        )"""
+        self.screen.blit(self.world, -camera.offset.xy)
         
         self.scroll = camera.offset.xy
 
-        props = []
         """ Collision Algorithm and Entity Updater """
         self.changes = {}  # reset the changes
         for obj in self.objects:
@@ -186,9 +182,6 @@ class GameState:
 
             if type(obj) is not pg.Rect:
                 obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
-                if hasattr(obj, "IDENTITY"):
-                    if obj.IDENTITY == "PROP":
-                        props.append(obj)
 
             if hasattr(obj, "move_ability"):
                 objects = copy(self.objects)  # gets all objects
@@ -210,13 +203,16 @@ class GameState:
                         objects.remove(obj_)
         self.collision_system(self.player, objects)
 
-        self.screen.blits([(prop.current_frame, prop.rect.topleft-self.scroll) for prop in props])
-
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
             
             exit_rect = pg.Rect(exit_rect[0].x, exit_rect[0].y, *exit_rect[0].size), exit_rect[1]
-            if self.player.rect.colliderect(exit_rect[0]):
+            itr_box = p.Rect(
+                *(self.player.rect.topleft-pg.Vector2(17, -45)),
+                self.player.rect.w // 2, self.player.rect.h // 2
+            )
+
+            if itr_box.colliderect(exit_rect[0]):
                 match self.player.InteractPoint:
                     case 1:
                         # Open UI interaction
@@ -224,6 +220,8 @@ class GameState:
                         self.player.npc_text = exit_rect[1]
                     case 2:
                         # Send the player to next level
+                        self.player.is_interacting = False
+                        self.player.npc_text = ''
                         return exit_state
 
 class PlayerRoom(GameState):
@@ -303,7 +301,7 @@ class Kitchen(GameState):
 
         self.exit_rects = {
             "player_room": (pg.Rect(1054,68,138,119),  "Back to your room?"),
-            "johns_garden": (pg.Rect(591, 678, 195, 99), "Go outside?")
+            "johns_garden": (pg.Rect(551, 620, 195, 99), "Go outside?")
         }
 
         self.spawn = {
@@ -320,20 +318,18 @@ class JohnsGarden(GameState):
         self.world = pg.Surface((2000, 2000))
         self.world.fill((0, 100, 0))
         self.objects = [
-            Box((200, 1200)),
-            JohnsHouse((396, 60)),
-            Carpet((750, 840)),
-            Fences.Fence1((24, 250)),
-            Fences.Fence2((54, 250)),
-            Fences.Fence3((54, 1024)),
-            Fences.Fence4((885, 1024)),
-            Fences.Fence5((1602, 250)),
-            Fences.Fence6((1203, 249)),
+            PROP_OBJECTS["box"]((200, 1200)),
+            PROP_OBJECTS["full_fence"]((21, 250)),
+            PROP_OBJECTS["side_fence"]((21, 250)),
+            PROP_OBJECTS["half_fence"]((21, 1014)),
+            PROP_OBJECTS["half_fence_reversed"]((930, 1014)),
+            PROP_OBJECTS["side_fence"]((1602, 250)),
+            PROP_OBJECTS["john_house"]((420, 60)),
         ]
 
         self.exit_rects = {
-            "kitchen": (pg.Rect(750, 840, 99, 51), "Go back to your house?")
+            "kitchen": (pg.Rect(780, 840, 99, 51), "Go back to your house?")
         }
         self.spawn = {
-            "kitchen": (self.exit_rects["kitchen"][0].bottomleft+pg.Vector2(0, 10))
+            "kitchen": (self.exit_rects["kitchen"][0].bottomleft)
         }
