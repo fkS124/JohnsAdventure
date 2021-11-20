@@ -18,8 +18,9 @@ from .levels import (
     JohnsGarden
 )
 
-def main(debug=False):
-    GameManager(debug=debug).update()
+
+def main(debug=False, first_state="player_room"):
+    GameManager(debug=debug, first_state=first_state).update()
 
 
 class GameManager:
@@ -38,15 +39,14 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+    DISPLAY = pg.display.set_mode((1280, 720), flags=pg.SRCALPHA) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
     
     FPS = 35
 
-
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, first_state="player_room"):
 
         # ------------- SPRITESHEET ---------------
         self.ui = UI_Spritesheet("data/ui/UI_spritesheet.png")
@@ -88,7 +88,7 @@ class GameManager:
         )
 
         # ----------- GAME STATE ------------------
-        self.state = "player_room"
+        self.state = first_state
         self.state_manager = {
             "player_room": PlayerRoom(self.DISPLAY, self.player),
             "kitchen": Kitchen(self.DISPLAY, self.player),
@@ -336,3 +336,10 @@ class Debugging:
             pl_col_rect.w -= 70
             pl_col_rect.h -= 115
             pg.draw.rect(self.screen,self.colors["collision_rect"], pl_col_rect, 1)
+
+            position = (self.player.rect.topleft - self.player.camera.offset.xy)
+            itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)
+            # Manual Position tweaks
+            itr_box.x -= 17
+            itr_box.y += 45
+            pg.draw.rect(self.screen, (0, 0, 0), itr_box, 2)

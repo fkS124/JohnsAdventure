@@ -3,12 +3,38 @@ from .utils import *
 from .backend import UI_Spritesheet
 import json
 
+
+
+DATA_PATH = resource_path("data/database/open_world.json")
+with open(DATA_PATH) as datas:
+    DATAS = json.load(datas)
+
+def get_coords(name):
+    if name not in DATAS:
+        return False
+
+    coords = DATAS[name]
+    # [x, y, width, height, scale, iterations]
+    return [coords["x"], coords["y"], coords["w"], coords["h"], coords["sc"], coords["it"]]
+
+
+def make_prop_object_creator(name):
+    return lambda pos: SimplePropObject(name, pos)
+
+
+COORDS = {name: get_coords(name) for name in DATAS}
+PROP_OBJECTS = {
+    name: make_prop_object_creator(name) for name in DATAS
+}
+
+
+
 class Prop:
 
     """Motionless thing like tree, chest, fences..."""
 
     def __init__(self,
-                 pos: pg.Vector2 | tuple[int, int],
+                 pos: pg.Vector2,
                  image_path:str="",
                  sprite_sheet:str="",
                  idle_coord:tuple=None,
@@ -19,7 +45,7 @@ class Prop:
                  type_of_interaction:str="unique",  # unique or several
                  collision:bool=True
                  ):
-        
+
         # Take spritesheet location data (Will be used soon)
         with open(resource_path('data/database/open_world.json')) as f:
             self.data = json.load(f)
@@ -36,13 +62,13 @@ class Prop:
 
             if idle_coord is not None:
                 self.idle = self.load_from_spritesheet(idle_coord)
-            
+
             if interaction_animation_coord is not None and interaction:
                 self.interaction_anim = self.load_from_spritesheet(interaction_animation_coord)
 
         # -------------------- INTERACTION ---------------------------
         self.interaction = interaction
-        
+
         if self.interaction:
             self.interaction_type = type_of_interaction
             if self.interaction_type == "unique":
@@ -59,7 +85,7 @@ class Prop:
                     self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.y-self.it_re_size[1], *self.it_re_size)
                 case "down":
                     self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.bottom, *self.it_re_size)
-        
+
         # ------------------- ANIMATION ------------------------------
         self.anim_manager = {
             "idle": (self.idle if hasattr(self, "idle") else None, "loop"),
@@ -67,7 +93,7 @@ class Prop:
         }
         self.state = "idle"
         self.delay = 0
-        self.index_anim = 0  
+        self.index_anim = 0
         self.delay_bt_frames = 100
 
         # ---------------- SPRITES AND RECT --------------------------
@@ -92,7 +118,7 @@ class Prop:
             self.interaction_rect.topleft-=scroll
 
     def on_interaction(self, player_instance=None):
-        
+
         """This function is called when an interaction appear with the player.
         Passing the player as an argument can for instance be helpful to give him 
         objects."""
@@ -112,9 +138,9 @@ class Prop:
             self.interact(player_instance=player_instance)
 
     def interact(self, player_instance=None):
-        
+
         # WRITE THE INTERACTION HERE -> including sounds, etc
-        
+
         pass
 
     def animate(self):
@@ -161,15 +187,16 @@ class Chest(Prop):
             interaction_direction="down",
             interaction_rect_size=(100, 50),
             type_of_interaction="unique"
-        )  
+        )
 
         # ------------- INTERACTION -------------
         self.name = "chest"
 
         # form :
         # {"coins": int, "items": [Item1, Item2, ...] or Item}
-        self.rewards = rewards        
+        self.rewards = rewards
         self.interaction_time = 0
+        self.rewarded = False
 
         # ------------ ANIMATION ----------------
         self.UI_button = [scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
@@ -188,7 +215,7 @@ class Chest(Prop):
         self.item_bg = scale(self.ui.parse_sprite('reward.png'),3)
         self.new = self.font.render("NEW !", True, (255, 255, 0))
 
-        self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255,255,255))   
+        self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255,255,255))
 
     def animate_new_items(self, screen, scroll):
 
@@ -204,7 +231,7 @@ class Chest(Prop):
             for i, key in enumerate(self.rewards):
                 pos = (dep_x+(2*i)*(self.item_bg.get_width()), r.y-self.dy)
                 screen.blit(self.item_bg, pos)  # blit a background image
-            
+
                 if self.rewards[key].__class__.__name__ not in [item.__class__.__name__ for item in self.player.inventory.items] and key != "coins":  # show up a new item
                     screen.blit(self.new, self.new.get_rect(topleft=(pos+pg.Vector2(0, self.item_bg.get_height()))))
 
@@ -219,6 +246,8 @@ class Chest(Prop):
 
             if pg.time.get_ticks() - self.interaction_time > 4000:  # after x seconds, end the animation
                 self.animation_ended = True
+                # Empty out Chest
+                self.rewards = {}
 
     def on_interaction(self, player_instance=None):
         return super().on_interaction(player_instance=player_instance)
@@ -242,7 +271,7 @@ class Chest(Prop):
 
     def update(self, screen, scroll, player):
         self.player = player
-        
+
         # Draw and move Chest
         super().update(screen, scroll)
         self.update_popup_button(screen, scroll)
@@ -250,71 +279,25 @@ class Chest(Prop):
         # Debug interact rect
         #pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
 
-        if not self.animation_ended:
+        if not self.animation_ended and self.has_interacted:
             self.animate_new_items(screen, scroll)
-            for reward in self.rewards:
-                # Browse though the chest and add items
-                if reward == "coins":
-                    self.player.data['coins'] += self.rewards[reward]
-                else:
-                    if type(self.rewards[reward]) is list:
-                        for item in self.rewards[reward]:
-                            self.player.inventory.items.append(item)
+            if not self.rewarded:
+                self.rewarded = True
+                for reward in self.rewards:
+                    # Browse though the chest and add items
+                    if reward == "coins":
+                        self.player.data['coins'] += self.rewards[reward]
                     else:
-                        self.player.inventory.items.append(self.rewards[reward])  
-
-            # Empty out Chest
-            self.rewards = {}
-        
-class Box(Prop):
-    def __init__(self, pos):
-        super().__init__(
-            pos=pos,sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[96, 229, 38, 45, 3, 1], interaction=False)
-        
-            
-class JohnsHouse(Prop):
-    def __init__(self, pos):
-        super().__init__(
-            pos=pos,
-            sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[381, 21, 269, 257, 3, 1], interaction=False)
+                        if type(self.rewards[reward]) is list:
+                            for item in self.rewards[reward]:
+                                self.player.inventory.items.append(item)
+                        else:
+                            self.player.inventory.items.append(self.rewards[reward])
 
 
-class Carpet(Prop):
-    def __init__(self, pos):
+class SimplePropObject(Prop):
+    def __init__(self, name, pos):
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[499, 280, 34, 18, 3, 1],
-            interaction=False, collision=False)
-
-class Fences:
-    class Fence(Prop):
-        def __init__(self, pos, coords):
-            super().__init__(
-                pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-                idle_coord=coords, interaction=False)
-
-    class Fence1(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [257, 67, 10, 292, 3, 1])
-
-    class Fence2(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [267, 68, 114, 34, 3, 1])
-
-    class Fence3(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [267, 324, 224, 35, 3, 1])
-
-    class Fence4(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [545, 324, 239, 34, 3, 1])
-
-    class Fence5(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [785, 67, 9, 291, 3, 1])
-
-    class Fence6(Fence):
-        def __init__(self, pos):
-            super().__init__(pos, [651, 68, 133, 34, 3, 1])
+            idle_coord=[*COORDS[name]]
+        )
