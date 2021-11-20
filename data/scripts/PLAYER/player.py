@@ -673,7 +673,6 @@ class Player:
         self.animation_handing(dt, m, player_p)
         if type(self.camera.method) is not type(self.camera_mode["auto"]):
             self.movement(m , player_p)
-        self.user_interface(m, player_p)  
       
         # Update the camera: ALWAYS LAST LINE
         self.update_camera_status()

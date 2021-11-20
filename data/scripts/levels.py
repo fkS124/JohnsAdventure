@@ -1,6 +1,8 @@
 import pygame as pg
 from pygame import Rect
 from copy import copy
+from operator import attrgetter
+import json
 
 #from .PLAYER.items import Chest
 from .PLAYER.player import *
@@ -82,6 +84,7 @@ class GameState:
         }
         ]
         """
+        self.offset_map = pg.Vector2(0, 0)
 
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
@@ -118,6 +121,10 @@ class GameState:
         else:
             col_rect = copy(col_obj)  # if it's a rect, just copy it
             col_rect.topleft -= self.scroll
+
+        if hasattr(col_obj, "d_collision"):
+            col_rect.topleft += pg.Vector2(*col_obj.d_collision[:2])
+            col_rect.size = col_obj.d_collision[2:]
   
         # pg.draw.rect(self.screen, (0, 255, 0), col_rect, 1)   ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
 
@@ -164,9 +171,23 @@ class GameState:
             ), 
             -camera.offset.xy
         )"""
-        self.screen.blit(self.world, -camera.offset.xy)
+        self.screen.blit(self.world, -camera.offset.xy-self.offset_map)
         
         self.scroll = camera.offset.xy
+
+        all_objects = []
+        for obj_ in self.objects:
+            if type(obj_) is not pg.Rect:
+                if hasattr(obj_, 'custom_center'):
+                    obj_.centery = obj_.rect.y+obj_.custom_center
+                else:
+                    obj_.centery = obj_.rect.centery
+                all_objects.append(obj_)
+        all_objects.append(self.player)
+        self.player.centery = self.player.rect.centery
+        all_objects
+        for obj in sorted(all_objects, key=attrgetter('centery')):
+            obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
 
         """ Collision Algorithm and Entity Updater """
         self.changes = {}  # reset the changes
@@ -179,9 +200,6 @@ class GameState:
             for eg. : def update(self, screen, scroll)
             self is ignored, screen and scroll are found by getattr(self, "screen") and getattr(self, "scroll")
             """
-
-            if type(obj) is not pg.Rect:
-                obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
 
             if hasattr(obj, "move_ability"):
                 objects = copy(self.objects)  # gets all objects
@@ -314,22 +332,40 @@ class JohnsGarden(GameState):
 
     def __init__(self, DISPLAY:pg.Surface, player_instance):
 
+        with open(resource_path('data/database/open_world_pos.json')) as datas:
+            positions = json.load(datas)
+        with open("data/database/open_world.json") as datas_:
+            DATAS = json.load(datas_)
+        def get_scale(name):
+            return DATAS[name]["sc"]
+        jh_pos = positions["john_house"][0]
+        jh_siz = (DATAS["john_house"]["w"]*get_scale("john_house"), DATAS["john_house"]["h"]*get_scale("john_house"))
+
         super().__init__(DISPLAY, player_instance)
-        self.world = pg.Surface((2000, 2000))
-        self.world.fill((0, 100, 0))
+        self.world = scale(l_path('data/sprites/world/chapter_1_map.png', alpha=True), 3)
+        self.world2 = pg.Surface(self.world.get_size())
+        self.world2.fill((0, 100, 0))
         self.objects = [
             PROP_OBJECTS["box"]((200, 1200)),
-            PROP_OBJECTS["full_fence"]((21, 250)),
-            PROP_OBJECTS["side_fence"]((21, 250)),
-            PROP_OBJECTS["half_fence"]((21, 1014)),
-            PROP_OBJECTS["half_fence_reversed"]((930, 1014)),
-            PROP_OBJECTS["side_fence"]((1602, 250)),
-            PROP_OBJECTS["john_house"]((420, 60)),
+            PROP_OBJECTS["full_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300)),
+            PROP_OBJECTS["side_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300)),
+            PROP_OBJECTS["half_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300+764)),
+            PROP_OBJECTS["half_fence_reversed"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+909, jh_pos[1]*3+300+764)),
+            PROP_OBJECTS["side_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+1581, jh_pos[1]*3+300)),
+            *[PROP_OBJECTS[object_](
+                (pos[0]*get_scale(object_),pos[1]*get_scale(object_)))
+                for object_, pos_ in positions.items()
+                for pos in pos_
+            ]
         ]
 
         self.exit_rects = {
-            "kitchen": (pg.Rect(780, 840, 99, 51), "Go back to your house?")
+            "kitchen": (pg.Rect(1829*3+(235*3)//2, 867*3+258*3, 100, 100), "Go back to your house?")
         }
         self.spawn = {
             "kitchen": (self.exit_rects["kitchen"][0].bottomleft)
         }
+
+    def update(self, camera, dt):
+        self.screen.blit(self.world2, -camera.offset.xy)
+        return super().update(camera, dt)

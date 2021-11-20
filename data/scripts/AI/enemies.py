@@ -14,7 +14,7 @@ class Enemy:
     There are a lot of docstrings to ease the comprehension of it, 
     as it can be a bit complicated sometimes."""
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100, xp_drop = int):
+    def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100, xp_drop = int, custom_rect=None):
 
         self.IDENTITY = "ENEMY"
 
@@ -28,6 +28,8 @@ class Enemy:
 
         self.dead = False  # dead or not
         self.attackable = True  # if false, player can't damage the enemy
+        if custom_rect is not None:
+            self.d_collision = custom_rect
 
         # COORDINATES MANAGEMENT
         self.pos = pos
@@ -288,7 +290,7 @@ class Enemy:
 class Dummy(Enemy):
 
     def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100, xp_drop = 210):
-        super().__init__(screen, pos, hp=100, xp_drop=210)
+        super().__init__(screen, pos, hp=100, xp_drop=210, custom_rect=[8*4, 34*4, (24-8)*4, (47-34)*4])
         self.load_animation(
             resource_path("data/sprites/dummy.png"),
             idle="static",
