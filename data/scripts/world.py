@@ -94,6 +94,8 @@ class GameManager:
             "kitchen": Kitchen(self.DISPLAY, self.player),
             "johns_garden": JohnsGarden(self.DISPLAY, self.player)
         }
+        keys = [key for key in self.state_manager[first_state].spawn]
+        self.player.rect.topleft = self.state_manager[first_state].spawn[keys[0]]
 
         # ------------ DEBUG ----------------------
         self.debug = debug
@@ -135,7 +137,12 @@ class GameManager:
         self.dt = self.framerate.tick(self.FPS) / 1000
 
         if not self.menu and not self.loading:  # if the game is playing
-            self.player.update(self.dt)
+            self.player.user_interface(pg.mouse.get_pos(), (
+                # 52 48 are players height and width
+                self.player.rect.x - 52 - self.player.camera.offset.x,
+                self.player.rect.y - self.player.camera.offset.y - 48
+
+            ))
             self.pause()
 
         if self.debug:
@@ -320,6 +327,9 @@ class Debugging:
                     if hasattr(obj, "IDENTITY"):
                         if obj.IDENTITY in ["NPC", "PROP"]:
                             col_rect.topleft -= scroll
+                        if hasattr(obj, "d_collision"):
+                            col_rect.topleft += pg.Vector2(*obj.d_collision[:2])
+                            col_rect.size = obj.d_collision[2:]
                         pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
             

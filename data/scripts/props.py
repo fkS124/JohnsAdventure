@@ -17,9 +17,16 @@ def get_coords(name):
     # [x, y, width, height, scale, iterations]
     return [coords["x"], coords["y"], coords["w"], coords["h"], coords["sc"], coords["it"]]
 
+def get_scale(name):
+    return DATAS[name]["sc"] if name in DATAS else False
+
 
 def make_prop_object_creator(name):
-    return lambda pos: SimplePropObject(name, pos)
+    custom_rect = DATAS[name]["crect"] if "crect" in DATAS[name] else [0, 0, 0, 0]
+    for i in range(len(custom_rect)):
+        custom_rect[i]*=get_scale(name)
+    custom_center = DATAS[name]["ccty"]*get_scale(name) if "ccty" in DATAS[name] else None
+    return lambda pos: SimplePropObject(name, pos, custom_rect, custom_center)
 
 
 COORDS = {name: get_coords(name) for name in DATAS}
@@ -43,7 +50,9 @@ class Prop:
                  interaction_rect_size:tuple[int,int]=(100,100),
                  interaction_animation_coord:tuple=None,
                  type_of_interaction:str="unique",  # unique or several
-                 collision:bool=True
+                 collision:bool=True,
+                 custom_collide_rect:list=None,
+                 custom_center=None
                  ):
 
         # Take spritesheet location data (Will be used soon)
@@ -52,6 +61,10 @@ class Prop:
 
         self.IDENTITY = "PROP"
         self.collidable = collision
+        if custom_collide_rect is not None:
+            self.d_collision = custom_collide_rect
+        if custom_center is not None:
+            self.custom_center = custom_center
         self.name = "default"
         if image_path == sprite_sheet == "":
             return ValueError("Prop must at least include an image or a spritesheet")
@@ -296,8 +309,10 @@ class Chest(Prop):
 
 
 class SimplePropObject(Prop):
-    def __init__(self, name, pos):
+    def __init__(self, name, pos, custom_rect, custom_center):
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[*COORDS[name]]
+            idle_coord=[*COORDS[name]],
+            custom_collide_rect=(custom_rect if custom_rect != [0, 0, 0, 0] else None),
+            custom_center=custom_center
         )
