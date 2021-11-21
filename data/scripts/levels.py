@@ -182,6 +182,9 @@ class GameState:
                     obj_.centery = obj_.rect.y+obj_.custom_center
                 else:
                     obj_.centery = obj_.rect.centery
+                    if hasattr(obj_, "sort"):
+                        if not obj_.sort:
+                            obj_.centery = 0
                 all_objects.append(obj_)
         all_objects.append(self.player)
         self.player.centery = self.player.rect.centery
@@ -342,9 +345,7 @@ class JohnsGarden(GameState):
         jh_siz = (DATAS["john_house"]["w"]*get_scale("john_house"), DATAS["john_house"]["h"]*get_scale("john_house"))
 
         super().__init__(DISPLAY, player_instance)
-        self.world = scale(l_path('data/sprites/world/chapter_1_map.png', alpha=True), 3)
-        self.world2 = pg.Surface(self.world.get_size())
-        self.world2.fill((0, 100, 0))
+        #self.world = scale(l_path('data/sprites/world/chapter_1_map.png', alpha=True), 3)
         self.objects = [
             PROP_OBJECTS["box"]((200, 1200)),
             PROP_OBJECTS["full_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300)),
@@ -352,6 +353,7 @@ class JohnsGarden(GameState):
             PROP_OBJECTS["half_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300+764)),
             PROP_OBJECTS["half_fence_reversed"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+909, jh_pos[1]*3+300+764)),
             PROP_OBJECTS["side_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+1581, jh_pos[1]*3+300)),
+            PROP_OBJECTS["l_road_sides"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+800)),
             *[PROP_OBJECTS[object_](
                 (pos[0]*get_scale(object_),pos[1]*get_scale(object_)))
                 for object_, pos_ in positions.items()
@@ -367,5 +369,5 @@ class JohnsGarden(GameState):
         }
 
     def update(self, camera, dt):
-        self.screen.blit(self.world2, -camera.offset.xy)
+        pg.draw.rect(self.screen, [0, 100, 0], [0, 0, self.W, self.H])
         return super().update(camera, dt)
