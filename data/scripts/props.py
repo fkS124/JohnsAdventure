@@ -26,7 +26,9 @@ def make_prop_object_creator(name):
     for i in range(len(custom_rect)):
         custom_rect[i]*=get_scale(name)
     custom_center = DATAS[name]["ccty"]*get_scale(name) if "ccty" in DATAS[name] else None
-    return lambda pos: SimplePropObject(name, pos, custom_rect, custom_center)
+    collide = DATAS[name]["col"] if "col" in DATAS[name] else True
+    sort = DATAS[name]["sort"] if "sort" in DATAS[name] else True
+    return lambda pos: SimplePropObject(name, pos, custom_rect, custom_center, collide=collide, sort=sort)
 
 
 COORDS = {name: get_coords(name) for name in DATAS}
@@ -309,10 +311,12 @@ class Chest(Prop):
 
 
 class SimplePropObject(Prop):
-    def __init__(self, name, pos, custom_rect, custom_center):
+    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True):
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
             idle_coord=[*COORDS[name]],
             custom_collide_rect=(custom_rect if custom_rect != [0, 0, 0, 0] else None),
-            custom_center=custom_center
+            custom_center=custom_center,
+            collision=collide
         )
+        self.sort = sort

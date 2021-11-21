@@ -1,17 +1,16 @@
 {
-  
   "john_house": {"x":728, "y":82, "w":270, "h":258, "it":  1, "sc": 3, "crect": [22, 82, 225, 175], "ccty":200},
 
   "manos_hut":{"x":428, "y":43, "w":282, "h":345, "it":  1, "sc": 3},
-  
+
   "tree": {"x":244, "y":418, "w":66, "h":78, "it":  1, "sc": 5, "crect":  [23, 40, 20, 38], "ccty": 75},
-  
+
   "box": {"x":187, "y":421, "w":38, "h":45, "it":  1, "sc": 3},
-  
+
   "street_light": {"x":105, "y":75, "w":68, "h":77, "it":  1, "sc": 3},
 
   "sign_all": {"x": 213,"y":348, "w":52, "h":66, "it":  1, "sc": 3,"crect": [22, 47, 8, 18], "ccty": 65},
-  
+
   "sign_side_1": {"x":273 , "y":361, "w":52, "h":53, "it":  1, "sc": 3,"crect": [22, 38, 8, 15], "ccty": 65},
 
   "sign_hori_1": {"x":199 , "y":348, "w":6, "h":66, "it":  1, "sc": 3, "crect": [0, 47, 8, 18], "ccty": 65},
@@ -23,10 +22,33 @@
   "sign_1_2_d": {"x":334 , "y":361, "w":29, "h":53, "it":  1, "sc": 3,"crect": [0, 38, 8, 15], "ccty": 65},
 
   "full_fence": {"x":444 , "y":442, "w":538, "h":36, "it":  1, "sc": 3},
-  
+
   "side_fence": {"x":972 , "y":487, "w":10, "h":255, "it":  1, "sc": 3},
 
   "half_fence": {"x":444 , "y":485, "w":233, "h":36, "it":  1, "sc": 3},
 
-  "half_fence_reversed": {"x": 713, "y": 486, "w": 233, "h": 36, "it": 1, "sc": 3}
+  "half_fence_reversed": {"x": 713, "y": 486, "w": 233, "h": 36, "it": 1, "sc": 3},
+
+
+
+  "r_road": {"x": 713, "y": 50, "w": 233, "h": 36, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "r_road_tr_l": {"x": 1044, "y": 98, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "r_road_tr_r": {"x": 1044, "y": 146, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "r_road_sides": {"x": 1044, "y": 194, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "r_road_end": {"x": 1044, "y": 242, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "road_half": {"x": 1044, "y": 290, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "l_road_tr_r": {"x": 1044, "y": 338, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "l_road_tr_l": {"x": 1044, "y": 386, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "l_road_sides": {"x": 1044, "y": 434, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "l_road_end": {"x": 1044, "y": 482 , "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "d_road_end": {"x": 1390, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "d_road_sides": {"x": 1438, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "d_road_tr_r": {"x": 1486, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "d_road_tr_l": {"x": 1534, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "d_road": {"x": 1582, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "u_road_end": {"x": 1390, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "u_road_sides": {"x": 1438, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "u_road_tr_r": {"x": 1486, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "u_road_tr_l": {"x": 1534, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "u_road": {"x": 1582, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false}
 }
