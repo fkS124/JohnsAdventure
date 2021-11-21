@@ -13,6 +13,7 @@ from ..utils import load, get_sprite, scale, flip_vertical, resource_path, l_pat
 from .inventory import Inventory
 from .player_stats import UpgradeStation
 from .camera import Camera, Follow, Border, Auto
+from ..particle_system import DustManager
 
 p.font.init()
 font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
@@ -128,6 +129,8 @@ class Player:
         # First spawn
         self.rect.x = 510
         self.rect.y = 290
+
+        self.dust_particle_effet = DustManager(10, self, self.screen)
 
         """
 
@@ -574,6 +577,8 @@ class Player:
 
     def animation_handing(self, dt, m, pos):
 
+        self.dust_particle_effet.update(self.screen)
+
         # Draw the Ring
         angle = math.atan2(
             m[1] - (self.rect.top + 95 - self.camera.offset.y),
@@ -623,15 +628,19 @@ class Player:
                 if self.Up and self.move_ability["up"]:
                     self.rect.y -= self.velocity[1]
                     dash_vel = -25
+                    self.direction = "up"
                 elif self.Down and self.move_ability["down"]:
                     self.rect.y += self.velocity[1]
                     dash_vel = 25
+                    self.direction = "down"
                 if self.Left and self.move_ability["right"]:
                     self.rect.x -= self.velocity[0]
                     dash_vel = -25 if not self.Down else 25 # Diagonal
+                    self.direction = "right"
                 elif self.Right and self.move_ability["left"]:
                     self.rect.x += self.velocity[0]
                     dash_vel = 25 if not self.Up else -25 # Diagonal
+                    self.direction = "left"
             else: # He is attacking
                 dash_vel = 0
 
