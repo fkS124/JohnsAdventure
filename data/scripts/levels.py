@@ -9,9 +9,12 @@ from .PLAYER.player import *
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .AI import npc
-from .utils import resource_path, load, l_path
-from .props import PROP_OBJECTS, Chest
+from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
+from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
+
+
+
 
 class GameState:
 
@@ -19,7 +22,7 @@ class GameState:
     It handles every objects and handle their update method's arguments.
     (These args can of course be different than other objects of the list)"""
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance):
+    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
 
         # ------- SCREEN -----------------
         self.display, self.screen = DISPLAY, DISPLAY
@@ -30,6 +33,9 @@ class GameState:
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
 
         self.objects = []
+        self.scroll = self.player.camera.offset.xy
+        # Get the prop object dict, (basically all the objects generated from open_world.json)
+        self.prop_objects = prop_objects
 
         # This might be the reason why players blit at top left for a nano second when you boot the game
         self.world = pg.Surface((1, 1))  # set default values for world -> supposed to be replaced
@@ -188,12 +194,12 @@ class GameState:
                 all_objects.append(obj_)
         all_objects.append(self.player)
         self.player.centery = self.player.rect.centery
-        all_objects
         for obj in sorted(all_objects, key=attrgetter('centery')):
-            obj.update(*[getattr(self, arg) for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]])
+            obj.update(*[getattr(self, arg)
+                for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
+            )
 
         """ Collision Algorithm and Entity Updater """
-        self.changes = {}  # reset the changes
         for obj in self.objects:
             """
             method.__code__.co_varnames -> ("arg1", "arg2", "var1", "var2", "var...") of the method
@@ -247,23 +253,24 @@ class GameState:
 
 class PlayerRoom(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance):
+    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
 
-        super().__init__(DISPLAY, player_instance)
+        super().__init__(DISPLAY, player_instance, prop_objects)
 
         self.objects = [
             # Wall borders
-            Rect(0,0, 1280,133), # Left
-            Rect(1270,134,10,586), # Right
-            Rect(0,0,1280,133), # Up
-            Rect(0,711, 1280,9), # Down
-            #################
-            npc.Mau((150,530), (300, 100)),
-            Rect(10,90, 430,360),
-            Rect(5,500, 72, 214),
-            Rect(450, 40, 410, 192),
-            Rect(36,400, 77,94), 
+            Rect(0, 0, 1280, 133),  # Left
+            Rect(1270, 134, 10, 586),  # Right
+            Rect(0, 0, 1280, 133),  # Up
+            Rect(0, 711, 1280, 9),  # Down
+            # Interactable objects
+            npc.Mau((150, 530), (300, 100)),
             Dummy(DISPLAY, (1050, 300)),
+            # Colliders
+            Rect(10, 90, 430, 360),
+            Rect(5, 500, 72, 214),
+            Rect(450, 40, 410, 192),
+            Rect(36, 400, 77, 94),
         ]
 
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
@@ -300,74 +307,207 @@ class PlayerRoom(GameState):
 
 class Kitchen(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance):
+    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
 
-        super().__init__(DISPLAY, player_instance)
+        super().__init__(DISPLAY, player_instance, prop_objects)
 
-        self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280,720))  # 1 Kitchen Room
+        # Kitchen background
+        self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
         self.objects = [
             # Wall borders
-            Rect(0,0, 1280,133), # Left
-            Rect(1270,134,10,586), # Right
-            Rect(0,0,1280,133), # Up
-            Rect(0,711, 1280,9), # Down
-            #################
+            Rect(0, 0, 1280, 133),  # Left
+            Rect(1270, 134, 10, 586),  # Right
+            Rect(0, 0, 1280, 133),  # Up
+            Rect(0, 711, 1280, 9),  # Down
+            # Interactable objects
             npc.Cynthia((570, 220)),
-            Rect(20, 250, 250,350),
-            Rect(280,300, 64, 256),
-            Rect(10,0, 990, 230),
+            Chest((910, 140), {"items": Training_Sword(), "coins": 50}),
+            # Colliders
+            Rect(20, 250, 250, 350),
+            Rect(280, 300, 64, 256),
+            Rect(10, 0, 990, 230),
             Rect(1020, 440, 256, 200),
-            Chest((910,140), {"items":Training_Sword(), "coins": 50})
         ]
 
         self.exit_rects = {
-            "player_room": (pg.Rect(1054,68,138,119),  "Back to your room?"),
+            "player_room": (pg.Rect(1054, 68, 138, 119), "Back to your room?"),
             "johns_garden": (pg.Rect(551, 620, 195, 99), "Go outside?")
         }
 
         self.spawn = {
-            "player_room": (self.exit_rects["player_room"][0].bottomleft+pg.Vector2(75, 0)),
-            "johns_garden": (self.exit_rects["johns_garden"][0].topleft+pg.Vector2(0, -200))
+            "player_room": (self.exit_rects["player_room"][0].bottomleft + pg.Vector2(75, 0)),
+            "johns_garden": (self.exit_rects["johns_garden"][0].topleft + pg.Vector2(0, -200))
         }
 
 
 class JohnsGarden(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance):
+    """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
-        with open(resource_path('data/database/open_world_pos.json')) as datas:
-            positions = json.load(datas)
-        with open("data/database/open_world.json") as datas_:
-            DATAS = json.load(datas_)
-        def get_scale(name):
-            return DATAS[name]["sc"]
-        jh_pos = positions["john_house"][0]
-        jh_siz = (DATAS["john_house"]["w"]*get_scale("john_house"), DATAS["john_house"]["h"]*get_scale("john_house"))
+    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
+        super().__init__(DISPLAY, player_instance, prop_objects)
 
-        super().__init__(DISPLAY, player_instance)
-        #self.world = scale(l_path('data/sprites/world/chapter_1_map.png', alpha=True), 3)
+        # Get the positions and the sprites' informations from the json files
+        with open(resource_path('data/database/open_world_pos.json')) as pos, \
+            open(resource_path("data/database/open_world.json")) as infos:
+            self.positions, self.sprite_info = json.load(pos), json.load(infos)
+        self.get_scale = lambda name: self.sprite_info[name]["sc"]  # func to get the scale of a sprite
+
+        # John's house position and size
+        jh_pos = self.positions["john_house"][0]
+        jh_siz = (self.sprite_info["john_house"]["w"] * self.get_scale("john_house"),
+                  self.sprite_info["john_house"]["h"] * self.get_scale("john_house"))
+        jh_sc = self.get_scale("john_house")
+
+        # Mano's hut position and scale
+        mano_pos = self.positions["manos_hut"][0]
+        mano_sc = self.get_scale("manos_hut")
+
+        # horizontal road width
+        hr_r_width = self.sprite_info["hori_road"]["w"]*self.sprite_info["hori_road"]["sc"]
+        hhr_r_width = self.sprite_info["hori_road_half"]["w"] * self.sprite_info["hori_road_half"]["sc"]
+        hr_s_width = self.sprite_info["hori_sides"]["w"] * self.sprite_info["hori_sides"]["sc"]
+        hr_s_height = self.sprite_info["hori_sides"]["h"] * self.sprite_info["hori_sides"]["sc"]
+        vr_r_height = self.sprite_info["ver_road"]["h"]*self.sprite_info["ver_road"]["sc"]
+
         self.objects = [
-            PROP_OBJECTS["box"]((200, 1200)),
-            PROP_OBJECTS["full_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300)),
-            PROP_OBJECTS["side_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300)),
-            PROP_OBJECTS["half_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+300+764)),
-            PROP_OBJECTS["half_fence_reversed"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+909, jh_pos[1]*3+300+764)),
-            PROP_OBJECTS["side_fence"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3+1581, jh_pos[1]*3+300)),
-            PROP_OBJECTS["l_road_sides"]((jh_pos[0]*3+jh_siz[0]*1.5-537*3, jh_pos[1]*3+800)),
-            *[PROP_OBJECTS[object_](
-                (pos[0]*get_scale(object_),pos[1]*get_scale(object_)))
-                for object_, pos_ in positions.items()
+            self.prop_objects["box"]((200, 1200)),
+            # Fences of john's house (values are calculated for scale = 3 considering this won't change)
+            self.prop_objects["full_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
+            self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
+            self.prop_objects["half_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 1064)),
+            self.prop_objects["half_fence_reversed"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 702, jh_pos[1] * 3 + 1064)),
+            self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 30, jh_pos[1] * 3 + 300)),
+            # All the objects contained in open_world_pos.json
+            *[self.prop_objects[object_](
+                (pos[0]*self.get_scale(object_),pos[1]*self.get_scale(object_)))
+                for object_, pos_ in self.positions.items()
                 for pos in pos_
-            ]
+            ],
+            # Mano's hut custom collisions
+            pg.Rect(mano_pos[0] * mano_sc, (mano_pos[1] + 292) * mano_sc, 41 * mano_sc, 35 * mano_sc),
+            pg.Rect((mano_pos[0] + 31) * mano_sc, (mano_pos[1] + 292) * mano_sc, 11 * mano_sc, 52 * mano_sc),
+            pg.Rect((mano_pos[0] + 240) * mano_sc, (mano_pos[1] + 292) * mano_sc, 11 * mano_sc, 52 * mano_sc),
+            pg.Rect((mano_pos[0] + 240) * mano_sc, (mano_pos[1] + 292) * mano_sc, 41 * mano_sc, 35 * mano_sc),
+            pg.Rect((mano_pos[0] + 41) * mano_sc, (mano_pos[1] + 324) * mano_sc, 75 * mano_sc, 4 * mano_sc),
+            pg.Rect((mano_pos[0] + 165) * mano_sc, (mano_pos[1] + 324) * mano_sc, 75 * mano_sc, 4 * mano_sc),
+            pg.Rect((mano_pos[0] + 116) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
+            pg.Rect((mano_pos[0] + 159) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
+            # Roads
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82) * jh_sc),
+                             n_road=1, start_type="ver_dirt"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc),
+                             n_road=6, start_type="hori_sides", type_r="hori_road", end_type="hori_road_half"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width,
+                                        (jh_pos[1] + 361 - 82) * jh_sc), start_type="ver_dirt", end_type="ver_sides",
+                             n_road=2),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc), n_road=3, type_r="hori_road",
+                             end_type="Vhori_sides"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height), n_road=4,
+                             type_r="ver_road", end_type="Vver_turn"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 3 * vr_r_height),
+                             n_road=3, type_r="hori_road"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height),
+                             n_road=3, type_r="ver_road"),
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33*3),
+                             n_road=5, type_r="hori_road", start_type="hori_turn", end_type="Vhori_end"),
         ]
 
         self.exit_rects = {
-            "kitchen": (pg.Rect(1829*3+(235*3)//2, 867*3+258*3, 100, 100), "Go back to your house?")
+            "kitchen": (pg.Rect((jh_pos[0]+846-728)*jh_sc, (jh_pos[1]+341-82)*jh_sc, 100, 60) , "Go back to your house?"),
+            # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof)
+            "manos_hut": (pg.Rect((mano_pos[0]+568-428)*mano_sc, (mano_pos[1]+337-43)*mano_sc, 100, 50),
+                          "Enter Mano's hut ?")
         }
         self.spawn = {
-            "kitchen": (self.exit_rects["kitchen"][0].bottomleft)
+            "kitchen": self.exit_rects["kitchen"][0].bottomleft,
+            "manos_hut": self.exit_rects["manos_hut"][0].bottomleft
         }
+
+    def build_road(self, start_pos:tuple[int, int], n_road:int, type_r:str="",
+                   start_type:str="", end_type:str="", types:list=[]):
+        roads = []
+        current_pos = list(start_pos)
+        default = type_r if type_r != "" else "ver_road"
+        if types == []:
+            for i in range(n_road):
+                if end_type != "" and i == n_road-1:
+                    road = end_type
+                elif start_type != "" and i == 0:
+                    road = start_type
+                else:
+                    road = default
+                new_road = self.get_new_road_object(road, current_pos)
+                roads.append(new_road)
+                if "hori" in road:
+                    current_pos[0] += new_road.current_frame.get_width()
+                else:
+                    current_pos[1] += new_road.current_frame.get_height()
+        else:
+            for index, road in enumerate(types):
+                new_road = self.get_new_road_object(road, current_pos)
+                if "hori" in road:
+                    current_pos[0] += new_road.current_frame.get_width()
+                else:
+                    current_pos[1] += new_road.current_frame.get_height()
+                roads.append(new_road)
+        print("Successfully generated", len(roads))
+        return roads
+
+    def get_new_road_object(self, name, pos):
+        direction = "H" if "hori" in name else "V"  # get the direction
+        flip = {"H":"H" in name, "V":"V" in name}  # determine the axis to flip
+        if flip["V"] and flip["H"]:
+            name = name[2:]  # removing the useless letters to avoid KeyError
+        elif flip["V"] and not flip["H"] or flip["H"] and not flip["V"]:
+            name = name[1:]  # removing the useless letters to avoid KeyError
+        road_obj = self.prop_objects[name](pos)  # get the object
+
+        # apply the flip
+        if flip["H"]:
+            road_obj.idle[0] = flip_horizontal(road_obj.idle[0])
+        if flip["V"]:
+            road_obj.idle[0] = flip_vertical(road_obj.idle[0])
+
+        return road_obj
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [0, 100, 0], [0, 0, self.W, self.H])
         return super().update(camera, dt)
+
+
+class ManosHut(GameState):
+
+    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
+
+        super().__init__(DISPLAY, player_instance, prop_objects)
+
+        # Mano's hut inside ground
+        self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))
+        sc_x = 1280/453
+        sc_y = 720/271
+        self.objects = [
+            # Wall borders
+            Rect(0, 0, 10, 720),  # Left
+            Rect(1270, 134, 10, 586),  # Right
+            Rect(0, 0, 1280, 133),  # Up
+            Rect(0, 711, 1280, 9),  # Down
+            # Furnitures
+            self.prop_objects["m_hut_bed"]((381*sc_x, 47*sc_y)),
+            self.prop_objects["m_hut_sofa"]((97*sc_x, 88*sc_y)),
+            self.prop_objects["m_hut_table"]((163*sc_x, 37*sc_y)),
+            self.prop_objects["m_hut_fireplace"]((5*sc_x, (193-236)*sc_y))
+        ]
+
+        self.spawn = {
+            "johns_garden": (1280//2, 720//2)
+        }
+
+        self.exit_rects = {
+            "johns_garden": (pg.Rect(1280 // 2, 720*3//4, 150, 150), "Go back to open world ?")
+        }

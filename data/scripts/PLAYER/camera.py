@@ -7,51 +7,52 @@ from ..utils import resource_path
 # Abstract method
 from abc import ABC, abstractmethod
 
-vec = pygame.math.Vector2 # To simplify things :')
+vec = pygame.math.Vector2  # To simplify things :')
 
 '''
 ##################################
 
-         Games's Camera
+         Games' Camera
 
 ##################################
 '''
+
 
 class Camera:
     def __init__(self, player, screen: pygame.surface):
-        '''
+        """
             The Player is given a upgraded camera system,
             to make the gameplay look better
-        '''
+        """
 
         self.player = player
 
         # The gap between the player and camera
-        self.offset = vec(0,0)
+        self.offset = vec(0, 0)
 
         # Field of view
-        self.fov = vec(0,0) 
-        self.changing = False # Event when fov changing occurs
+        self.fov = vec(0, 0)
+        self.changing = False  # Event when fov changing occurs
 
         # We use float to get the precice location
-        self.offset_float = vec(0,0)
+        self.offset_float = vec(0, 0)
 
         # Screen Surface
         self.display = screen
-        
+
         # Screen Size
         self.screen = screen.get_size()
 
         # Keep track of the Player
         self.CONST = vec(
 
-        #Camera X Position
-        -screen.get_width()/2,
+            # Camera X Position
+            -screen.get_width() / 2,
 
-        #Camera Y Position (ndecided)
-        -screen.get_height()/2
+            # Camera Y Position (ndecided)
+            -screen.get_height() / 2
 
-        ) # end of CONST
+        )  # end of CONST
 
     def set_method(self, method):
         '''
@@ -65,6 +66,7 @@ class Camera:
     def scroll(self):
         self.method.scroll()
 
+
 '''
 ##################################
 
@@ -74,22 +76,24 @@ All below share the same principle with different tweaks
 ##################################
 '''
 
+
 class CamScroll(ABC):
-      '''
+    '''
          Camera Movement
       '''
-      def __init__(self, camera, player, status):
-          self.camera = camera
-          self.player = player
-          self.status = status
 
-      @abstractmethod
-      def scroll(self):
-          '''
+    def __init__(self, camera, player, status):
+        self.camera = camera
+        self.player = player
+        self.status = status
+
+    @abstractmethod
+    def scroll(self):
+        """
           if this is empty abstractmethod
           will tell us something went wrong
-          '''
-          pass
+          """
+        pass
 
 
 class Follow(CamScroll):
@@ -97,27 +101,27 @@ class Follow(CamScroll):
         CamScroll.__init__(self, camera, player, status="Follow")
 
     def scroll(self):
-        '''
+        """
         Formula to follow the player
 
         It takes the difference player did to the screen
         and adds it to camera's offset updating camera's
         position.
 
-        '''
+        """
 
         # X Axis
         self.camera.offset_float.x += (
-        self.player.rect.x - self.camera.offset_float.x
-        +
-        self.camera.CONST.x
+                self.player.rect.x - self.camera.offset_float.x
+                +
+                self.camera.CONST.x
         )
 
         # Y Axis
         self.camera.offset_float.y += (
-        self.player.rect.y - self.camera.offset_float.y
-        +
-        self.camera.CONST.y
+                self.player.rect.y - self.camera.offset_float.y
+                +
+                self.camera.CONST.y
         )
 
         # Turn the numbers back to pixels
@@ -132,18 +136,18 @@ class Border(CamScroll):
     the camera will stop moving.
 
     '''
+
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player, status="Border")
 
-
     def scroll(self):
-        '''
+        """
         Formula to follow the player
 
         It takes the difference player did to the screen
         and adds it to camera's offset updating camera's
         position.
-        '''
+        """
 
         self.camera.offset_float.x += (self.player.rect.x - self.camera.offset_float.x + self.camera.CONST.x)
         self.camera.offset_float.y += (self.player.rect.y - self.camera.offset_float.y + self.camera.CONST.y)
@@ -157,22 +161,24 @@ class Border(CamScroll):
         self.camera.offset.y = max(self.camera.screen[1], self.camera.offset.y)
         self.camera.offset.y = min(self.camera.offset.y, 0)
 
+
 class Auto(CamScroll):
-    '''
+    """
     Screen moves independently
-    '''
+    """
+
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player, status="Auto")
         self.screen = camera.display
 
         self.W, self.H = self.screen.get_size()
-        sur = pygame.Surface((camera.screen[0], 92)) 
-        sur.fill((0,0,0))
+        sur = pygame.Surface((camera.screen[0], 92))
+        sur.fill((0, 0, 0))
         self.cinema_bar = sur
 
         # Bar Y position before the camera
         self.bar_y = -self.cinema_bar.get_height()
-        
+
         self.bar_speed = 64
 
         self.dx, self.dy = (0, 0)
@@ -188,13 +194,13 @@ class Auto(CamScroll):
         self.duration = 0
 
     def look_at(self, pos):
-        self.camera.offset.xy = [pos[0]-self.screen.get_width()//2, pos[1]-self.screen.get_height()//2]
+        self.camera.offset.xy = [pos[0] - self.screen.get_width() // 2, pos[1] - self.screen.get_height() // 2]
 
-    def set_text(self, txt:str):
+    def set_text(self, txt: str):
         self.text = txt
 
     def go_to(self, pos, duration=1000):
-        
+
         self.start = pygame.time.get_ticks()
         self.duration = duration
 
@@ -203,42 +209,55 @@ class Auto(CamScroll):
             return self.look_at(self.looking_at)
 
         angle = math.atan2(
-            pos[1]-self.looking_at[1],
-            pos[0]-self.looking_at[0]
+            pos[1] - self.looking_at[1],
+            pos[0] - self.looking_at[0]
         )
 
-        distx, disty = abs(pos[0]-self.looking_at[0]), abs(pos[1]-self.looking_at[1])
-        self.dx = math.cos(angle)*abs((distx) / (duration / 20 * math.cos(angle)))
-        self.dy = math.sin(angle)*abs((disty) / (duration / 20 * math.sin(angle)))
+        distx, disty = abs(pos[0] - self.looking_at[0]), abs(pos[1] - self.looking_at[1])
+        self.dx = math.cos(angle) * abs((distx) / (duration / 20 * math.cos(angle)))
+        self.dy = math.sin(angle) * abs((disty) / (duration / 20 * math.sin(angle)))
         self.delay_mvt = pygame.time.get_ticks()
         self.target = pos
 
         self.moving_cam = True
-        
+
+    def draw(self):
+        # Bottom Cinema Bar
+        b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
+        self.screen.blit(self.cinema_bar, (0, b_pos))
+        render = self.font.render(self.text, True, (255, 255, 255))
+        if self.bar_y > 0:
+            self.screen.blit(render, render.get_rect(center=(self.W // 2, self.H - self.cinema_bar.get_height() // 2)))
+        """ Debug:
+        pygame.draw.line(self.screen, (255, 255, 255), (0, 0), (self.W, self.H))
+        pygame.draw.line(self.screen, (255, 255, 255), (self.W, 0), (0, self.H))
+        pygame.draw.circle(self.screen, (255, 255, 0), self.target-self.camera.offset.xy, 6)
+        """
+
     def scroll(self):
-        '''
+        """
         Moving the camera
 
-        We have to somehow find a way to put x, y cords and dt and then use them to move the camera 
-        ''' 
-        dt = pygame.time.Clock().tick(35)/1000
+        We have to somehow find a way to put x, y cords and dt and then use them to move the camera
+        """
+        dt = pygame.time.Clock().tick(35) / 1000
 
         if self.bar_y < 0:
-           self.bar_y += self.bar_speed * dt 
+            self.bar_y += self.bar_speed * dt
 
-        # Top Cinema Bar
-        self.screen.blit(self.cinema_bar, (0, self.bar_y))      
+            # Top Cinema Bar
+        self.screen.blit(self.cinema_bar, (0, self.bar_y))
 
         self.look_at(self.looking_at)
 
         if self.moving_cam:
-                        
-            dx, dy = self.target[0]-self.looking_at[0], self.target[1]-self.looking_at[1]
+
+            dx, dy = self.target[0] - self.looking_at[0], self.target[1] - self.looking_at[1]
             if pygame.time.get_ticks() - self.delay_mvt > 20:
                 self.delay_mvt = pygame.time.get_ticks()
                 if abs(dx) < abs(self.dx) or abs(dy) < abs(self.dy):
                     self.looking_at += vec(dx, dy)
-                
+
                 else:
                     self.looking_at += vec(self.dx, self.dy)
 
@@ -246,19 +265,4 @@ class Auto(CamScroll):
                 self.moving_cam = False
                 self.looking_at = self.target
 
-            #print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
-        
-        # Bottom Cinema Bar
-        b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
-        self.screen.blit(self.cinema_bar, (0, b_pos))
-        render = self.font.render(self.text, True, (255, 255, 255))
-        if self.bar_y > 0:
-            self.screen.blit(render, render.get_rect(center=(self.W//2, self.H-self.cinema_bar.get_height()//2)))
-        """ Debug:
-        pygame.draw.line(self.screen, (255, 255, 255), (0, 0), (self.W, self.H))
-        pygame.draw.line(self.screen, (255, 255, 255), (self.W, 0), (0, self.H))
-        pygame.draw.circle(self.screen, (255, 255, 0), self.target-self.camera.offset.xy, 6)
-        """
-        
-        
-    
+            # print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
