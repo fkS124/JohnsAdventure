@@ -11,11 +11,13 @@ from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .UI.pause_menu import PauseMenu
 from .utils import resource_path, l_path
+from .props import PropGetter
 
 from .levels import (
     PlayerRoom,
     Kitchen,
-    JohnsGarden
+    JohnsGarden,
+    ManosHut
 )
 
 
@@ -89,13 +91,19 @@ class GameManager:
 
         # ----------- GAME STATE ------------------
         self.state = first_state
+        self.prop_objects = PropGetter(self.player).PROP_OBJECTS
         self.state_manager = {
-            "player_room": PlayerRoom(self.DISPLAY, self.player),
-            "kitchen": Kitchen(self.DISPLAY, self.player),
-            "johns_garden": JohnsGarden(self.DISPLAY, self.player)
+            "player_room": PlayerRoom(self.DISPLAY, self.player, self.prop_objects),
+            "kitchen": Kitchen(self.DISPLAY, self.player, self.prop_objects),
+            "johns_garden": JohnsGarden(self.DISPLAY, self.player, self.prop_objects),
+            "manos_hut": ManosHut(self.DISPLAY, self.player, self.prop_objects)
         }
         keys = [key for key in self.state_manager[first_state].spawn]
         self.player.rect.topleft = self.state_manager[first_state].spawn[keys[0]]
+
+        # first pos of the player (next to his bed)
+        if not debug and first_state == "player_room":
+            self.player.rect.topleft = (self.DISPLAY.get_width()//2-120, self.DISPLAY.get_height()//2-20)
 
         # ------------ DEBUG ----------------------
         self.debug = debug
@@ -144,6 +152,7 @@ class GameManager:
 
             ))
             self.pause()
+            self.player.camera.method.draw()
 
         if self.debug:
             self.debugger.update()

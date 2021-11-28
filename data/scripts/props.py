@@ -1,41 +1,65 @@
 import pygame as pg
 from .utils import *
 from .backend import UI_Spritesheet
+from .particle_system import PARTICLE_EFFECTS
 import json
-
 
 
 DATA_PATH = resource_path("data/database/open_world.json")
 with open(DATA_PATH) as datas:
     DATAS = json.load(datas)
+COORDS  = {name: [DATAS[name]["x"], DATAS[name]["y"], DATAS[name]["w"],
+                  DATAS[name]["h"], DATAS[name]["sc"], DATAS[name]["it"]] for name in DATAS}
 
-def get_coords(name):
-    if name not in DATAS:
-        return False
+class PropGetter:
 
-    coords = DATAS[name]
-    # [x, y, width, height, scale, iterations]
-    return [coords["x"], coords["y"], coords["w"], coords["h"], coords["sc"], coords["it"]]
+    def __init__(self, player):
+        self.player = player
+        self.COORDS = {name: self.get_coords(name) for name in DATAS}
+        self.PROP_OBJECTS = {
+            name: self.make_prop_object_creator(name) for name in DATAS
+        }
 
-def get_scale(name):
-    return DATAS[name]["sc"] if name in DATAS else False
+    def get_coords(self, name):
+        if name not in DATAS:
+            return False
+
+        coords = DATAS[name]
+        # [x, y, width, height, scale, iterations]
+        return [coords["x"], coords["y"], coords["w"], coords["h"], coords["sc"], coords["it"]]
+
+    def get_scale(self, name):
+        return DATAS[name]["sc"] if name in DATAS else False
+
+    def make_prop_object_creator(self, name):
+        datas = DATAS[name]
+        custom_rect = datas["crect"] if "crect" in datas else [0, 0, 0, 0]
+        for i in range(len(custom_rect)):
+            custom_rect[i]*=self.get_scale(name)
+
+        custom_center = datas["ccty"]*self.get_scale(name) if "ccty" in DATAS[name] else None
+        collide = datas["col"] if "col" in datas else True
+        sort = datas["sort"] if "sort" in datas else True
+        particle = None
+        if "add_args" in datas:
+            if "particle" in datas["add_args"]:
+                p_data = datas["add_args"]["particle"]
+                args = [p_data[arg] for arg in p_data]
+                if args[-1] == "player":
+                    final_args = args[1:-1]
+                    final_args.append(self.player)
+                else:
+                    final_args = args[1:]
+                particle = PARTICLE_EFFECTS[args[0]](*(final_args))
 
 
-def make_prop_object_creator(name):
-    custom_rect = DATAS[name]["crect"] if "crect" in DATAS[name] else [0, 0, 0, 0]
-    for i in range(len(custom_rect)):
-        custom_rect[i]*=get_scale(name)
-    custom_center = DATAS[name]["ccty"]*get_scale(name) if "ccty" in DATAS[name] else None
-    collide = DATAS[name]["col"] if "col" in DATAS[name] else True
-    sort = DATAS[name]["sort"] if "sort" in DATAS[name] else True
-    return lambda pos: SimplePropObject(name, pos, custom_rect, custom_center, collide=collide, sort=sort)
-
-
-COORDS = {name: get_coords(name) for name in DATAS}
-PROP_OBJECTS = {
-    name: make_prop_object_creator(name) for name in DATAS
-}
-
+        return lambda pos: SimplePropObject(name,
+                                            pos,
+                                            custom_rect,
+                                            custom_center,
+                                            collide=collide,
+                                            sort=sort,
+                                            particle=particle)
 
 
 class Prop:
@@ -311,7 +335,7 @@ class Chest(Prop):
 
 
 class SimplePropObject(Prop):
-    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True):
+    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True, particle=None):
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
             idle_coord=[*COORDS[name]],
@@ -320,3 +344,13 @@ class SimplePropObject(Prop):
             collision=collide
         )
         self.sort = sort
+        self.particle_effect = particle
+        if particle is not None:
+            self.particle_effect.pos[0] = self.particle_effect.pos[0] * 3 + self.rect.x
+            self.particle_effect.pos[1] = self.particle_effect.pos[1] * 3 + self.rect.y
+
+    def update(self, screen, scroll):
+        update = super(SimplePropObject, self).update(screen, scroll)
+        if self.particle_effect is not None:
+            self.particle_effect.update(screen)
+        return update
