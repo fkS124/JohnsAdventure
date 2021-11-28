@@ -152,7 +152,10 @@ class GameManager:
 
             ))
             self.pause()
-            self.player.camera.method.draw()
+            try:  # TODO : Remove this try except and fix the error
+                self.player.camera.method.draw()
+            except AttributeError:
+                pass
 
         if self.debug:
             self.debugger.update()
