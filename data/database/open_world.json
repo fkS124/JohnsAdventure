@@ -1,7 +1,15 @@
 {
   "john_house": {"x":728, "y":82, "w":270, "h":258, "it":  1, "sc": 3, "crect": [22, 82, 225, 175], "ccty":200},
 
-  "manos_hut":{"x":428, "y":43, "w":282, "h":345, "it":  1, "sc": 3},
+  "manos_hut":{"x":428, "y":43, "w":282, "h":345, "it":  1, "sc": 3, "crect":  [0, 123, 282, 170], "ccty": 277,
+    "add_args":  {"particle":  {"name":  "smoke", "pos":  [80, 122], "size":  [25, 2], "player": "player"}
+  }},
+  "m_hut_bed":{"x":307, "y":528, "w":66, "h":122, "it":  1, "sc": 3},
+  "m_hut_fireplace":{"x":91, "y": 534, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144},
+  "m_hut_table":{"x":170, "y": 533, "w":126, "h":75, "it":  1, "sc": 3},
+  "m_hut_sofa":{"x":170, "y": 612, "w": 52, "h":133, "it":  1, "sc": 3},
+
+  "table_2":{"x":225, "y": 612, "w":59, "h":94, "it":  1, "sc": 3},
 
   "tree": {"x":244, "y":418, "w":66, "h":78, "it":  1, "sc": 5, "crect":  [23, 40, 20, 38], "ccty": 75},
 
@@ -29,26 +37,19 @@
 
   "half_fence_reversed": {"x": 713, "y": 486, "w": 233, "h": 36, "it": 1, "sc": 3},
 
+  "hori_road": {"x": 1046, "y": 379, "w": 330, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "hori_road_half": {"x": 1231, "y": 341, "w": 165, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
 
+  "ver_road": {"x": 1193, "y": 56, "w": 34, "h": 320, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "ver_road_half": {"x": 1241, "y": 56, "w": 34, "h": 161, "it": 1, "sc": 3, "col":  false, "sort": false},
 
-  "r_road": {"x": 713, "y": 50, "w": 233, "h": 36, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "r_road_tr_l": {"x": 1044, "y": 98, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "r_road_tr_r": {"x": 1044, "y": 146, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "r_road_sides": {"x": 1044, "y": 194, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "r_road_end": {"x": 1044, "y": 242, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "road_half": {"x": 1044, "y": 290, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "l_road_tr_r": {"x": 1044, "y": 338, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "l_road_tr_l": {"x": 1044, "y": 386, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "l_road_sides": {"x": 1044, "y": 434, "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "l_road_end": {"x": 1044, "y": 482 , "w": 320, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "d_road_end": {"x": 1390, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "d_road_sides": {"x": 1438, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "d_road_tr_r": {"x": 1486, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "d_road_tr_l": {"x": 1534, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "d_road": {"x": 1582, "y": 50, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "u_road_end": {"x": 1390, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "u_road_sides": {"x": 1438, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "u_road_tr_r": {"x": 1486, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "u_road_tr_l": {"x": 1534, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "u_road": {"x": 1582, "y": 389, "w": 34, "h": 322, "it": 1, "sc": 3, "col":  false, "sort": false}
+  "hori_turn":{"x": 1081, "y": 61, "w": 33, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "hori_end":{"x":  1085, "y": 134, "w": 29, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "hori_dirt": {"x": 1042, "y": 175, "w": 123, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "hori_sides": {"x": 1080, "y": 97, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+
+  "ver_turn":{"x": 1080, "y": 212, "w": 34, "h": 33, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "ver_end":{"x":  1116, "y": 212, "w": 34, "h": 31, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "ver_dirt": {"x": 1041, "y": 49, "w": 34, "h": 123, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "ver_sides": {"x": 1044, "y": 212, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false}
 }
