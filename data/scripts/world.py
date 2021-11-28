@@ -22,7 +22,7 @@ from .levels import (
 
 
 def main(debug=False, first_state="player_room"):
-    GameManager(debug=debug, first_state=first_state).update()
+    return GameManager(debug=debug, first_state=first_state)
 
 
 class GameManager:
