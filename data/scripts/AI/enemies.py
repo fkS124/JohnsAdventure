@@ -6,7 +6,6 @@ from math import ceil
 
 
 class Enemy:
-
     """Designed to be the parent class of every enemy.
     
     It should help creating new ennemies, faster.
@@ -14,7 +13,7 @@ class Enemy:
     There are a lot of docstrings to ease the comprehension of it, 
     as it can be a bit complicated sometimes."""
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int,int], hp:int=100, xp_drop = int, custom_rect=None):
+    def __init__(self, screen: pg.Surface, pos: tuple[int, int], hp: int = 100, xp_drop=int, custom_rect=None):
 
         self.IDENTITY = "ENEMY"
 
@@ -47,7 +46,7 @@ class Enemy:
 
         # ANIMATION
         self.current_sprite = None
-        #self.rect = None
+        # self.rect = None
         self.id_anim = self.delay = 0
         self.hitted = False
         self.idling = False
@@ -55,20 +54,20 @@ class Enemy:
         # IMAGES & SPRITES MANAGEMENT
 
         # defines if the part is animated, useful for managing animation
-        self.animating = { 
+        self.animating = {
             "hit": [False, "hitted", "hit_anim", "single"],
             "walk": [False, "moving", "walk_anim_manager", "loop"],
             "attack": [False, "attacking", "attack_anim_manager", "single"],
             "idle": [False, "idling", "idle", "loop"],
             "death": [False, "dead", "death_anim", "single"],
         }
-        # FORM EXPLANATION :
-        # "state": [animating (T or F), "variable_of_animation_name", "animation_var_name" or "dict_managing_anim", "loop" or "single"]
-        # "state" -> eg.: "hit" for the hit animation (default False)
-        # animating -> tell if an animation is loaded and has to be played
-        # "variable_of_animation_name" -> name of the variable that track if this currently has to be animated -> eg. : walking = True or False for walking animation
-        # "animation_var_name" -> basically where the animation is stored or where the dict that manages it is stored (dicts are useful for multiple directions)
-        # "loop" if the animation has to be played in a loop, "single" otherwise
+        # FORM EXPLANATION : "state": [animating (T or F), "variable_of_animation_name", "animation_var_name" or
+        # "dict_managing_anim", "loop" or "single"] "state" -> eg.: "hit" for the hit animation (default False)
+        # animating -> tell if an animation is loaded and has to be played "variable_of_animation_name" -> name of
+        # the variable that track if this currently has to be animated -> eg. : walking = True or False for walking
+        # animation "animation_var_name" -> basically where the animation is stored or where the dict that manages it
+        # is stored (dicts are useful for multiple directions) "loop" if the animation has to be played in a loop,
+        # "single" otherwise
 
         self.sheet = pg.Surface((10, 10))
         self.idle = self.hit_anim = self.death_anim = self.walk_right = self.walk_left = self.walk_down = self.walk_up = self.attack_right = self.attack_left = self.attack_down = self.attack_up = []
@@ -92,14 +91,13 @@ class Enemy:
             "up": self.attack_up
         }
 
-
     def load_animation(self,
-                       sheet_path:str,
-                       idle:str="None",
-                       hit_anim:str="None",
-                       walk_anim:str="None",
-                       death_anim:str="None",
-                       attack_anim:str="None",
+                       sheet_path: str,
+                       idle: str = "None",
+                       hit_anim: str = "None",
+                       walk_anim: str = "None",
+                       death_anim: str = "None",
+                       attack_anim: str = "None",
                        idle_coo=None,  # idle sprites
                        hit_coo=None,  # hit sprites
                        walk_l_coo=None,  # left
@@ -135,24 +133,25 @@ class Enemy:
         if idle in ["static", "animated"] and idle_coo is not None:  # check if there is an animation passed as an arg
             self.animating["idle"][0] = True  # specify that there is an idle animation
             self.idle = self.load_sheet(idle_coo)  # load it
-        
+
         if hit_anim in ["static", "animated"] and hit_coo is not None:
-            self.animating["hit"][0] = True  
+            self.animating["hit"][0] = True
             self.hit_anim = self.load_sheet(hit_coo)
-        
+
         if walk_anim in ["static", "animated"] and None not in [walk_d_coo, walk_l_coo, walk_r_coo, walk_u_coo]:
-            self.animating["walk"][0] = True  
+            self.animating["walk"][0] = True
             self.walk_down = self.load_sheet(walk_d_coo)
             self.walk_right = self.load_sheet(walk_r_coo)
             self.walk_up = self.load_sheet(walk_u_coo)
             self.walk_left = self.load_sheet(walk_l_coo)
 
         if death_anim in ["static", "animated"] and death_coo is not None:
-            self.animating["death"][0] = True  
+            self.animating["death"][0] = True
             self.death_anim = self.load_sheet(death_coo)
 
-        if attack_anim in ["static", "animated"] and None not in [attack_d_coo, attack_l_coo, attack_r_coo, attack_u_coo]:
-            self.animating["attack"][0] = True  
+        if attack_anim in ["static", "animated"] and None not in [attack_d_coo, attack_l_coo, attack_r_coo,
+                                                                  attack_u_coo]:
+            self.animating["attack"][0] = True
             self.attack_down = self.load_sheet(walk_d_coo)
             self.attack_right = self.load_sheet(walk_r_coo)
             self.attack_up = self.load_sheet(walk_u_coo)
@@ -165,10 +164,10 @@ class Enemy:
 
         x, y, width, height = coo[:4]
         if coo[-1] != 0:  # check for scale
-            return [scale(get_sprite(self.sheet, x+width*i, y, width, height), coo[-1]) for i in range(coo[-2])]
+            return [scale(get_sprite(self.sheet, x + width * i, y, width, height), coo[-1]) for i in range(coo[-2])]
         else:
-            return [get_sprite(self.sheet, x+width*i, y, width, height) for i in range(coo[-2])]
-    
+            return [get_sprite(self.sheet, x + width * i, y, width, height) for i in range(coo[-2])]
+
     def animate(self):
 
         """Animate the enemy considering all its states, it's designed to be generic,
@@ -190,12 +189,12 @@ class Enemy:
                                 if self.id_anim + 1 < len(animation):
                                     self.id_anim += 1
                         self.delay = pg.time.get_ticks()
-                        self.current_sprite = animation[self.id_anim] 
+                        self.current_sprite = animation[self.id_anim]
 
                         # Update Enemy's rect
-        self.rect = self.current_sprite.get_rect(topleft=self.pos)  
+        self.rect = self.current_sprite.get_rect(topleft=self.pos)
 
-    def deal_damage(self, value:int, crit:bool, endurance_ignorance:bool=False):
+    def deal_damage(self, value: int, crit: bool, endurance_ignorance: bool = False):
 
         """Deal damages to its own instance, also triggers animations of hits,
         include critics and endurance ignorance."""
@@ -206,14 +205,14 @@ class Enemy:
         self.hitted = True
         # -> crit : dmg_type="crit" -> health ; dmg_type="health" ...
         if not endurance_ignorance:
-            self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value-self.endurance), dmg_type=("default" if not crit else "crit"))) 
+            self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value - self.endurance),
+                                                  dmg_type=("default" if not crit else "crit")))
         else:
             self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value), dmg_type="health"))
         if self.hp <= 0:
             self.attackable = False
             self.dead = True
             self.hp = 0
-    
 
     def life_bar(self):
 
@@ -221,11 +220,12 @@ class Enemy:
         if self.MAX_HP != self.hp:
             # Outline
             pg.draw.rect(self.screen, (0, 0, 0), [self.pos[0], self.pos[1] - 12, self.current_sprite.get_width(), 10])
-            
-            # Health Bar
-            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12, int((self.current_sprite.get_width()/self.MAX_HP)*self.show_hp) - 2, 8])
 
-            #pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
+            # Health Bar
+            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12, int((
+                self.current_sprite.get_width() / self.MAX_HP) * self.show_hp) - 2, 8])
+
+            # pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
     def update_dmg_popups(self, scroll):
 
@@ -251,7 +251,7 @@ class Enemy:
         if self.attacking:
             self.moving = False
             self.idling = False
-        
+
         if self.moving:
             self.idling = False
         else:
@@ -273,29 +273,30 @@ class Enemy:
         # update the life bar if it's shown
         if self.show_life_bar:
             if self.show_hp >= self.hp:
-                self.show_hp -= dt*16*abs((self.show_hp-self.hp)//3+1)
+                self.show_hp -= dt * 16 * abs((self.show_hp - self.hp) // 3 + 1)
             self.life_bar()
 
         # update the damage pop ups
         self.update_dmg_popups(scroll)
 
         # update the pos of the enemy
-        self.pos = self.x-scroll[0], self.y-scroll[1]
+        self.pos = self.x - scroll[0], self.y - scroll[1]
 
         # call logic method
-        self.logic()       
+        self.logic()
         self.screen.blit(self.current_sprite, self.pos)
 
 
 class Dummy(Enemy):
 
-    def __init__(self, screen:pg.Surface, pos:tuple[int, int], hp:int=100, xp_drop = 210):
-        super().__init__(screen, pos, hp=100, xp_drop=210, custom_rect=[8*4, 34*4, (24-8)*4, (47-34)*4])
+    def __init__(self, screen: pg.Surface, pos: tuple[int, int], hp: int = 100, xp_drop=210):
+        super().__init__(screen, pos, hp=100, xp_drop=210, custom_rect=[8 * 4, 34 * 4, (24 - 8) * 4, (47 - 34) * 4])
         self.load_animation(
-            resource_path("data/sprites/dummy.png"),
+            resource_path("data/sprites/dummy.jpeg"),
             idle="static",
             hit_anim="animated",
             idle_coo=[0, 0, 34, 48, 1, 4],
             hit_coo=[0, 48, 34, 48, 4, 4]
         )
         self.xp_drop = self.xp_available = xp_drop
+        self.scale = 4

@@ -15,6 +15,7 @@ from .AI import npc
 from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
+from .AI.death_animator import DeathManager
 
 
 class GameState:
@@ -31,6 +32,7 @@ class GameState:
 
         # -------- WORLD's OBJECTS ----------
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
+        self._PLAYER_VEL = copy(self.player.base_vel)
 
         self.objects = []
         self.scroll = self.player.camera.offset.xy
@@ -42,6 +44,9 @@ class GameState:
 
         # eg. -> "next_state_name" : pg.Rect(0, 0, 100, 100)
         self.exit_rects = {}  # the rects that lead to exit the current room
+
+        # dead objects animations
+        self.death_anim_manager = DeathManager(self.screen, self.player.camera)
 
         # ----------- COLLISION SYSTEM ---------
 
@@ -166,6 +171,7 @@ class GameState:
 
         # update the game values
         self.player.rooms_objects = self.objects
+        self.player.base_vel = copy(self._PLAYER_VEL)
         self.dt = dt
 
         """world_rect = self.world.get_rect()
@@ -182,6 +188,7 @@ class GameState:
         self.scroll = camera.offset.xy
 
         all_objects = []
+        to_remove = []
         for obj_ in self.objects:
             if type(obj_) is not pg.Rect:
                 if hasattr(obj_, 'custom_center'):
@@ -192,12 +199,26 @@ class GameState:
                         if not obj_.sort:
                             obj_.centery = 0
                 all_objects.append(obj_)
+        for obj_2 in self.death_anim_manager.animations:
+            obj_2.centery = obj_2.rect.centery
+        all_objects.extend(self.death_anim_manager.animations)
         all_objects.append(self.player)
         self.player.centery = self.player.rect.centery
         for obj in sorted(all_objects, key=attrgetter('centery')):
             obj.update(*[getattr(self, arg)
                          for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
                        )
+
+            if hasattr(obj, "IDENTITY"):
+                if obj.IDENTITY == "ENEMY":
+                    if obj.dead:
+                        to_remove.append(obj)
+                        scale = 1 if not hasattr(obj, "scale") else obj.scale
+                        self.death_anim_manager.input_death_animation(obj.current_sprite, obj.rect.topleft+self.scroll, scale)
+
+        for removing in to_remove:
+            self.objects.remove(removing)
+            del removing
 
         """ Collision Algorithm and Entity Updater """
         for obj in self.objects:
@@ -344,6 +365,7 @@ class JohnsGarden(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
+        self._PLAYER_VEL = 10
 
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \

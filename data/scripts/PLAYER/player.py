@@ -3,7 +3,6 @@ Credits @Marios325346, @ƒkS124
 Here is john, our protagonist.
 '''
 
-
 import pygame as p
 import math
 from copy import copy
@@ -19,11 +18,13 @@ p.font.init()
 font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
 debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
 
+
 class Player:
     def __init__(self, screen, font, ux, ui, data):
         self.screen, self.InteractPoint = screen, 0
         self.sound_manager = SoundManager(sound_only=True)
-        self.velocity = p.Vector2(0, 0) # Player's speed
+        self.base_vel = 6
+        self.velocity = p.Vector2(0, 0)  # Player's speed
         self.direction = "left"
         self.move_ability = {
             "left": True,
@@ -40,12 +41,11 @@ class Player:
         self.npc_catalog = ux
 
         # content display (it gets updated by the npcs)
-        self.interact_text =  '' 
+        self.interact_text = ''
 
+        self.paused = self.click = self.Interactable = self.is_interacting = False  # Features
+        self.Right = self.Down = self.Left = self.Right = self.Up = False  # Movement
 
-        self.paused = self.click = self.Interactable = self.is_interacting = False #  Features
-        self.Right = self.Down = self.Left = self.Right = self.Up = False # Movement
-        
         self.data = data
         self.inventory = Inventory(self.screen, ui, font)
 
@@ -55,7 +55,7 @@ class Player:
         # Animation
         self.sheet = l_path('data/sprites/john.png')
 
-        self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i*27, 29, 27, 21), 4) for i in range(5)]
+        self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.delay_rlu = 0
         self.id_rlu = 0
@@ -82,20 +82,20 @@ class Player:
             'dash_u': [],
             'dash_d': []
         }
-        
+
         def get_j(row, col):
-            return scale(get_sprite(self.sheet, 46 * row, 52 * col, 46, 52),3)
+            return scale(get_sprite(self.sheet, 46 * row, 52 * col, 46, 52), 3)
 
         # This for loop is reliable only for the current spritesheet
         # W :46
         # H: 52
         x_gap = y_gap = 0
         for key, value in self.anim.items():
-            temp_list = [] # Holds the 5 frames
+            temp_list = []  # Holds the 5 frames
             for i in range(5):
                 temp_list.append(get_j(x_gap, y_gap))
                 x_gap += 1
-            self.anim[key] = temp_list # Update the item key
+            self.anim[key] = temp_list  # Update the item key
             # It has reached the end of spritesheet
             if x_gap > 13:
                 x_gap = 0
@@ -124,7 +124,7 @@ class Player:
 
         """
 
-        self.rect = self.anim['right'][0].get_rect() # This gets changed later
+        self.rect = self.anim['right'][0].get_rect()  # This gets changed later
 
         # First spawn
         self.rect.x = 510
@@ -154,7 +154,6 @@ class Player:
         self.camera_status = 'auto'
         self.set_camera_to(self.camera_status)
 
-
         ''' 
             How to get the status of the camera 
 
@@ -179,16 +178,17 @@ class Player:
 
         ''' Stats'''
 
-        # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width / max_hp * hp
+        # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width /
+        # max_hp * hp
         self.level = 1
         self.health = 180
         self.damage = 10
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
-        self.xp = 0 # wtf leveling system in john's adventures!??!?
+        self.xp = 0  # wtf leveling system in john's adventures!??!?
 
         # Code for Dash Ability goes here
-        self.dash_width = 180 # the pixel width for bars
+        self.dash_width = 180  # the pixel width for bars
         self.dash_cd = 750
         self.last_dash_end = 0
         self.dash_start = 0
@@ -200,22 +200,23 @@ class Player:
         self.index_dash_animation = 0
         self.current_dashing_frame = None
 
-
         # Levelling
-        self.experience = 0 # XP
-        self.experience_width = 0 # This is for the UI
+        self.experience = 0  # XP
+        self.experience_width = 0  # This is for the UI
         self.level_index = 1
 
         # recalculate the damages, considering the equiped weapon
-        self.modified_damages = self.damage + (self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+        self.modified_damages = self.damage + (
+            self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
 
-        self.upgrade_station = UpgradeStation(self.screen, ui, p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
+        self.upgrade_station = UpgradeStation(self.screen, ui,
+                                              p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
 
         ''' UI '''
-        self.health_box = scale(ui.parse_sprite('health'),5)
+        self.health_box = scale(ui.parse_sprite('health'), 5)
         self.heart = scale(ui.parse_sprite('heart'), 4)
         self.hp_box_rect = self.health_box.get_rect(
-            topleft = (
+            topleft=(
                 self.screen.get_width() - self.health_box.get_width() - 90,
                 20
             )
@@ -231,12 +232,12 @@ class Player:
 
         # ticks value in the future
         self.last_attacking_click = 0
-        
+
         # still to be determined
         self.attack_cooldown = 350
 
         # still to be determined  This is the cooldown of the last attack
-        self.attack_speed = self.attack_cooldown * 2  - 25/100
+        self.attack_speed = self.attack_cooldown * 2 - 25 / 100
 
         self.max_combo_multiplier = 1.025
         self.last_combo_hit_time = 0
@@ -253,40 +254,40 @@ class Player:
         '''
         self.camera.set_method(self.camera_mode[_KEY])
 
-
     def leveling(self):
 
         # PLAY THE SOUND OF THE LEVEL UPGRADING
-        if self.experience >= 180: # <- The max width of the bar
-            self.level += 1 # Increase the level
-            self.experience = self.experience - 180 # Do the maths in case the exp is more than 180, else its 0
-            self.level_index += 1 # a index for multiplying 180(width)    
+        if self.experience >= 180:  # <- The max width of the bar
+            self.level += 1  # Increase the level
+            self.experience = self.experience - 180  # Do the maths in case the exp is more than 180, else its 0
+            self.level_index += 1  # a index for multiplying 180(width)
             self.upgrade_station.new_level()
-            self.ring_lu = True # Level UP UI starts
-        self.experience_width = self.experience / self.level_index # Player needs more and more exp on each level, therefore we have to cut it
+            self.ring_lu = True  # Level UP UI starts
+        self.experience_width = self.experience / self.level_index  # Player needs more and more exp on each level,
+        # therefore we have to cut it
 
     def get_crit(self):
         crit = random()
         crit_chance = self.inventory.get_equiped("Weapon").critical_chance
         if crit < crit_chance:
-            return self.modified_damages*crit_chance
+            return self.modified_damages * crit_chance
         return 0
 
     # This should belong in collision system >:(((
     def check_content(self, pos):
         position = (self.rect.topleft - self.camera.offset.xy)
-        itr_box = p.Rect(*position, self.rect.w//2, self.rect.h//2)
+        itr_box = p.Rect(*position, self.rect.w // 2, self.rect.h // 2)
         # Manual Position tweaks
         itr_box.x -= 17
         itr_box.y += 45
 
         # Interact Rect for debugging
-        #p.draw.rect(self.screen, (255,255,255), itr_box, 1)
+        # p.draw.rect(self.screen, (255,255,255), itr_box, 1)
         for obj in self.rooms_objects:
             if hasattr(obj, "IDENTITY"):
                 if obj.IDENTITY == "NPC":
                     if itr_box.colliderect(obj.interaction_rect):
-                       
+
                         # If player clicks Interaction key
                         if self.Interactable:
                             # Stop the npcs from moving
@@ -299,11 +300,11 @@ class Player:
                             self.npc_text = obj.tell_story
 
                             # Stop browsing to reduce calcs
-                            break 
+                            break
                 elif obj.IDENTITY == "PROP":
                     if obj.name == "chest":  # MUST BE BEFORE checking collision to avoid attribute errors
                         if itr_box.colliderect(obj.interaction_rect):
-                            obj.on_interaction(self) # Run Chest opening                      
+                            obj.on_interaction(self)  # Run Chest opening
 
     def check_for_hitting(self):
         '''
@@ -314,11 +315,14 @@ class Player:
             if hasattr(obj, "attackable"):
                 if obj.attackable:
                     if self.attacking_hitbox.colliderect(obj.rect):
-                        self.sound_manager.play_sound("dummyHit") # This is where it will play the object's hit sound NOT THE SWORD
+                        self.sound_manager.play_sound(
+                            "dummyHit")  # This is where it will play the object's hit sound NOT THE SWORD
                         crit = self.get_crit()
-                        obj.deal_damage(self.modified_damages+crit, crit>0) if self.current_combo != self.last_attack else obj.deal_damage(self.modified_damages*self.max_combo_multiplier+crit, crit>0)
+                        obj.deal_damage(self.modified_damages + crit,
+                                        crit > 0) if self.current_combo != self.last_attack else obj.deal_damage(
+                            self.modified_damages * self.max_combo_multiplier + crit, crit > 0)
                         self.inventory.get_equiped("Weapon").start_special_effect(obj)
-                    if obj.hp <= 0: # Check if its dead , give xp to the player
+                    if obj.hp <= 0:  # Check if its dead , give xp to the player
                         self.experience += obj.xp_available
                         obj.xp_available = 0
 
@@ -326,11 +330,10 @@ class Player:
 
         click_time = p.time.get_ticks()
 
-
         if not self.attacking and self.inventory.get_equiped("Weapon") is not None:
             self.attacking = True
             self.last_attacking_click = click_time
-            self.sound_manager.play_sound("woodenSword") # Play first hit
+            self.sound_manager.play_sound("woodenSword")  # Play first hit
             self.current_combo += 1
             self.next_combo_available = False
             self.update_attack(pos)
@@ -343,7 +346,7 @@ class Player:
                     self.attacking = False
                     self.current_combo = 0
                 else:
-                    self.sound_manager.play_sound("woodenSword") # Play sound 2
+                    self.sound_manager.play_sound("woodenSword")  # Play sound 2
                     self.restart_animation = True
                     self.current_combo += 1
                     self.last_attacking_click = click_time
@@ -363,25 +366,29 @@ class Player:
         if self.attacking and self.camera_status != "auto":
 
             # sets the attacking hitbox according to the direction
-            rect = p.Rect(self.rect.x - self.camera.offset.x - 50, self.rect.y - self.camera.offset.y - 40, *self.rect.size)
+            rect = p.Rect(self.rect.x - self.camera.offset.x - 50, self.rect.y - self.camera.offset.y - 40,
+                          *self.rect.size)
 
-            
             # Some tweaks to attacking sprite
             temp = pos
 
             if self.looking_up:
-                self.attacking_hitbox = p.Rect(rect.x, rect.y-self.attacking_hitbox_size[0], self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(rect.x, rect.y - self.attacking_hitbox_size[0],
+                                               self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
             elif self.looking_down:
-                self.attacking_hitbox = p.Rect(rect.x, rect.bottom, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                self.attacking_hitbox = p.Rect(rect.x, rect.bottom, self.attacking_hitbox_size[1],
+                                               self.attacking_hitbox_size[0])
             elif self.looking_left:
-                self.attacking_hitbox = p.Rect(rect.x-self.attacking_hitbox_size[1], rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
-                temp = pos[0] - 2, pos[1] # Fix Image position
+                self.attacking_hitbox = p.Rect(rect.x - self.attacking_hitbox_size[1], rect.y,
+                                               self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
+                temp = pos[0] - 2, pos[1]  # Fix Image position
             elif self.looking_right:
-                self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1], self.attacking_hitbox_size[0])
-                temp = pos[0] + 2, pos[1] # Fix Image position
+                self.attacking_hitbox = p.Rect(rect.right, rect.y, self.attacking_hitbox_size[1],
+                                               self.attacking_hitbox_size[0])
+                temp = pos[0] + 2, pos[1]  # Fix Image position
 
-            #p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
-            #p.draw.rect(self.screen, (0, 255, 0), rect, 2)
+            # p.draw.rect(self.screen, (255, 0, 0), self.attacking_hitbox, 2)
+            # p.draw.rect(self.screen, (0, 255, 0), rect, 2)
 
             # animation delay of 100 ms
             if p.time.get_ticks() - self.delay_attack_animation > 100 and self.restart_animation:
@@ -398,16 +405,16 @@ class Player:
                     curr_anim = a['up_a_1'] if self.current_combo == 1 or self.current_combo == 3 else a['up_a_2']
 
                 if self.index_attack_animation + 1 < len(curr_anim):  # check if the animation didn't reach its end
-                        self.delay_attack_animation = p.time.get_ticks()  # reset the delay
-                        self.attacking_frame = curr_anim[self.index_attack_animation+1]  # change the current animation frame
-                        self.index_attack_animation+=1  # increment the animation index
+                    self.delay_attack_animation = p.time.get_ticks()  # reset the delay
+                    self.attacking_frame = curr_anim[
+                        self.index_attack_animation + 1]  # change the current animation frame
+                    self.index_attack_animation += 1  # increment the animation index
                 else:
                     self.restart_animation = False  # don't allow the restart of the animation until a next combo is reached
                     self.index_attack_animation = 0  # reset the animation index, without changing the frame in order to stay in "pause"
                     self.next_combo_available = True  # allow to attack again
 
-
-            #p.draw.rect(self.screen, (255,255,255), self.Rect)
+            # p.draw.rect(self.screen, (255,255,255), self.Rect)
 
             # ----- Blit Animation ------
 
@@ -435,27 +442,27 @@ class Player:
         if self.camera_status != "auto":
             # Health bar
             p.draw.rect(
-            self.screen, (255,0,0),
-            p.Rect(
-                self.hp_box_rect.x,self.hp_box_rect.y  + 20,
-                self.health, 25)
+                self.screen, (255, 0, 0),
+                p.Rect(
+                    self.hp_box_rect.x, self.hp_box_rect.y + 20,
+                    self.health, 25)
             )
 
             # Dash Cooldown bar
             p.draw.rect(
-                self.screen, (0,255,0),
+                self.screen, (0, 255, 0),
                 p.Rect(
-                    self.hp_box_rect.x, self.hp_box_rect.y  + 90,
+                    self.hp_box_rect.x, self.hp_box_rect.y + 90,
                     self.dash_width, 15)
             )
 
             # Experience bar
             p.draw.rect(
-                self.screen, (0,255,255),
+                self.screen, (0, 255, 255),
                 p.Rect(
-                    self.hp_box_rect.x, self.hp_box_rect.y  + 60,
+                    self.hp_box_rect.x, self.hp_box_rect.y + 60,
                     self.experience_width, 15
-                    )
+                )
             )
 
             # Player UI
@@ -471,12 +478,13 @@ class Player:
             self.upgrade_station.update(self)
 
             # Inventory Icon
-            self.inventory.update(self)  # sending its own object in order that the inventory can access to the player's damages
+            self.inventory.update(
+                self)  # sending its own object in order that the inventory can access to the player's damages
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (
             self.inventory.get_equiped("Weapon").damage \
-             if self.inventory.get_equiped("Weapon") is not None else 0
+                if self.inventory.get_equiped("Weapon") is not None else 0
         )
         equiped = self.inventory.get_equiped("Weapon")
         if hasattr(equiped, "special_effect"):
@@ -486,11 +494,11 @@ class Player:
         if self.Interactable and self.is_interacting:
             self.npc_catalog.draw(self.npc_text)
 
-        #if not self.inventory
+        # if not self.inventory
         if self.show_mouse:
             self.screen.blit(self.mouse_icon, self.mouse_icon.get_rect(center=m))
 
-    def set_looking(self, dir_:str, pos):
+    def set_looking(self, dir_: str, pos):
         '''
             This function is for coordinating the hitbox
             and also playing the looking animation
@@ -531,15 +539,15 @@ class Player:
 
             if p.time.get_ticks() - self.delay_dash_animation > 50:
                 self.delay_dash_animation = p.time.get_ticks()
-                match self.dashing_direction: # lgtm [py/syntax-error]
-                    case "left": 
+                match self.dashing_direction:  # lgtm [py/syntax-error]
+                    case "left":
                         anim = self.anim['dash_l']
-                    case "right": 
+                    case "right":
                         anim = self.anim['dash_r']
-                    case "up": 
+                    case "up":
                         anim = self.anim['dash_u']
                     case "down":
-                        anim = self.anim['dash_d'] 
+                        anim = self.anim['dash_d']
                 self.index_dash_animation = (self.index_dash_animation + 1) % len(anim)
                 self.current_dashing_frame = anim[self.index_dash_animation]
             self.screen.blit(self.current_dashing_frame, pos)
@@ -552,23 +560,23 @@ class Player:
 
             if p.time.get_ticks() - self.delay_increasing_dash > 2:
                 self.delay_attack_animation = p.time.get_ticks()
-                freq = 25 # Frequency of the dash
+                freq = 25  # Frequency of the dash
                 if self.move_ability[self.dashing_direction]:
-                    match self.dashing_direction: # lgtm [py/syntax-error]
+                    match self.dashing_direction:  # lgtm [py/syntax-error]
                         case "up":
-                            self.rect.y -= dt*freq + 12 # 12 = players speed(2) * 2
+                            self.rect.y -= dt * freq + 12  # 12 = players speed(2) * 2
                         case "down":
-                            self.rect.y += dt*freq + 12
+                            self.rect.y += dt * freq + 12
                         case "right":
-                            self.rect.x += dt*freq + 12
+                            self.rect.x += dt * freq + 12
                         case "left":
-                            self.rect.x -= dt*freq + 12
+                            self.rect.x -= dt * freq + 12
 
         else:
             #  Update the  UI
-            
+
             if p.time.get_ticks() - self.delay_increasing_dash > self.dash_cd / ((11 / 3) * 2):
-                self.dash_width += 180/((11 / 3) * 2)
+                self.dash_width += 180 / ((11 / 3) * 2)
                 self.delay_increasing_dash = p.time.get_ticks()
 
             if p.time.get_ticks() - self.last_dash_end > self.dash_cd:
@@ -585,22 +593,22 @@ class Player:
             m[0] - (self.rect.left + 10 - self.camera.offset.x),
         )
         x, y = pos[0] - math.cos(angle), pos[1] - math.sin(angle) + 10
-        angle = abs(math.degrees(angle))+90 if angle < 0 else 360-math.degrees(angle)+90
+        angle = abs(math.degrees(angle)) + 90 if angle < 0 else 360 - math.degrees(angle) + 90
         image = p.transform.rotate(self.attack_pointer, angle)
-        ring_pos = (x - image.get_width()//2 + 69, y - image.get_height()//2  + 139)
+        ring_pos = (x - image.get_width() // 2 + 69, y - image.get_height() // 2 + 139)
 
         # Blit attack ring only on this condition
         if not self.ring_lu and self.camera_status != "auto":
             self.screen.blit(image, ring_pos)
 
         self.update_attack(pos)
-           
+
         if not self.attacking and not self.dashing:
             angle = math.atan2(
                 m[1] - (self.rect.top + 95 - self.camera.offset.y),
                 m[0] - (self.rect.left + 10 - self.camera.offset.x),
             )
-            angle = abs(math.degrees(angle)) if angle < 0 else 360-math.degrees(angle)
+            angle = abs(math.degrees(angle)) if angle < 0 else 360 - math.degrees(angle)
 
             if self.camera_status != "auto":
                 if 135 >= angle > 45:
@@ -614,16 +622,16 @@ class Player:
             else:
                 "we will put a str from camera instead of 'right' later on."
                 self.set_looking("right", pos)
-        
+
         self.update_dash(dt, pos)
-        
+
         # Level UP ring
         self.animate_level_up_ring()
 
     def movement(self, m, pos):
 
         if not self.inventory.show_menu:
-            if not self.attacking: # if he is not attacking, allow him to move
+            if not self.attacking:  # if he is not attacking, allow him to move
                 ''' Movement '''
                 if self.Up and self.move_ability["up"]:
                     self.rect.y -= self.velocity[1]
@@ -635,13 +643,13 @@ class Player:
                     self.direction = "down"
                 if self.Left and self.move_ability["right"]:
                     self.rect.x -= self.velocity[0]
-                    dash_vel = -25 if not self.Down else 25 # Diagonal
+                    dash_vel = -25 if not self.Down else 25  # Diagonal
                     self.direction = "right"
                 elif self.Right and self.move_ability["left"]:
                     self.rect.x += self.velocity[0]
-                    dash_vel = 25 if not self.Up else -25 # Diagonal
+                    dash_vel = 25 if not self.Up else -25  # Diagonal
                     self.direction = "left"
-            else: # He is attacking
+            else:  # He is attacking
                 dash_vel = 0
 
             ''' Animation '''
@@ -649,9 +657,9 @@ class Player:
             if self.a_index >= 27:
                 self.a_index = 0
             self.a_index += 1
-       # Player is looking at the inventory, stop animation
+        # Player is looking at the inventory, stop animation
         else:
-            self.a_index = 0 # Play only first frame
+            self.a_index = 0  # Play only first frame
 
         if not self.Up and not self.Down and not self.Right and not self.Left:
             self.walking = False
@@ -667,13 +675,14 @@ class Player:
                     self.id_rlu = 0
 
                 self.current_frame_ring = self.lvl_up_ring[self.id_rlu]
-            self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(center=self.rect.topleft-self.camera.offset.xy+p.Vector2(15, 80)))
+            self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(
+                center=self.rect.topleft - self.camera.offset.xy + p.Vector2(15, 80)))
 
-    def handler(self,dt):
-        player_p  = (
-        # 52 48 are players height and width
-        self.rect.x - 52 - self.camera.offset.x,
-        self.rect.y - self.camera.offset.y - 48
+    def handler(self, dt):
+        player_p = (
+            # 52 48 are players height and width
+            self.rect.x - 52 - self.camera.offset.x,
+            self.rect.y - self.camera.offset.y - 48
         )
         m = p.mouse.get_pos()
 
@@ -681,11 +690,11 @@ class Player:
         self.controls(player_p)
         self.animation_handing(dt, m, player_p)
         if type(self.camera.method) is not type(self.camera_mode["auto"]):
-            self.movement(m , player_p)
-      
+            self.movement(m, player_p)
+
         # Update the camera: ALWAYS LAST LINE
         self.update_camera_status()
-        self.camera.scroll() 
+        self.camera.scroll()
 
     def update(self, dt):
         # Function that handles everything :brain:
@@ -706,57 +715,54 @@ class Player:
             self.click = False
             a = self.data['controls']
 
-
             if keys[p.K_1]:
-                self.camera.fov.xy += p.math.Vector2(15,15)
+                self.camera.fov.xy += p.math.Vector2(15, 15)
             if keys[p.K_2]:
-                self.camera.fov.xy -= p.math.Vector2(15,15)
-
-
+                self.camera.fov.xy -= p.math.Vector2(15, 15)
 
             if not self.inventory.show_menu:
-               self.Up = keys[a["up"]]
-               self.Down = keys[a["down"]]
-               self.Right = keys[a["left"]]
-               self.Left = keys[a["right"]]
+                self.Up = keys[a["up"]]
+                self.Down = keys[a["down"]]
+                self.Right = keys[a["left"]]
+                self.Left = keys[a["right"]]
 
             interact = a['interact']
             dash = a['dash']
             inv = a['inventory']
             itr = a['interact']
-            self.velocity = p.Vector2(-6, 6) if not(self.paused) else p.Vector2(0, 0)
+            self.velocity = p.Vector2(-self.base_vel, self.base_vel) if not (self.paused) else p.Vector2(0, 0)
 
             # Reset Interaction
             if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
-               self.walking = True
-               self.InteractPoint, self.Interactable = 0, False
-               self.is_interacting = False   
-               self.npc_catalog.reset()
-               # It finds for that one NPC that the player interacted with and it goes back to walking
-               for obj in self.rooms_objects:
+                self.walking = True
+                self.InteractPoint, self.Interactable = 0, False
+                self.is_interacting = False
+                self.npc_catalog.reset()
+                # It finds for that one NPC that the player interacted with and it goes back to walking
+                for obj in self.rooms_objects:
                     if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
                         obj.interacting = False
-                        break # Stop the for loop to save calculations                   
-            match e.type: # lgtm [py/syntax-error]
+                        break  # Stop the for loop to save calculations
+            match e.type:  # lgtm [py/syntax-error]
                 case p.QUIT:
                     raise SystemExit
 
                 case p.KEYDOWN:
                     match e.key:
-                        
-                        #case p.K_1:
-                             
+
+                        # case p.K_1:
+
                         case p.K_F12:
                             p.display.toggle_fullscreen()
                         case p.K_ESCAPE:
                             self.paused = True
 
-                       # Temporar until we get a smart python ver
+                    # Temporar until we get a smart python ver
                     if e.key == inv and self.camera_status != "auto":
                         self.show_mouse = True
                         self.inventory.set_active()
                         if not self.inventory.show_menu:
-                           self.show_mouse = False
+                            self.show_mouse = False
 
                     if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu:
                         self.start_dash()
