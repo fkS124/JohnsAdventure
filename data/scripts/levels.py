@@ -1,8 +1,11 @@
+import random
+
 import pygame as pg
 from pygame import Rect
 from copy import copy
 from operator import attrgetter
 import json
+from random import gauss
 
 # from .PLAYER.items import Chest
 from .PLAYER.player import *
@@ -433,6 +436,8 @@ class JohnsGarden(GameState):
             *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33 * 3),
                              n_road=5, type_r="hori_road", start_type="hori_turn", end_type="Vhori_end"),
+            *self.generate_chunk("tree", jh_pos[0]*jh_sc-900, jh_pos[1]*jh_sc+1300, 10, 19, 420, 300, randomize=60),
+            *self.generate_chunk("grass", jh_pos[0]*jh_sc-1000, jh_pos[1]*jh_sc+1400, 12, 27, 100*3, 80*3, randomize=50),
         ]
 
         self.exit_rects = {
@@ -476,6 +481,12 @@ class JohnsGarden(GameState):
                 roads.append(new_road)
         print("Successfully generated", len(roads))
         return roads
+
+    def generate_chunk(self, type_, x, y, row, col, step_x, step_y, randomize=20):
+        return [
+            self.prop_objects[type_]((x+c*step_x+int(gauss(0, randomize)), y+r*step_y+int(gauss(0, randomize))))
+            for c in range(col) for r in range(row)
+        ]
 
     def get_new_road_object(self, name, pos):
         direction = "H" if "hori" in name else "V"  # get the direction
