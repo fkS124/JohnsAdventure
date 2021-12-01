@@ -16,10 +16,14 @@ from data.scripts.utils import resource_path
 
 def load_game():
     global game_instance
+    first_state = "player_room"
+    no_rect = no_rect = "--no_rect" in sys.argv
+    debug = "--debug" in sys.argv
     if sys.argv[-1] != "main.py" and sys.argv[-1] != "--debug":
-        game_instance = main(debug=("--debug" in sys.argv), first_state=sys.argv[-1])
-    else:
-        game_instance = main(debug=("--debug" in sys.argv))
+        debug = "--debug" in sys.argv
+        first_state = sys.argv[sys.argv.index("--debug")+1]
+
+    game_instance = main(debug=debug, first_state=first_state, no_rect=no_rect)
 
 
 if __name__ == '__main__':

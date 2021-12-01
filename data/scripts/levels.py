@@ -16,6 +16,7 @@ from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
 from .AI.death_animator import DeathManager
+from .POSTPROCESSING.lights_manager import LightManager
 
 
 class GameState:
@@ -23,7 +24,7 @@ class GameState:
     It handles every objects and handle their update method's arguments.
     (These args can of course be different than other objects of the list)"""
 
-    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, light_state="day"):
 
         # ------- SCREEN -----------------
         self.display, self.screen = DISPLAY, DISPLAY
@@ -96,6 +97,10 @@ class GameState:
         ]
         """
         self.offset_map = pg.Vector2(0, 0)
+
+        # Light system
+        self.light_state = light_state
+        self.lights_manager = LightManager(self.screen)
 
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
@@ -251,6 +256,9 @@ class GameState:
                         objects.remove(obj_)
         self.collision_system(self.player, objects)
 
+        # Light system
+        self.lights_manager.update(self)
+
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
 
@@ -364,7 +372,7 @@ class JohnsGarden(GameState):
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects)
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="night")
         self._PLAYER_VEL = 10
 
         # Get the positions and the sprites' informations from the json files
@@ -404,6 +412,7 @@ class JohnsGarden(GameState):
                 for object_, pos_ in self.positions.items()
                 for pos in pos_
             ],
+            self.prop_objects["street_lamp"]((323*3+400, 888*3+800)),
             # Mano's hut custom collisions
             pg.Rect(mano_pos[0] * mano_sc, (mano_pos[1] + 292) * mano_sc, 41 * mano_sc, 35 * mano_sc),
             pg.Rect((mano_pos[0] + 31) * mano_sc, (mano_pos[1] + 292) * mano_sc, 11 * mano_sc, 52 * mano_sc),

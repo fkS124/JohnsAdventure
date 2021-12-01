@@ -21,8 +21,8 @@ from .levels import (
 )
 
 
-def main(debug=False, first_state="player_room"):
-    return GameManager(debug=debug, first_state=first_state)
+def main(debug=False, first_state="player_room", no_rect=False):
+    return GameManager(debug=debug, first_state=first_state, no_rect=no_rect)
 
 
 class GameManager:
@@ -48,7 +48,7 @@ class GameManager:
     
     FPS = 35
 
-    def __init__(self, debug=False, first_state="player_room"):
+    def __init__(self, debug=False, first_state="player_room", no_rect=False):
 
         # ------------- SPRITESHEET ---------------
         self.ui = UI_Spritesheet("data/ui/UI_spritesheet.png")
@@ -100,6 +100,7 @@ class GameManager:
         }
         keys = [key for key in self.state_manager[first_state].spawn]
         self.player.rect.topleft = self.state_manager[first_state].spawn[keys[0]]
+        self.state_manager[self.state].lights_manager.init_level(self.state_manager[self.state])
 
         # first pos of the player (next to his bed)
         if not debug and first_state == "player_room":
@@ -107,7 +108,7 @@ class GameManager:
 
         # ------------ DEBUG ----------------------
         self.debug = debug
-        self.debugger = Debugging(self.DISPLAY, self)
+        self.debugger = Debugging(self.DISPLAY, self, no_rect)
 
         # -------- CAMERA SRC HANDLER -------------
         self.s_duration = 0
@@ -175,7 +176,7 @@ class GameManager:
                 self.delay_scaling = pg.time.get_ticks()
                 self.current_scale += 0.1
             
-            
+
             scale_ = self.start_scale - self.current_scale
             img = scale(self.pygame_logo, scale_)
             self.DISPLAY.blit(img, img.get_rect(center=(self.W//2, self.H//2)))  
@@ -215,9 +216,9 @@ class GameManager:
 
                 update_return = self.loading_screen.update()
                 if update_return is not None:
-                    #print(update_return["next_state"])
                     if update_return["next_state"] != "menu":
                         self.state = update_return["next_state"]
+                        self.state_manager[self.state].lights_manager.init_level(self.state_manager[self.state])
                         self.loading = False
                         if update_return["next_music"] is not None:
                             self.sound_manager.play_music(update_return["next_music"])
@@ -292,8 +293,9 @@ class GameManager:
 
 class Debugging:
 
-    def __init__(self, display, game_instance):
+    def __init__(self, display, game_instance, no_rect):
 
+        self.no_rect = no_rect
         self.screen = display
         self.game = game_instance
         self.player = self.game.player
@@ -319,49 +321,50 @@ class Debugging:
         """Primitive debugging system showing rects.
         
         TODO: Improve it to show stats. And make it more readable."""
-        
-        if not self.game.menu and not self.game.loading:
-            scroll = self.player.camera.offset.xy
-            objects = copy(self.game.state_manager[self.game.state].objects)
-            objects.append(self.player)
 
-            for obj in objects:
-                if type(obj) is pg.Rect:
-                    pg.draw.rect(self.screen, self.colors["collision_rect"], pg.Rect(obj.topleft-self.player.camera.offset.xy, obj.size), 2)
-                else:
-                    for key, color in self.colors.items():
-                        if hasattr(obj, key):
-                            attr = (getattr(obj, key))
-                            if type(attr) is pg.Rect:
-                                pg.draw.rect(self.screen, color, attr, 1)
+        if not self.no_rect:
+            if not self.game.menu and not self.game.loading:
+                scroll = self.player.camera.offset.xy
+                objects = copy(self.game.state_manager[self.game.state].objects)
+                objects.append(self.player)
 
-                    col_rect = copy(obj.rect)
-                    if hasattr(obj, "IDENTITY"):
-                        if obj.IDENTITY in ["NPC", "PROP"]:
-                            col_rect.topleft -= scroll
-                        if hasattr(obj, "d_collision"):
-                            col_rect.topleft += pg.Vector2(*obj.d_collision[:2])
-                            col_rect.size = obj.d_collision[2:]
-                        pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
+                for obj in objects:
+                    if type(obj) is pg.Rect:
+                        pg.draw.rect(self.screen, self.colors["collision_rect"], pg.Rect(obj.topleft-self.player.camera.offset.xy, obj.size), 2)
+                    else:
+                        for key, color in self.colors.items():
+                            if hasattr(obj, key):
+                                attr = (getattr(obj, key))
+                                if type(attr) is pg.Rect:
+                                    pg.draw.rect(self.screen, color, attr, 1)
 
-            
-            exit_rects = self.game.state_manager[self.game.state].exit_rects
-            for exit_rect in exit_rects:
-                r = copy(exit_rects[exit_rect][0])
-                r.topleft -= scroll
-                pg.draw.rect(self.screen, self.colors["exit_rect"], r, 2)
-                self.draw_text(str('To:'+exit_rect[0]), self.colors["exit_rect"], r.topleft, bottomleft=True)
+                        col_rect = copy(obj.rect)
+                        if hasattr(obj, "IDENTITY"):
+                            if obj.IDENTITY in ["NPC", "PROP"]:
+                                col_rect.topleft -= scroll
+                            if hasattr(obj, "d_collision"):
+                                col_rect.topleft += pg.Vector2(*obj.d_collision[:2])
+                                col_rect.size = obj.d_collision[2:]
+                            pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
-            pl_col_rect = copy(self.player.rect)
-            pl_col_rect.topleft -= scroll
-            pl_col_rect.topleft -= pg.Vector2(15, -70)
-            pl_col_rect.w -= 70
-            pl_col_rect.h -= 115
-            pg.draw.rect(self.screen,self.colors["collision_rect"], pl_col_rect, 1)
 
-            position = (self.player.rect.topleft - self.player.camera.offset.xy)
-            itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)
-            # Manual Position tweaks
-            itr_box.x -= 17
-            itr_box.y += 45
-            pg.draw.rect(self.screen, (0, 0, 0), itr_box, 2)
+                exit_rects = self.game.state_manager[self.game.state].exit_rects
+                for exit_rect in exit_rects:
+                    r = copy(exit_rects[exit_rect][0])
+                    r.topleft -= scroll
+                    pg.draw.rect(self.screen, self.colors["exit_rect"], r, 2)
+                    self.draw_text(str('To:'+exit_rect[0]), self.colors["exit_rect"], r.topleft, bottomleft=True)
+
+                pl_col_rect = copy(self.player.rect)
+                pl_col_rect.topleft -= scroll
+                pl_col_rect.topleft -= pg.Vector2(15, -70)
+                pl_col_rect.w -= 70
+                pl_col_rect.h -= 115
+                pg.draw.rect(self.screen,self.colors["collision_rect"], pl_col_rect, 1)
+
+                position = (self.player.rect.topleft - self.player.camera.offset.xy)
+                itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)
+                # Manual Position tweaks
+                itr_box.x -= 17
+                itr_box.y += 45
+                pg.draw.rect(self.screen, (0, 0, 0), itr_box, 2)

@@ -3,6 +3,7 @@ from .utils import *
 from .backend import UI_Spritesheet
 from .particle_system import PARTICLE_EFFECTS
 import json
+from .POSTPROCESSING.lights_manager import LightSource
 
 DATA_PATH = resource_path("data/database/open_world.json")
 with open(DATA_PATH) as datas:
@@ -41,6 +42,7 @@ class PropGetter:
         collide = datas["col"] if "col" in datas else True
         sort = datas["sort"] if "sort" in datas else True
         particle = None
+        light_sources = []
         if "add_args" in datas:
             if "particle" in datas["add_args"]:
                 p_data = datas["add_args"]["particle"]
@@ -52,13 +54,21 @@ class PropGetter:
                     final_args = args[1:]
                 particle = PARTICLE_EFFECTS[args[0]](*(final_args))
 
+            if "light_sources" in datas["add_args"]:
+                l_sources = datas["add_args"]["light_sources"]
+                light_sources = [LightSource(
+                    pg.Vector2(light["pos"][0]*self.get_scale(name), light["pos"][1]*self.get_scale(name)),
+                    light["radius"] * self.get_scale(name), light["opacity"], light["color"])
+                    for light in l_sources]
+
         return lambda pos: SimplePropObject(name,
                                             pos,
                                             custom_rect,
                                             custom_center,
                                             collide=collide,
                                             sort=sort,
-                                            particle=particle)
+                                            particle=particle,
+                                            light_sources=light_sources)
 
 
 class Prop:
@@ -357,10 +367,10 @@ class Chest(Prop):
 
 
 class SimplePropObject(Prop):
-    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True, particle=None):
+    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True, particle=None, light_sources=[]):
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=[*COORDS[name]],
+            idle_coord=COORDS[name],
             custom_collide_rect=(custom_rect if custom_rect != [0, 0, 0, 0] else None),
             custom_center=custom_center,
             collision=collide
@@ -370,6 +380,9 @@ class SimplePropObject(Prop):
         if particle is not None:
             self.particle_effect.pos[0] = self.particle_effect.pos[0] * 3 + self.rect.x
             self.particle_effect.pos[1] = self.particle_effect.pos[1] * 3 + self.rect.y
+        self.light_sources = light_sources
+        for l_source in light_sources:
+            l_source.pos += pg.Vector2(self.rect.topleft)
 
     def update(self, screen, scroll):
         update = super(SimplePropObject, self).update(screen, scroll)
