@@ -4,7 +4,7 @@ from copy import copy
 from operator import attrgetter
 import json
 
-#from .PLAYER.items import Chest
+# from .PLAYER.items import Chest
 from .PLAYER.player import *
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
@@ -12,17 +12,15 @@ from .AI import npc
 from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
-
-
+from .AI.death_animator import DeathManager
 
 
 class GameState:
-
     """Parent class of every level.
     It handles every objects and handle their update method's arguments.
     (These args can of course be different than other objects of the list)"""
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
 
         # ------- SCREEN -----------------
         self.display, self.screen = DISPLAY, DISPLAY
@@ -31,6 +29,7 @@ class GameState:
 
         # -------- WORLD's OBJECTS ----------
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
+        self._PLAYER_VEL = copy(self.player.base_vel)
 
         self.objects = []
         self.scroll = self.player.camera.offset.xy
@@ -42,6 +41,9 @@ class GameState:
 
         # eg. -> "next_state_name" : pg.Rect(0, 0, 100, 100)
         self.exit_rects = {}  # the rects that lead to exit the current room
+
+        # dead objects animations
+        self.death_anim_manager = DeathManager(self.screen, self.player.camera)
 
         # ----------- COLLISION SYSTEM ---------
 
@@ -105,10 +107,10 @@ class GameState:
 
         vel = copy(moving_object.velocity)  # gets velocity of the moving object
         obj_rect = copy(moving_object.rect)  # gets rect from the moving object
-        obj_rect.topleft-=self.scroll  # applying scroll
+        obj_rect.topleft -= self.scroll  # applying scroll
 
         # apply a few modifications from the original player's rect to fit better to the collision system
-        if type(moving_object) is Player: 
+        if type(moving_object) is Player:
             obj_rect.topleft -= pg.Vector2(15, -70)
             obj_rect.w -= 70
             obj_rect.h -= 115
@@ -131,7 +133,7 @@ class GameState:
         if hasattr(col_obj, "d_collision"):
             col_rect.topleft += pg.Vector2(*col_obj.d_collision[:2])
             col_rect.size = col_obj.d_collision[2:]
-  
+
         # pg.draw.rect(self.screen, (0, 255, 0), col_rect, 1)   ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
 
         # colliding points
@@ -142,11 +144,11 @@ class GameState:
             # pg.draw.circle(self.screen, (0, 255, 255), point, 5)   ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
             if col_rect.collidepoint(point):
                 changed = True
-                moving_object.move_ability[side] = False 
+                moving_object.move_ability[side] = False
         if not changed:
             moving_object.move_ability[side] = True  # if no change have been done, resets the value
         if not moving_object.move_ability[side]:
-            return "kill"  
+            return "kill"
             # -> tell the "parent script" to break the loop because a collision has already occured on this side
 
     def collision_system(self, obj_moving, objects_to_collide):
@@ -165,7 +167,8 @@ class GameState:
     def update(self, camera, dt):
 
         # update the game values
-        self.player.rooms_objects = self.objects 
+        self.player.rooms_objects = self.objects
+        self.player.base_vel = copy(self._PLAYER_VEL)
         self.dt = dt
 
         """world_rect = self.world.get_rect()
@@ -177,27 +180,42 @@ class GameState:
             ), 
             -camera.offset.xy
         )"""
-        self.screen.blit(self.world, -camera.offset.xy-self.offset_map)
-        
+        self.screen.blit(self.world, -camera.offset.xy - self.offset_map)
+
         self.scroll = camera.offset.xy
 
         all_objects = []
+        to_remove = []
         for obj_ in self.objects:
             if type(obj_) is not pg.Rect:
                 if hasattr(obj_, 'custom_center'):
-                    obj_.centery = obj_.rect.y+obj_.custom_center
+                    obj_.centery = obj_.rect.y + obj_.custom_center
                 else:
                     obj_.centery = obj_.rect.centery
                     if hasattr(obj_, "sort"):
                         if not obj_.sort:
                             obj_.centery = 0
                 all_objects.append(obj_)
+        for obj_2 in self.death_anim_manager.animations:
+            obj_2.centery = obj_2.rect.centery
+        all_objects.extend(self.death_anim_manager.animations)
         all_objects.append(self.player)
         self.player.centery = self.player.rect.centery
         for obj in sorted(all_objects, key=attrgetter('centery')):
             obj.update(*[getattr(self, arg)
-                for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
-            )
+                         for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
+                       )
+
+            if hasattr(obj, "IDENTITY"):
+                if obj.IDENTITY == "ENEMY":
+                    if obj.dead:
+                        to_remove.append(obj)
+                        scale = 1 if not hasattr(obj, "scale") else obj.scale
+                        self.death_anim_manager.input_death_animation(obj.current_sprite, obj.rect.topleft+self.scroll, scale)
+
+        for removing in to_remove:
+            self.objects.remove(removing)
+            del removing
 
         """ Collision Algorithm and Entity Updater """
         for obj in self.objects:
@@ -220,7 +238,7 @@ class GameState:
                             if not obj_.collidable:
                                 objects.remove(obj_)
                 self.collision_system(obj, objects)  # handle collisions
-        
+
         # handle collisions for the player
         objects = copy(self.objects)
         for obj_ in copy(objects):
@@ -232,10 +250,10 @@ class GameState:
 
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
-            
+
             exit_rect = pg.Rect(exit_rect[0].x, exit_rect[0].y, *exit_rect[0].size), exit_rect[1]
             itr_box = p.Rect(
-                *(self.player.rect.topleft-pg.Vector2(17, -45)),
+                *(self.player.rect.topleft - pg.Vector2(17, -45)),
                 self.player.rect.w // 2, self.player.rect.h // 2
             )
 
@@ -251,10 +269,10 @@ class GameState:
                         self.player.npc_text = ''
                         return exit_state
 
+
 class PlayerRoom(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
-
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
 
         self.objects = [
@@ -276,17 +294,17 @@ class PlayerRoom(GameState):
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
 
         self.exit_rects = {
-            "kitchen": (pg.Rect(1008,148,156,132), "Go down?")
+            "kitchen": (pg.Rect(1008, 148, 156, 132), "Go down?")
         }
 
         self.spawn = {
-            "kitchen": (self.exit_rects["kitchen"][0].bottomleft+pg.Vector2(0, 50))
+            "kitchen": (self.exit_rects["kitchen"][0].bottomleft + pg.Vector2(0, 50))
         }
 
         self.camera_script = [
             {
-                "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20), 
-                "duration": 0, 
+                "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
+                "duration": 0,
                 "text": f"Hello Player. Welcome to John's Adventure.",
                 "waiting_end": 4000,
             },
@@ -297,7 +315,7 @@ class PlayerRoom(GameState):
                 "text": "Your quest is waiting for you downstairs."
             },
             {
-                "pos": (self.screen.get_width()//2-120, self.screen.get_height()//2-20),
+                "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
                 "duration": 750,
                 "waiting_end": 250,
                 "next_cam_status": "follow"
@@ -307,8 +325,7 @@ class PlayerRoom(GameState):
 
 class Kitchen(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
-
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
 
         # Kitchen background
@@ -341,15 +358,15 @@ class Kitchen(GameState):
 
 
 class JohnsGarden(GameState):
-
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
+        self._PLAYER_VEL = 10
 
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \
-            open(resource_path("data/database/open_world.json")) as infos:
+                open(resource_path("data/database/open_world.json")) as infos:
             self.positions, self.sprite_info = json.load(pos), json.load(infos)
         self.get_scale = lambda name: self.sprite_info[name]["sc"]  # func to get the scale of a sprite
 
@@ -364,11 +381,11 @@ class JohnsGarden(GameState):
         mano_sc = self.get_scale("manos_hut")
 
         # horizontal road width
-        hr_r_width = self.sprite_info["hori_road"]["w"]*self.sprite_info["hori_road"]["sc"]
+        hr_r_width = self.sprite_info["hori_road"]["w"] * self.sprite_info["hori_road"]["sc"]
         hhr_r_width = self.sprite_info["hori_road_half"]["w"] * self.sprite_info["hori_road_half"]["sc"]
         hr_s_width = self.sprite_info["hori_sides"]["w"] * self.sprite_info["hori_sides"]["sc"]
         hr_s_height = self.sprite_info["hori_sides"]["h"] * self.sprite_info["hori_sides"]["sc"]
-        vr_r_height = self.sprite_info["ver_road"]["h"]*self.sprite_info["ver_road"]["sc"]
+        vr_r_height = self.sprite_info["ver_road"]["h"] * self.sprite_info["ver_road"]["sc"]
 
         self.objects = [
             self.prop_objects["box"]((200, 1200)),
@@ -380,7 +397,7 @@ class JohnsGarden(GameState):
             self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 30, jh_pos[1] * 3 + 300)),
             # All the objects contained in open_world_pos.json
             *[self.prop_objects[object_](
-                (pos[0]*self.get_scale(object_),pos[1]*self.get_scale(object_)))
+                (pos[0] * self.get_scale(object_), pos[1] * self.get_scale(object_)))
                 for object_, pos_ in self.positions.items()
                 for pos in pos_
             ],
@@ -414,14 +431,15 @@ class JohnsGarden(GameState):
                                         (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height),
                              n_road=3, type_r="ver_road"),
             *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33*3),
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33 * 3),
                              n_road=5, type_r="hori_road", start_type="hori_turn", end_type="Vhori_end"),
         ]
 
         self.exit_rects = {
-            "kitchen": (pg.Rect((jh_pos[0]+846-728)*jh_sc, (jh_pos[1]+341-82)*jh_sc, 100, 60) , "Go back to your house?"),
+            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc, (jh_pos[1] + 341 - 82) * jh_sc, 100, 60),
+                        "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof)
-            "manos_hut": (pg.Rect((mano_pos[0]+568-428)*mano_sc, (mano_pos[1]+337-43)*mano_sc, 100, 50),
+            "manos_hut": (pg.Rect((mano_pos[0] + 568 - 428) * mano_sc, (mano_pos[1] + 337 - 43) * mano_sc, 100, 50),
                           "Enter Mano's hut ?")
         }
         self.spawn = {
@@ -429,14 +447,14 @@ class JohnsGarden(GameState):
             "manos_hut": self.exit_rects["manos_hut"][0].bottomleft
         }
 
-    def build_road(self, start_pos:tuple[int, int], n_road:int, type_r:str="",
-                   start_type:str="", end_type:str="", types:list=[]):
+    def build_road(self, start_pos: tuple[int, int], n_road: int, type_r: str = "",
+                   start_type: str = "", end_type: str = "", types: list = []):
         roads = []
         current_pos = list(start_pos)
         default = type_r if type_r != "" else "ver_road"
         if types == []:
             for i in range(n_road):
-                if end_type != "" and i == n_road-1:
+                if end_type != "" and i == n_road - 1:
                     road = end_type
                 elif start_type != "" and i == 0:
                     road = start_type
@@ -461,7 +479,7 @@ class JohnsGarden(GameState):
 
     def get_new_road_object(self, name, pos):
         direction = "H" if "hori" in name else "V"  # get the direction
-        flip = {"H":"H" in name, "V":"V" in name}  # determine the axis to flip
+        flip = {"H": "H" in name, "V": "V" in name}  # determine the axis to flip
         if flip["V"] and flip["H"]:
             name = name[2:]  # removing the useless letters to avoid KeyError
         elif flip["V"] and not flip["H"] or flip["H"] and not flip["V"]:
@@ -483,14 +501,13 @@ class JohnsGarden(GameState):
 
 class ManosHut(GameState):
 
-    def __init__(self, DISPLAY:pg.Surface, player_instance, prop_objects):
-
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))
-        sc_x = 1280/453
-        sc_y = 720/271
+        sc_x = 1280 / 453
+        sc_y = 720 / 271
         self.objects = [
             # Wall borders
             Rect(0, 0, 10, 720),  # Left
@@ -498,16 +515,16 @@ class ManosHut(GameState):
             Rect(0, 0, 1280, 133),  # Up
             Rect(0, 711, 1280, 9),  # Down
             # Furnitures
-            self.prop_objects["m_hut_bed"]((381*sc_x, 47*sc_y)),
-            self.prop_objects["m_hut_sofa"]((97*sc_x, 88*sc_y)),
-            self.prop_objects["m_hut_table"]((163*sc_x, 37*sc_y)),
-            self.prop_objects["m_hut_fireplace"]((5*sc_x, (193-236)*sc_y))
+            self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
+            self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
+            self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
+            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y))
         ]
 
         self.spawn = {
-            "johns_garden": (1280//2, 720//2)
+            "johns_garden": (1280 // 2, 720 // 2)
         }
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(1280 // 2, 720*3//4, 150, 150), "Go back to open world ?")
+            "johns_garden": (pg.Rect(1280 // 2, 720 * 3 // 4, 150, 150), "Go back to open world ?")
         }

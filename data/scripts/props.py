@@ -4,12 +4,12 @@ from .backend import UI_Spritesheet
 from .particle_system import PARTICLE_EFFECTS
 import json
 
-
 DATA_PATH = resource_path("data/database/open_world.json")
 with open(DATA_PATH) as datas:
     DATAS = json.load(datas)
-COORDS  = {name: [DATAS[name]["x"], DATAS[name]["y"], DATAS[name]["w"],
-                  DATAS[name]["h"], DATAS[name]["sc"], DATAS[name]["it"]] for name in DATAS}
+COORDS = {name: [DATAS[name]["x"], DATAS[name]["y"], DATAS[name]["w"],
+                 DATAS[name]["h"], DATAS[name]["sc"], DATAS[name]["it"]] for name in DATAS}
+
 
 class PropGetter:
 
@@ -35,9 +35,9 @@ class PropGetter:
         datas = DATAS[name]
         custom_rect = datas["crect"] if "crect" in datas else [0, 0, 0, 0]
         for i in range(len(custom_rect)):
-            custom_rect[i]*=self.get_scale(name)
+            custom_rect[i] *= self.get_scale(name)
 
-        custom_center = datas["ccty"]*self.get_scale(name) if "ccty" in DATAS[name] else None
+        custom_center = datas["ccty"] * self.get_scale(name) if "ccty" in DATAS[name] else None
         collide = datas["col"] if "col" in datas else True
         sort = datas["sort"] if "sort" in datas else True
         particle = None
@@ -52,7 +52,6 @@ class PropGetter:
                     final_args = args[1:]
                 particle = PARTICLE_EFFECTS[args[0]](*(final_args))
 
-
         return lambda pos: SimplePropObject(name,
                                             pos,
                                             custom_rect,
@@ -63,23 +62,26 @@ class PropGetter:
 
 
 class Prop:
-
     """Motionless thing like tree, chest, fences..."""
 
     def __init__(self,
                  pos: pg.Vector2,
-                 image_path:str="",
-                 sprite_sheet:str="",
-                 idle_coord:tuple=None,
-                 interaction:bool=False,
-                 interaction_direction:str="",
-                 interaction_rect_size:tuple[int,int]=(100,100),
-                 interaction_animation_coord:tuple=None,
-                 type_of_interaction:str="unique",  # unique or several
-                 collision:bool=True,
-                 custom_collide_rect:list=None,
-                 custom_center=None
+                 image_path: str = "",
+                 sprite_sheet: str = "",
+                 idle_coord: tuple = None,
+                 interaction: bool = False,
+                 interaction_direction: str = "",
+                 interaction_rect_size: tuple[int, int] = (100, 100),
+                 interaction_animation_coord: tuple = None,
+                 type_of_interaction: str = "unique",  # unique or several
+                 collision: bool = True,
+                 custom_collide_rect: list = None,
+                 custom_center=None,
+                 status: str = "static"
                  ):
+
+        # either "static" or "breakable"
+        self.status = status
 
         # Take spritesheet location data (Will be used soon)
         with open(resource_path('data/database/open_world.json')) as f:
@@ -117,13 +119,17 @@ class Prop:
             self.interaction_direction = interaction_direction
             match interaction_direction:
                 case "left":
-                    self.interaction_rect = pg.Rect(self.rect.x-self.it_re_size[0], self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.x - self.it_re_size[0],
+                                                    self.rect.centery - self.it_re_size[1] // 2, *self.it_re_size)
                 case "right":
-                    self.interaction_rect = pg.Rect(self.rect.right, self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.right, self.rect.centery - self.it_re_size[1] // 2,
+                                                    *self.it_re_size)
                 case "up":
-                    self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.y-self.it_re_size[1], *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.centerx - self.it_re_size[0] // 2,
+                                                    self.rect.y - self.it_re_size[1], *self.it_re_size)
                 case "down":
-                    self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.bottom, *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.centerx - self.it_re_size[0] // 2, self.rect.bottom,
+                                                    *self.it_re_size)
 
         # ------------------- ANIMATION ------------------------------
         self.anim_manager = {
@@ -147,14 +153,18 @@ class Prop:
         if self.interaction:
             match self.interaction_direction:
                 case "left":
-                    self.interaction_rect = pg.Rect(self.rect.x-self.it_re_size[0], self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.x - self.it_re_size[0],
+                                                    self.rect.centery - self.it_re_size[1] // 2, *self.it_re_size)
                 case "right":
-                    self.interaction_rect = pg.Rect(self.rect.right, self.rect.centery-self.it_re_size[1]//2, *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.right, self.rect.centery - self.it_re_size[1] // 2,
+                                                    *self.it_re_size)
                 case "up":
-                    self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.y-self.it_re_size[1], *self.it_re_size)
+                    self.interaction_rect = pg.Rect(self.rect.centerx - self.it_re_size[0] // 2,
+                                                    self.rect.y - self.it_re_size[1], *self.it_re_size)
                 case "down":
-                    self.interaction_rect = pg.Rect(self.rect.centerx-self.it_re_size[0]//2, self.rect.bottom, *self.it_re_size)
-            self.interaction_rect.topleft-=scroll
+                    self.interaction_rect = pg.Rect(self.rect.centerx - self.it_re_size[0] // 2, self.rect.bottom,
+                                                    *self.it_re_size)
+            self.interaction_rect.topleft -= scroll
 
     def on_interaction(self, player_instance=None):
 
@@ -204,14 +214,18 @@ class Prop:
         if not self.static_image:
             self.animate()
         self.update_interaction_rect(scroll)
-        screen.blit(self.current_frame, (self.rect.topleft-scroll))
+        screen.blit(self.current_frame, (self.rect.topleft - scroll))
 
     def load_from_spritesheet(self, coords):
         if coords == [0, 0, 0, 0, 0, 0] or coords is None:
             return None
         if coords[-1] == "flip":
-            return [flip_vertical(scale(get_sprite(self.sprite_sheet, coords[0]+coords[2]*i, coords[1], coords[2], coords[3]), coords[4])) for i in range(coords[5])]
-        return [scale(get_sprite(self.sprite_sheet, coords[0]+coords[2]*i, coords[1], coords[2], coords[3]), coords[4]) for i in range(coords[5])]
+            return [flip_vertical(
+                scale(get_sprite(self.sprite_sheet, coords[0] + coords[2] * i, coords[1], coords[2], coords[3]),
+                      coords[4])) for i in range(coords[5])]
+        return [
+            scale(get_sprite(self.sprite_sheet, coords[0] + coords[2] * i, coords[1], coords[2], coords[3]), coords[4])
+            for i in range(coords[5])]
 
 
 class Chest(Prop):
@@ -238,7 +252,9 @@ class Chest(Prop):
         self.rewarded = False
 
         # ------------ ANIMATION ----------------
-        self.UI_button = [scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i,31,40,14) ,2) for i in range(2)]
+        self.UI_button = [
+            scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i, 31, 40, 14), 2) for i in
+            range(2)]
         self.id_button = 0
         self.delay_button = 0
 
@@ -251,37 +267,41 @@ class Chest(Prop):
 
         self.coin = l_path("data/sprites/items/coin1.png", alpha=True)
         self.ui = UI_Spritesheet('data/ui/UI_spritesheet.png')
-        self.item_bg = scale(self.ui.parse_sprite('reward.png'),3)
+        self.item_bg = scale(self.ui.parse_sprite('reward.png'), 3)
         self.new = self.font.render("NEW !", True, (255, 255, 0))
 
-        self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255,255,255))
+        self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255, 255, 255))
 
     def animate_new_items(self, screen, scroll):
 
         if self.has_interacted:
 
-            if pg.time.get_ticks()-self.delay_dy>20 and self.dy <= self.dy_max:
+            if pg.time.get_ticks() - self.delay_dy > 20 and self.dy <= self.dy_max:
                 self.delay_dy = pg.time.get_ticks()
                 self.dy += 1
 
             # gets a real rect for the player
-            r = pg.Rect(*self.player.rect.topleft-scroll-pg.Vector2(48, 70), *self.player.rect.size)
-            dep_x = r.centerx - (len(self.rewards)*2-1)*self.item_bg.get_width()//2
+            r = pg.Rect(*self.player.rect.topleft - scroll - pg.Vector2(48, 70), *self.player.rect.size)
+            dep_x = r.centerx - (len(self.rewards) * 2 - 1) * self.item_bg.get_width() // 2
             for i, key in enumerate(self.rewards):
-                pos = (dep_x+(2*i)*(self.item_bg.get_width()), r.y-self.dy)
+                pos = (dep_x + (2 * i) * (self.item_bg.get_width()), r.y - self.dy)
                 screen.blit(self.item_bg, pos)  # blit a background image
 
-                if self.rewards[key].__class__.__name__ not in [item.__class__.__name__ for item in self.player.inventory.items] and key != "coins":  # show up a new item
-                    screen.blit(self.new, self.new.get_rect(topleft=(pos+pg.Vector2(0, self.item_bg.get_height()))))
+                if self.rewards[key].__class__.__name__ not in [item.__class__.__name__ for item in
+                                                                self.player.inventory.items] and key != "coins":  # show up a new item
+                    screen.blit(self.new, self.new.get_rect(topleft=(pos + pg.Vector2(0, self.item_bg.get_height()))))
 
                 if key == "coins":  # shows a special display if it's coin ("coin_log"+"n_coins")
                     # Coin Image
-                    screen.blit(self.coin, self.coin.get_rect(x=pos[0]+self.coin_txt.get_width()//2, centery=pos[1]+self.item_bg.get_height()//3))
+                    screen.blit(self.coin, self.coin.get_rect(x=pos[0] + self.coin_txt.get_width() // 2,
+                                                              centery=pos[1] + self.item_bg.get_height() // 3))
 
                     # Coin Text
-                    screen.blit(self.coin_txt, self.coin_txt.get_rect(x=pos[0] + self.coin_txt.get_width()//2, centery= pos[1] + 33))
+                    screen.blit(self.coin_txt,
+                                self.coin_txt.get_rect(x=pos[0] + self.coin_txt.get_width() // 2, centery=pos[1] + 33))
                 else:  # shows tje icon of the item
-                    screen.blit(self.rewards[key].icon, self.rewards[key].icon.get_rect(center=pg.Rect(*pos, *self.item_bg.get_size()).center))
+                    screen.blit(self.rewards[key].icon,
+                                self.rewards[key].icon.get_rect(center=pg.Rect(*pos, *self.item_bg.get_size()).center))
 
             if pg.time.get_ticks() - self.interaction_time > 4000:  # after x seconds, end the animation
                 self.animation_ended = True
@@ -297,16 +317,18 @@ class Chest(Prop):
 
     def update_popup_button(self, screen, scroll):
         position = (self.player.rect.topleft - scroll)
-        itr_box = pg.Rect(*position, self.player.rect.w//2, self.player.rect.h//2)
+        itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)
 
         if self.interaction_rect.colliderect(itr_box) and not self.has_interacted:
             if pg.time.get_ticks() - self.delay_button > 500:
                 self.id_button = (self.id_button + 1) % len(self.UI_button)
                 self.delay_button = pg.time.get_ticks()
 
-            screen.blit(self.UI_button[self.id_button], self.UI_button[self.id_button].get_rect(center=self.rect.center-scroll-pg.Vector2(0, 75)))
+            screen.blit(self.UI_button[self.id_button],
+                        self.UI_button[self.id_button].get_rect(center=self.rect.center - scroll - pg.Vector2(0, 75)))
             txt = self.font2.render(pg.key.name(self.player.data["controls"]["interact"]), True, (255, 255, 255))
-            screen.blit(txt, txt.get_rect(center=self.UI_button[self.id_button].get_rect(center=self.rect.center-scroll-pg.Vector2(0, 78-((self.id_button)*2))).center))
+            screen.blit(txt, txt.get_rect(center=self.UI_button[self.id_button].get_rect(
+                center=self.rect.center - scroll - pg.Vector2(0, 78 - ((self.id_button) * 2))).center))
 
     def update(self, screen, scroll, player):
         self.player = player
@@ -316,7 +338,7 @@ class Chest(Prop):
         self.update_popup_button(screen, scroll)
 
         # Debug interact rect
-        #pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
+        # pg.draw.rect(screen, (0, 255, 255), self.interaction_rect, 1)
 
         if not self.animation_ended and self.has_interacted:
             self.animate_new_items(screen, scroll)

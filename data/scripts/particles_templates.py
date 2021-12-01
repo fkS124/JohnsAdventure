@@ -1,5 +1,6 @@
 import pygame as pg
 
+
 class ParticleManager:
 
     def __init__(self, player):
@@ -36,6 +37,7 @@ class ParticleManager:
         for removing in to_remove:
             self.particles.remove(removing)
 
+
 class Particle:
 
     def __init__(self, image, pos, last_time, camera):
@@ -47,7 +49,6 @@ class Particle:
         self.camera = camera
 
     def behavior(self):
-
         """
         Basically defines the movements of the particle, if it goes diagonally or just randomly...
         """
@@ -55,7 +56,6 @@ class Particle:
         pass
 
     def logic(self):
-
         """
         Core part of the particle : you defines when it moves, color changes, size changes, etc
         """
@@ -64,5 +64,5 @@ class Particle:
 
     def render(self, screen):
         self.logic()
-        screen.blit(self.image, self.rect.topleft-self.camera.offset.xy)
+        screen.blit(self.image, self.rect.topleft - self.camera.offset.xy)
         return "kill" if pg.time.get_ticks() - self.begin_time > self.last_time else None

@@ -7,13 +7,13 @@ from .utils import scale
 
 class DustManager(ParticleManager):
 
-    def __init__(self, intensity:int, player_instance, display):
+    def __init__(self, intensity: int, player_instance, display):
         super(DustManager, self).__init__(player_instance)
         self.particle_object = DustParticle
         self.player = player_instance
         self.display = display
         self.color = [255, 255, 255]
-        self.size = (intensity//2, intensity//2)
+        self.size = (intensity // 2, intensity // 2)
 
         self.last_player_pos = copy(self.player.rect.midbottom)
 
@@ -55,10 +55,11 @@ class DustManager(ParticleManager):
                 for i in range(1):
                     self.add_particles(
                         self.size,
-                        (pl_rect.centerx+(randint(min(val[0]), max(val[0]))), pl_rect.bottom-randint(min(val[1]), max(val[1]))),
+                        (pl_rect.centerx + (randint(min(val[0]), max(val[0]))),
+                         pl_rect.bottom - randint(min(val[1]), max(val[1]))),
                         self.darker(self.display.get_at(
-                            (int(self.last_player_pos[0]-self.player.camera.offset.x),
-                             int(self.last_player_pos[1]+1-self.player.camera.offset.y))
+                            (int(self.last_player_pos[0] - self.player.camera.offset.x),
+                             int(self.last_player_pos[1] + 1 - self.player.camera.offset.y))
                         ), 20),
                         400
                     )
@@ -67,9 +68,10 @@ class DustManager(ParticleManager):
             return True
         return False
 
+
 class DustParticle(Particle):
 
-    def __init__(self, size:tuple[int,int], pos:pg.Vector2, color:tuple[int,int,int], last_time, camera):
+    def __init__(self, size: tuple[int, int], pos: pg.Vector2, color: tuple[int, int, int], last_time, camera):
         super().__init__(
             image=pg.Surface(size),
             pos=pos,
@@ -80,7 +82,7 @@ class DustParticle(Particle):
         self.dy = 1
 
     def behavior(self):
-        if pg.time.get_ticks()-self.begin_time<self.last_time//2:
+        if pg.time.get_ticks() - self.begin_time < self.last_time // 2:
             self.rect.y -= self.dy
         else:
             self.rect.y += self.dy
@@ -104,7 +106,8 @@ class SmokeManager(ParticleManager):
         self.last_len = len(self.particles)
         for i in range(4):
             rad = int(gauss(*self.size))
-            self.add_particles(rad, pg.Vector2(pos)-pg.Vector2(20, rad*1.5), choice(self.colors), self.height, randint(*self.duration))
+            self.add_particles(rad, pg.Vector2(pos) - pg.Vector2(20, rad * 1.5), choice(self.colors), self.height,
+                               randint(*self.duration))
 
     def trigger_check(self) -> bool:
         if self.last_len != len(self.particles):
@@ -115,22 +118,23 @@ class SmokeManager(ParticleManager):
 
         if self.trigger_check():
             rad = int(gauss(*self.size))
-            self.add_particles(rad, pg.Vector2(self.pos) - pg.Vector2(35, rad*1.3), choice(self.colors), self.height,
+            self.add_particles(rad, pg.Vector2(self.pos) - pg.Vector2(35, rad * 1.3), choice(self.colors), self.height,
                                randint(*self.duration))
 
         return True
 
+
 class SmokeParticle(Particle):
 
-    def __init__(self, radius:int, pos:pg.Vector2, color:tuple[int,int,int], max_height:int, last_time, camera):
+    def __init__(self, radius: int, pos: pg.Vector2, color: tuple[int, int, int], max_height: int, last_time, camera):
         super().__init__(
-            image=pg.Surface((radius//2, radius//2), pg.SRCALPHA),
+            image=pg.Surface((radius // 2, radius // 2), pg.SRCALPHA),
             pos=pos,
             last_time=last_time,
             camera=camera
         )
         self.dep_pos = pos
-        pg.draw.circle(self.image, color, (radius//4, radius//4), radius//4)
+        pg.draw.circle(self.image, color, (radius // 4, radius // 4), radius // 4)
         self.image = scale(self.image, 4.5)
         self.image.set_alpha(180)
         self.dx = 1
@@ -141,7 +145,7 @@ class SmokeParticle(Particle):
 
     def behavior(self):
         self.rect.y -= self.dy
-        self.image.set_alpha(180-((pg.time.get_ticks()-self.begin_time)/self.last_time)*180)
+        self.image.set_alpha(180 - ((pg.time.get_ticks() - self.begin_time) / self.last_time) * 180)
         if pg.time.get_ticks() - self.delay > 200:
             self.l = not self.l
             self.delay = pg.time.get_ticks()
@@ -155,6 +159,7 @@ class SmokeParticle(Particle):
         if pg.Vector2(self.pos).distance_to(pg.Vector2(self.dep_pos)) > self.max_height:
             return "kill"
         return update
+
 
 PARTICLE_EFFECTS = {
     "smoke": SmokeManager,
