@@ -14,6 +14,10 @@
   "tree": {"x":244, "y":418, "w":66, "h":78, "it":  1, "sc": 5, "crect":  [23, 40, 20, 38], "ccty": 75},
   "grass": {"x":123, "y":415, "w":31, "h":29, "it": 1, "sc": 3, "col": false, "sort": false},
   "bush": {"x":130, "y": 454, "w": 13, "h": 15, "it": 1, "sc": 3, "sort": false},
+  "street_lamp": {"x": 105, "y": 75, "w": 63, "h": 76, "it": 1, "sc": 3, "crect": [25, 50, 15, 25], "ccty": 50,
+    "add_args": {"light_sources": [{"pos":  [11, 16], "radius": 80, "opacity": 255, "color": [255, 255, 51]},
+                                   {"pos":  [56, 16], "radius": 80, "opacity": 255, "color": [255, 255, 51]}]
+    }},
 
   "box": {"x":187, "y":421, "w":38, "h":45, "it":  1, "sc": 3},
 
