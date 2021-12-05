@@ -41,7 +41,7 @@ if __name__ == '__main__':
                 raise SystemExit
 
         screen.fill((0, 0, 0))
-        screen.blit(font.render("Loading you sussy baka...", True, (0, 255, 0)), (0, 0))
+        # screen.blit(font.render("Loading you sussy baka...", True, (0, 255, 0)), (0, 0))
 
         # TODO : MAKE IT LOOK BETTER
 

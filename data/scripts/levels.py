@@ -372,7 +372,7 @@ class JohnsGarden(GameState):
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="night")
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="day")
         self._PLAYER_VEL = 10
 
         # Get the positions and the sprites' informations from the json files
@@ -412,7 +412,8 @@ class JohnsGarden(GameState):
                 for object_, pos_ in self.positions.items()
                 for pos in pos_
             ],
-            self.prop_objects["street_lamp"]((323*3+400, 888*3+800)),
+            self.prop_objects["street_lamp"]((323 * 3 + 900, 888 * 3 + 800)),
+            self.prop_objects["street_lamp"]((323 * 3 - 300, 888 * 3 + 800)),
             # Mano's hut custom collisions
             pg.Rect(mano_pos[0] * mano_sc, (mano_pos[1] + 292) * mano_sc, 41 * mano_sc, 35 * mano_sc),
             pg.Rect((mano_pos[0] + 31) * mano_sc, (mano_pos[1] + 292) * mano_sc, 11 * mano_sc, 52 * mano_sc),
@@ -447,6 +448,8 @@ class JohnsGarden(GameState):
                              n_road=5, type_r="hori_road", start_type="hori_turn", end_type="Vhori_end"),
             *self.generate_chunk("tree", jh_pos[0]*jh_sc-900, jh_pos[1]*jh_sc+1300, 10, 19, 420, 300, randomize=60),
             *self.generate_chunk("grass", jh_pos[0]*jh_sc-1000, jh_pos[1]*jh_sc+1400, 12, 27, 100*3, 80*3, randomize=50),
+            *self.generate_chunk("tree", jh_pos[0]*jh_sc+1250, jh_pos[1]*jh_sc, 3, 8, 100*4, 100*3, randomize=40),
+            *self.generate_chunk("grass", jh_pos[0]*jh_sc+1250, jh_pos[1]*jh_sc, 6, 18, 100*2, 100*2, randomize=40)
         ]
 
         self.exit_rects = {
@@ -515,14 +518,14 @@ class JohnsGarden(GameState):
         return road_obj
 
     def update(self, camera, dt):
-        pg.draw.rect(self.screen, [0, 100, 0], [0, 0, self.W, self.H])
+        pg.draw.rect(self.screen, [60, 128, 0], [0, 0, self.W, self.H])
         return super().update(camera, dt)
 
 
 class ManosHut(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects)
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_dark")
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))

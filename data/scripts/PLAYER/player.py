@@ -603,14 +603,14 @@ class Player:
 
         self.update_attack(pos)
 
-        if not self.attacking and not self.dashing:
+        if not self.attacking and not self.dashing :
             angle = math.atan2(
                 m[1] - (self.rect.top + 95 - self.camera.offset.y),
                 m[0] - (self.rect.left + 10 - self.camera.offset.x),
             )
             angle = abs(math.degrees(angle)) if angle < 0 else 360 - math.degrees(angle)
 
-            if self.camera_status != "auto":
+            if self.camera_status != "auto" and not self.inventory.show_menu and not self.upgrade_station.show_menu:
                 if 135 >= angle > 45:
                     self.set_looking("up", pos)
                 elif 225 >= angle > 135:
