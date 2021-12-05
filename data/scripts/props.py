@@ -3,7 +3,8 @@ from .utils import *
 from .backend import UI_Spritesheet
 from .particle_system import PARTICLE_EFFECTS
 import json
-from .POSTPROCESSING.lights_manager import LightSource
+from .POSTPROCESSING.lights_manager import LightTypes
+
 
 DATA_PATH = resource_path("data/database/open_world.json")
 with open(DATA_PATH) as datas:
@@ -43,6 +44,7 @@ class PropGetter:
         sort = datas["sort"] if "sort" in datas else True
         particle = None
         light_sources = []
+        light_types = LightTypes()
         if "add_args" in datas:
             if "particle" in datas["add_args"]:
                 p_data = datas["add_args"]["particle"]
@@ -54,12 +56,14 @@ class PropGetter:
                     final_args = args[1:]
                 particle = PARTICLE_EFFECTS[args[0]](*(final_args))
 
-            if "light_sources" in datas["add_args"]:
-                l_sources = datas["add_args"]["light_sources"]
-                light_sources = [LightSource(
-                    pg.Vector2(light["pos"][0]*self.get_scale(name), light["pos"][1]*self.get_scale(name)),
-                    light["radius"] * self.get_scale(name), light["opacity"], light["color"])
-                    for light in l_sources]
+            for l_type in light_types.light_types:
+                if l_type in datas["add_args"]:
+                    light_sources.extend(
+                        [
+                            {"type": l_type, "info": info, "scale": self.get_scale(name)}
+                            for info in datas["add_args"][l_type]
+                        ]
+                    )
 
         return lambda pos: SimplePropObject(name,
                                             pos,
@@ -380,8 +384,11 @@ class SimplePropObject(Prop):
         if particle is not None:
             self.particle_effect.pos[0] = self.particle_effect.pos[0] * 3 + self.rect.x
             self.particle_effect.pos[1] = self.particle_effect.pos[1] * 3 + self.rect.y
-        self.light_sources = light_sources
-        for l_source in light_sources:
+        self.light_sources = [
+            LightTypes().get_light_object(light["type"], light["info"], light["scale"])
+            for light in light_sources
+        ]
+        for l_source in self.light_sources:
             l_source.pos += pg.Vector2(self.rect.topleft)
 
     def update(self, screen, scroll):

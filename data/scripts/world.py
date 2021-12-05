@@ -41,7 +41,7 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
    
-    DISPLAY = pg.display.set_mode((1280, 720), flags=pg.SRCALPHA) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+    DISPLAY = pg.display.set_mode((1280, 720), flags=pg.SCALED) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()

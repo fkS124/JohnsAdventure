@@ -5,7 +5,12 @@
     "add_args":  {"particle":  {"name":  "smoke", "pos":  [80, 122], "size":  [25, 2], "player": "player"}
   }},
   "m_hut_bed":{"x":307, "y":528, "w":66, "h":122, "it":  1, "sc": 3},
-  "m_hut_fireplace":{"x":91, "y": 534, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144},
+  "m_hut_fireplace":{"x":91, "y": 534, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144,
+    "add_args": {
+      "polygon_light": [{"pos": [42, 179], "height": 55, "radius": 60, "dep_angle": 45, "end_angle": -45,
+        "color": [207, 112, 23], "dep_alpha": 180
+      }]
+  }},
   "m_hut_table":{"x":170, "y": 533, "w":126, "h":75, "it":  1, "sc": 3},
   "m_hut_sofa":{"x":170, "y": 612, "w": 52, "h":133, "it":  1, "sc": 3},
 
@@ -14,9 +19,9 @@
   "tree": {"x":244, "y":418, "w":66, "h":78, "it":  1, "sc": 5, "crect":  [23, 40, 20, 38], "ccty": 75},
   "grass": {"x":123, "y":415, "w":31, "h":29, "it": 1, "sc": 3, "col": false, "sort": false},
   "bush": {"x":130, "y": 454, "w": 13, "h": 15, "it": 1, "sc": 3, "sort": false},
-  "street_lamp": {"x": 105, "y": 75, "w": 63, "h": 76, "it": 1, "sc": 3, "crect": [25, 50, 15, 25], "ccty": 50,
-    "add_args": {"light_sources": [{"pos":  [11, 16], "radius": 80, "opacity": 255, "color": [255, 255, 51]},
-                                   {"pos":  [56, 16], "radius": 80, "opacity": 255, "color": [255, 255, 51]}]
+  "street_lamp": {"x": 105, "y": 75, "w": 68, "h": 76, "it": 1, "sc": 3, "crect": [25, 50, 15, 25], "ccty": 50,
+    "add_args": {"light_sources": [{"pos":  [11, 16], "radius": 100, "opacity": 150, "color": [255, 255, 51]},
+                                   {"pos":  [56, 16], "radius": 100, "opacity": 150, "color": [255, 255, 51]}]
     }},
 
   "box": {"x":187, "y":421, "w":38, "h":45, "it":  1, "sc": 3},
@@ -57,5 +62,10 @@
   "ver_turn":{"x": 1080, "y": 212, "w": 34, "h": 33, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_end":{"x":  1116, "y": 212, "w": 34, "h": 31, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_dirt": {"x": 1041, "y": 49, "w": 34, "h": 123, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "ver_sides": {"x": 1044, "y": 212, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false}
+  "ver_sides": {"x": 1044, "y": 212, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "hill_left": {"x":1000, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3},
+
+  "hill_middle": {"x":1216, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3},
+
+  "hill_right": {"x":1002, "y": 592, "w": 158, "h":129, "it": 1, "sc": 3}
 }
