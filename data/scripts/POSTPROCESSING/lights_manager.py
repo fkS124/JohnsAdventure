@@ -46,8 +46,9 @@ class LightManager:
         self.objects = copy(current_level.objects)
 
         # manage lights
-        for light in self.lights:
-            light.update(self.DISPLAY, current_level.scroll, self.main_layer)
+        if self.light_state != "day":
+            for light in self.lights:
+                    light.update(self.DISPLAY, current_level.scroll, self.main_layer)
 
         # blit layer
         self.DISPLAY.blit(self.main_layer, (0, 0))

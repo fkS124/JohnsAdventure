@@ -102,6 +102,24 @@ class GameState:
         self.light_state = light_state
         self.lights_manager = LightManager(self.screen)
 
+    def load_objects(self, filename):
+        # Open file
+        file = open(resource_path(filename), 'r')
+        temp_list = []
+
+        # Sadly we have to manually define everything for eval, unless we find a way to one line it
+        stuff = {
+            'DISPLAY': self.display, 'Rect': Rect, 'npc': npc, 'Dummy': Dummy,
+            'Chest': Chest, 'Training_Sword': Training_Sword
+
+        }
+        for line in file:
+            obj = line.replace('\n', '')
+            temp_list.append(eval(obj, stuff))
+        # Close file for security
+        file.close()
+        return temp_list
+
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
         this function detects the collision between
@@ -219,7 +237,8 @@ class GameState:
                     if obj.dead:
                         to_remove.append(obj)
                         scale = 1 if not hasattr(obj, "scale") else obj.scale
-                        self.death_anim_manager.input_death_animation(obj.current_sprite, obj.rect.topleft+self.scroll, scale)
+                        self.death_anim_manager.input_death_animation(obj.current_sprite,
+                                                                      obj.rect.topleft + self.scroll, scale)
 
         for removing in to_remove:
             self.objects.remove(removing)
@@ -282,32 +301,13 @@ class GameState:
 
 
 class PlayerRoom(GameState):
-
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
-
-        self.objects = [
-            # Wall borders
-            Rect(0, 0, 1280, 133),  # Left
-            Rect(1270, 134, 10, 586),  # Right
-            Rect(0, 0, 1280, 133),  # Up
-            Rect(0, 711, 1280, 9),  # Down
-            # Interactable objects
-            npc.Mau((150, 530), (300, 100)),
-            Dummy(DISPLAY, (1050, 300)),
-            # Colliders
-            Rect(10, 90, 430, 360),
-            Rect(5, 500, 72, 214),
-            Rect(450, 40, 410, 192),
-            Rect(36, 400, 77, 94),
-        ]
-
+        self.objects = super().load_objects('data/database/levels/player_room.txt')
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
-
         self.exit_rects = {
             "kitchen": (pg.Rect(1008, 148, 156, 132), "Go down?")
         }
-
         self.spawn = {
             "kitchen": (self.exit_rects["kitchen"][0].bottomleft + pg.Vector2(0, 50))
         }
@@ -335,33 +335,14 @@ class PlayerRoom(GameState):
 
 
 class Kitchen(GameState):
-
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects)
-
-        # Kitchen background
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
-        self.objects = [
-            # Wall borders
-            Rect(0, 0, 1280, 133),  # Left
-            Rect(1270, 134, 10, 586),  # Right
-            Rect(0, 0, 1280, 133),  # Up
-            Rect(0, 711, 1280, 9),  # Down
-            # Interactable objects
-            npc.Cynthia((570, 220)),
-            Chest((910, 140), {"items": Training_Sword(), "coins": 50}),
-            # Colliders
-            Rect(20, 250, 250, 350),
-            Rect(280, 300, 64, 256),
-            Rect(10, 0, 990, 230),
-            Rect(1020, 440, 256, 200),
-        ]
-
+        self.objects = super().load_objects('data/database/levels/kitchen.txt')
         self.exit_rects = {
             "player_room": (pg.Rect(1054, 68, 138, 119), "Back to your room?"),
             "johns_garden": (pg.Rect(551, 620, 195, 99), "Go outside?")
         }
-
         self.spawn = {
             "player_room": (self.exit_rects["player_room"][0].bottomleft + pg.Vector2(75, 0)),
             "johns_garden": (self.exit_rects["johns_garden"][0].topleft + pg.Vector2(0, -200))
@@ -373,7 +354,7 @@ class JohnsGarden(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, light_state="day")
-        self._PLAYER_VEL = 10
+        self._PLAYER_VEL = 10 * 3  # 3 freq
 
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \
@@ -398,8 +379,9 @@ class JohnsGarden(GameState):
         hr_s_height = self.sprite_info["hori_sides"]["h"] * self.sprite_info["hori_sides"]["sc"]
         vr_r_height = self.sprite_info["ver_road"]["h"] * self.sprite_info["ver_road"]["sc"]
 
+        # Use super().load_objects() , when every model is ready
         self.objects = [
-            self.prop_objects["box"]((200, 1200)),
+            # .prop_objects["box"]((200, 1200)),
             # Fences of john's house (values are calculated for scale = 3 considering this won't change)
             self.prop_objects["full_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
             self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
@@ -423,33 +405,69 @@ class JohnsGarden(GameState):
             pg.Rect((mano_pos[0] + 165) * mano_sc, (mano_pos[1] + 324) * mano_sc, 75 * mano_sc, 4 * mano_sc),
             pg.Rect((mano_pos[0] + 116) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
             pg.Rect((mano_pos[0] + 159) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
-            # Roads
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82) * jh_sc),
-                             n_road=1, start_type="ver_dirt"),
+
+            # Road between mano and john homes
             *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc),
-                             n_road=6, start_type="hori_sides", type_r="hori_road", end_type="hori_road_half"),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width,
+                             n_road=4, type_r="hori_road", end_type="hori_road_half"),
+
+            # john dirt road
+            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82) * jh_sc),
+                             n_road=2, start_type="ver_dirt", end_type="ver_sides"),
+
+            # Manos dirt road
+            *self.build_road(start_pos=((jh_pos[0] - 246) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width,
                                         (jh_pos[1] + 361 - 82) * jh_sc), start_type="ver_dirt", end_type="ver_sides",
                              n_road=2),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
+
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc), n_road=3, type_r="hori_road",
                              end_type="Vhori_sides"),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height), n_road=4,
+
+            # Route 4
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height), n_road=3,
+                             type_r="ver_road", end_type="Vhori_sides"),
+            # Cave Road
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 2 * vr_r_height), n_road=2,
+                             type_r="hori_road"),
+
+            # Route 5 Bottom Right
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 498) * jh_sc + hr_s_height * 18), n_road=2,
                              type_r="ver_road", end_type="Vver_turn"),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 3 * vr_r_height),
+
+
+            # Route 6 Bottom Right
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
+                                        (jh_pos[1] + 361 - 82 + 172 - 50) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
                              n_road=3, type_r="hori_road"),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+
+            # Route 7 -> Top Right
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height),
                              n_road=3, type_r="ver_road"),
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+
+            # Route 8 -> Top right of map
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33 * 3),
-                             n_road=5, type_r="hori_road", start_type="hori_turn", end_type="Vhori_end"),
-            *self.generate_chunk("tree", jh_pos[0]*jh_sc-900, jh_pos[1]*jh_sc+1300, 10, 19, 420, 300, randomize=60),
-            *self.generate_chunk("grass", jh_pos[0]*jh_sc-1000, jh_pos[1]*jh_sc+1400, 12, 27, 100*3, 80*3, randomize=50),
-            *self.generate_chunk("tree", jh_pos[0]*jh_sc+1250, jh_pos[1]*jh_sc, 3, 8, 100*4, 100*3, randomize=40),
-            *self.generate_chunk("grass", jh_pos[0]*jh_sc+1250, jh_pos[1]*jh_sc, 6, 18, 100*2, 100*2, randomize=40)
+                             n_road=4, type_r="hori_road", start_type="hori_turn"),
+
+            # The game without the grass and trees take around 150mb of ram
+            # Currently the trees take +100 mb of ram, so we need to be exact and precise with the numbers
+            # Trees right from john's room
+            *self.generate_chunk("tree", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
+                                 randomize=10),
+
+            # Trees right from manos hut
+            *self.generate_chunk("tree", mano_pos[0] * mano_sc + 950, jh_pos[1] * jh_sc, 3, 3, 100 * 4, 100 * 3,
+                                 randomize=40),
+            # Trees left from manos hut
+            *self.generate_chunk("tree", mano_pos[0] * mano_sc - 750, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
+                                 randomize=10),
+            # Add grass details under those trees
+            *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
+                                 randomize=20)
         ]
 
         self.exit_rects = {
@@ -496,7 +514,8 @@ class JohnsGarden(GameState):
 
     def generate_chunk(self, type_, x, y, row, col, step_x, step_y, randomize=20):
         return [
-            self.prop_objects[type_]((x+c*step_x+int(gauss(0, randomize)), y+r*step_y+int(gauss(0, randomize))))
+            self.prop_objects[type_](
+                (x + c * step_x + int(gauss(0, randomize)), y + r * step_y + int(gauss(0, randomize))))
             for c in range(col) for r in range(row)
         ]
 
@@ -537,6 +556,9 @@ class ManosHut(GameState):
             Rect(1270, 134, 10, 586),  # Right
             Rect(0, 0, 1280, 133),  # Up
             Rect(0, 711, 1280, 9),  # Down
+
+            # Όταν
+            npc.Manos((235 * sc_x, 115 * sc_y), (300, 100)),
             # Furnitures
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
