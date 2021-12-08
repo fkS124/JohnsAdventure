@@ -26,7 +26,6 @@ def main(debug=False, first_state="player_room", no_rect=False):
 
 
 class GameManager:
-
     """
 
     Game class -> handles everything of the game.
@@ -36,16 +35,17 @@ class GameManager:
 
     # FONTS
 
-    pg.mixer.pre_init(44100, 32, 2, 4096) # Frequency, 32 Bit sound, channels, buffer
+    pg.mixer.pre_init(44100, 32, 2, 4096)  # Frequency, 32 Bit sound, channels, buffer
     pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
     pg.mouse.set_visible(False)
     # CONSTS
-   
-    DISPLAY = pg.display.set_mode((1280, 720), flags=pg.SCALED) #| pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+
+    DISPLAY = pg.display.set_mode((1280, 720),
+                                  flags=pg.SCALED)  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
-    
+
     FPS = 35
 
     def __init__(self, debug=False, first_state="player_room", no_rect=False):
@@ -82,11 +82,11 @@ class GameManager:
 
         # ------------- PLAYER ----------------
         self.player = Player(
-        self.DISPLAY, # Screen surface
-        self.font, # Font
-        self.interface,
-        self.ui, # Other UI like Inventory
-        self.menu_manager.save, # controls
+            self.DISPLAY,  # Screen surface
+            self.font,  # Font
+            self.interface,
+            self.ui,  # Other UI like Inventory
+            self.menu_manager.save,  # controls
         )
 
         # ----------- GAME STATE ------------------
@@ -104,7 +104,7 @@ class GameManager:
 
         # first pos of the player (next to his bed)
         if not debug and first_state == "player_room":
-            self.player.rect.topleft = (self.DISPLAY.get_width()//2-120, self.DISPLAY.get_height()//2-20)
+            self.player.rect.topleft = (self.DISPLAY.get_width() // 2 - 120, self.DISPLAY.get_height() // 2 - 20)
 
         # ------------ DEBUG ----------------------
         self.debug = debug
@@ -153,10 +153,7 @@ class GameManager:
 
             ))
             self.pause()
-            try:  # TODO : Remove this try except and fix the error
-                self.player.camera.method.draw()
-            except AttributeError:
-                pass
+            self.player.camera.method.draw()
 
         if self.debug:
             self.debugger.update()
@@ -164,7 +161,7 @@ class GameManager:
         pg.display.update()
 
     def pg_loading_screen(self):
-        while pg.time.get_ticks()<3000:
+        while pg.time.get_ticks() < 3000:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
@@ -175,31 +172,30 @@ class GameManager:
             if pg.time.get_ticks() - self.delay_scaling > 25 and self.start_scale - self.current_scale > 0.75:
                 self.delay_scaling = pg.time.get_ticks()
                 self.current_scale += 0.1
-            
 
             scale_ = self.start_scale - self.current_scale
             img = scale(self.pygame_logo, scale_)
-            self.DISPLAY.blit(img, img.get_rect(center=(self.W//2, self.H//2)))  
+            self.DISPLAY.blit(img, img.get_rect(center=(self.W // 2, self.H // 2)))
 
             if pg.time.get_ticks() - self.start_logo_time > 700:
-                self.DISPLAY.blit(self.font.render("@Copyright Logo by www.pygame.org", True, (0,0,0)), img.get_rect(topleft=(self.W//2 - 320, self.H//2 + 230)))
+                self.DISPLAY.blit(self.font.render("@Copyright Logo by www.pygame.org", True, (0, 0, 0)),
+                                  img.get_rect(topleft=(self.W // 2 - 320, self.H // 2 + 230)))
 
             self.framerate.tick(self.FPS)
             pg.display.update()
 
     def update(self):
-        
-        '''
+
+        """
 
             FOR DEBUGGING MEASURES, ELSE RUN THE GAME NORMAL
-        
-        '''
+
+        """
         if not self.debug:
             self.pg_loading_screen()
         else:
             self.menu = False
-            self.loading = False 
-
+            self.loading = False
 
         while True:
 
@@ -210,7 +206,8 @@ class GameManager:
                 if self.menu_manager.start_game:  # start the game
                     self.menu = False
                     self.loading = True
-                    self.loading_screen.start(self.state, duration=2500, main_loading=True, cat=True, text=False, key_end=False)
+                    self.loading_screen.start(self.state, duration=2500, main_loading=True, cat=True, text=False,
+                                              key_end=False)
 
             elif self.loading:  # update the loading screen
 
@@ -248,18 +245,24 @@ class GameManager:
         c_level = self.state_manager[self.state]
         cam_script = c_level.camera_script
         src_index = c_level.cam_index
-        
+
         self.player.set_camera_to("auto")
         self.scripting = True
         self.ended = False
 
         cur_script = cam_script[src_index]
-        self.player.camera.method.go_to(cur_script["pos"], duration=cur_script["duration"])
+        if "pos" in cur_script and "duration" in cur_script:
+            self.player.camera.method.go_to(cur_script["pos"], duration=cur_script["duration"])
         self.s_next_cam = cur_script["next_cam_status"] if "next_cam_status" in cur_script else None
         self.player.camera.method.set_text(cur_script["text"] if "text" in cur_script else "")
         self.s_dt_to_wait_on_end = cur_script["waiting_end"] if "waiting_end" in cur_script else 0
+        if "zoom" in cur_script:
+            if "zoom_duration" not in cur_script:
+                self.player.camera.method.fov = cur_script["zoom"]
+            else:
+                self.player.camera.method.start_zoom_out(cur_script["zoom"], cur_script["zoom_duration"])
 
-        #print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
+        # print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
 
     def camera_script_handler(self):
         c_level = self.state_manager[self.state]
@@ -274,8 +277,8 @@ class GameManager:
             else:
                 self.state_manager[self.state].ended_script = True
                 return
-            
-        if not camera.method.moving_cam and not self.ended:
+
+        if not camera.method.moving_cam and not camera.method.zooming_out and not self.ended:
             self.end = pg.time.get_ticks()
             self.ended = True
 
@@ -313,7 +316,7 @@ class Debugging:
         text = self.font.render(txt, True, color)
         rect = text.get_rect(topleft=pos)
         if bottomleft:
-            rect.bottomleft=pos
+            rect.bottomleft = pos
         self.screen.blit(text, rect)
 
     def update(self):
@@ -330,7 +333,8 @@ class Debugging:
 
                 for obj in objects:
                     if type(obj) is pg.Rect:
-                        pg.draw.rect(self.screen, self.colors["collision_rect"], pg.Rect(obj.topleft-self.player.camera.offset.xy, obj.size), 2)
+                        pg.draw.rect(self.screen, self.colors["collision_rect"],
+                                     pg.Rect(obj.topleft - self.player.camera.offset.xy, obj.size), 2)
                     else:
                         for key, color in self.colors.items():
                             if hasattr(obj, key):
@@ -347,20 +351,19 @@ class Debugging:
                                 col_rect.size = obj.d_collision[2:]
                             pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
-
                 exit_rects = self.game.state_manager[self.game.state].exit_rects
                 for exit_rect in exit_rects:
                     r = copy(exit_rects[exit_rect][0])
                     r.topleft -= scroll
                     pg.draw.rect(self.screen, self.colors["exit_rect"], r, 2)
-                    self.draw_text(str('To:'+exit_rect[0]), self.colors["exit_rect"], r.topleft, bottomleft=True)
+                    self.draw_text(str('To:' + exit_rect[0]), self.colors["exit_rect"], r.topleft, bottomleft=True)
 
                 pl_col_rect = copy(self.player.rect)
                 pl_col_rect.topleft -= scroll
                 pl_col_rect.topleft -= pg.Vector2(15, -70)
                 pl_col_rect.w -= 70
                 pl_col_rect.h -= 115
-                pg.draw.rect(self.screen,self.colors["collision_rect"], pl_col_rect, 1)
+                pg.draw.rect(self.screen, self.colors["collision_rect"], pl_col_rect, 1)
 
                 position = (self.player.rect.topleft - self.player.camera.offset.xy)
                 itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)

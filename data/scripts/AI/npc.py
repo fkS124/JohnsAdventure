@@ -284,7 +284,38 @@ class Candy(MovingNPC):
             Addition: don't make her walk left/right just idle
     """
 
-    pass
+    def __init__(self, pos):
+        super(Candy, self).__init__(
+            movement="lateral",
+            range_rect=pg.Rect(pos, (200, 200)),  # TODO : get a real range rect (didn't know what to put)
+            velocity=pg.Vector2(1, 0),
+            pos=pos,
+            sprite_sheet_path='data/sprites/npc_spritesheet.png',
+            idle=True,
+            idle_right=[119, 87, 37, 27, 3, 2],
+            move_anim=True,
+            move_right=[2, 86, 38, 29, 3, 3],
+            move_left=[2, 86, 38, 29, 3, 3, "flip"],
+        )
+        self.direction = "right"
+        self.anim_duration["idle"] = 1000
+        self.anim_duration["move"] = 250
+
+        self.status = "sleeping"
+        self.it_re_size = (1, 1)
+
+        self.state = "idle"
+        self.animate()
+
+        self.interactable = False
+
+    def logic(self, scroll):
+        if self.status == "awake":
+            self.state = "move"
+            return super(Candy, self).logic(scroll)
+        elif self.status == "sleeping":
+            self.state = "idle"
+            self.animate()
 
 
 class Cynthia(NPC):
@@ -316,7 +347,7 @@ class Manos(NPC):
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
             # idk why the animation is weird pls fix it
-            idle_down=[9, 120, 18, 45, 3, 3],
+            idle_down=[2, 120, 20, 45, 3, 3],
             tell_story='Sup john'
         )
         self.direction = "down"
