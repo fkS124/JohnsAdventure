@@ -78,14 +78,17 @@ All below share the same principle with different tweaks
 
 
 class CamScroll(ABC):
-    '''
+    """
          Camera Movement
-      '''
+    """
 
     def __init__(self, camera, player, status):
         self.camera = camera
         self.player = player
         self.status = status
+
+        self.fov = 1
+        self.capture_rect = pygame.Rect(0, 0, 1280, 720)
 
     @abstractmethod
     def scroll(self):
@@ -94,6 +97,26 @@ class CamScroll(ABC):
           will tell us something went wrong
           """
         pass
+
+    def draw(self):
+        if self.fov != 1:  # if fov == 1 (normal res), we don't apply this mechanic to save performances
+
+            # get the current screen
+            surface = self.camera.display.subsurface(self.capture_rect)
+
+            # scale it according to fov -> size * fov = new_size => fov ∈ [1, 2] where 2 is 100% zoom.
+            scaled = pygame.transform.smoothscale(
+                surface,
+                (surface.get_width()*self.fov, surface.get_height()*self.fov)
+            )
+
+            dw = surface.get_width()*self.fov - surface.get_width()
+            dh = surface.get_height()*self.fov - surface.get_height()
+
+            # blit it
+            self.camera.display.blit(
+                scaled, (-dw / 2, -dh / 2)
+            )
 
 
 class Follow(CamScroll):
@@ -193,6 +216,21 @@ class Auto(CamScroll):
         self.start = 0
         self.duration = 0
 
+        self.fov = 1
+        self.capture_rect = pygame.Rect(
+            0,
+            self.bar_y+self.cinema_bar.get_height(),
+            self.screen.get_width(),
+            self.screen.get_height() - 2 * abs(self.bar_y + self.cinema_bar.get_height())
+        )
+
+        self.zooming_out = False
+        self.target_zoom_out = 1
+        self.duration_zoom_out = 0
+        self.start_time_zoom_out = 0
+        self.d_fov = 0
+        self.delay_zmo = 0
+
     def look_at(self, pos):
         self.camera.offset.xy = [pos[0] - self.screen.get_width() // 2, pos[1] - self.screen.get_height() // 2]
 
@@ -222,9 +260,12 @@ class Auto(CamScroll):
         self.moving_cam = True
 
     def draw(self):
+        super(Auto, self).draw()
+
         # Bottom Cinema Bar
         b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
         self.screen.blit(self.cinema_bar, (0, b_pos))
+        self.screen.blit(self.cinema_bar, (0, self.bar_y))
         render = self.font.render(self.text, True, (255, 255, 255))
         if self.bar_y > 0:
             self.screen.blit(render, render.get_rect(center=(self.W // 2, self.H - self.cinema_bar.get_height() // 2)))
@@ -233,6 +274,14 @@ class Auto(CamScroll):
         pygame.draw.line(self.screen, (255, 255, 255), (self.W, 0), (0, self.H))
         pygame.draw.circle(self.screen, (255, 255, 0), self.target-self.camera.offset.xy, 6)
         """
+
+    def start_zoom_out(self, value, duration):
+        self.duration_zoom_out = duration
+        self.target_zoom_out = value
+        self.zooming_out = True
+        self.start_time_zoom_out = pygame.time.get_ticks()
+        self.d_fov = 20 * (self.target_zoom_out - self.fov) / duration
+        self.delay_zmo = self.start_time_zoom_out
 
     def scroll(self):
         """
@@ -266,3 +315,15 @@ class Auto(CamScroll):
                 self.looking_at = self.target
 
             # print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
+
+        if self.zooming_out:
+
+            print(pygame.time.get_ticks(), self.start_time_zoom_out, self.duration_zoom_out, self.d_fov, pygame.time.get_ticks()-self.start_time_zoom_out)
+
+            if abs(self.fov-self.target_zoom_out) < 0.01:
+                self.zooming_out = False
+                self.fov = self.target_zoom_out
+
+            if pygame.time.get_ticks() - self.delay_zmo > 20:
+                self.delay_zmo = pygame.time.get_ticks()
+                self.fov += self.d_fov

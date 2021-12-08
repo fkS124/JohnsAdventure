@@ -318,6 +318,7 @@ class PlayerRoom(GameState):
                 "duration": 0,
                 "text": f"Hello Player. Welcome to John's Adventure.",
                 "waiting_end": 4000,
+                "zoom": 2
             },
             {
                 "pos": (1100, 225),
@@ -329,7 +330,11 @@ class PlayerRoom(GameState):
                 "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
                 "duration": 750,
                 "waiting_end": 250,
-                "next_cam_status": "follow"
+            },
+            {
+                "next_cam_status": "follow",
+                "zoom": 1,
+                "zoom_duration": 1200
             }
         ]
 
@@ -363,7 +368,7 @@ class JohnsGarden(GameState):
         self.get_scale = lambda name: self.sprite_info[name]["sc"]  # func to get the scale of a sprite
 
         # John's house position and size
-        jh_pos = self.positions["john_house"][0]
+        jh_pos = self.positions["john_house"][0] - pg.Vector2(1, 30)
         jh_siz = (self.sprite_info["john_house"]["w"] * self.get_scale("john_house"),
                   self.sprite_info["john_house"]["h"] * self.get_scale("john_house"))
         jh_sc = self.get_scale("john_house")
@@ -558,7 +563,8 @@ class ManosHut(GameState):
             Rect(0, 711, 1280, 9),  # Down
 
             # Όταν
-            npc.Manos((235 * sc_x, 115 * sc_y), (300, 100)),
+            npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
+            npc.Candy(pg.Vector2(205, 395)),  # TODO : Put a real position
             # Furnitures
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),

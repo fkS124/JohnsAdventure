@@ -286,21 +286,22 @@ class Player:
         for obj in self.rooms_objects:
             if hasattr(obj, "IDENTITY"):
                 if obj.IDENTITY == "NPC":
-                    if itr_box.colliderect(obj.interaction_rect):
+                    if obj.interactable:
+                        if itr_box.colliderect(obj.interaction_rect):
 
-                        # If player clicks Interaction key
-                        if self.Interactable:
-                            # Stop the npcs from moving
-                            obj.interacting = True
+                            # If player clicks Interaction key
+                            if self.Interactable:
+                                # Stop the npcs from moving
+                                obj.interacting = True
 
-                            # Turn on interact zone
-                            self.is_interacting = True
+                                # Turn on interact zone
+                                self.is_interacting = True
 
-                            # Get npc's text
-                            self.npc_text = obj.tell_story
+                                # Get npc's text
+                                self.npc_text = obj.tell_story
 
-                            # Stop browsing to reduce calcs
-                            break
+                                # Stop browsing to reduce calcs
+                                break
                 elif obj.IDENTITY == "PROP":
                     if obj.name == "chest":  # MUST BE BEFORE checking collision to avoid attribute errors
                         if itr_box.colliderect(obj.interaction_rect):
