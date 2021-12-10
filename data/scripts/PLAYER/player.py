@@ -316,13 +316,34 @@ class Player:
             if hasattr(obj, "attackable"):
                 if obj.attackable:
                     if self.attacking_hitbox.colliderect(obj.rect):
-                        self.sound_manager.play_sound(
-                            "dummyHit")  # This is where it will play the object's hit sound NOT THE SWORD
+                        equipped_weapon = self.inventory.get_equiped("Weapon")
+
+                        # This is where it will play the object's hit sound NOT THE SWORD
+                        self.sound_manager.play_sound("dummyHit")
+
+                        knock_back = {}
+                        if equipped_weapon.KB:
+                            knock_back["duration"] = equipped_weapon.knock_back["duration"]
+
+                            print(self.rect.topleft - self.camera.offset.xy, obj.rect.topleft)
+                            knock_back["vel"] = p.Vector2(
+                                p.Vector2(obj.rect.topleft) - p.Vector2(self.rect.topleft - self.camera.offset.xy)
+                            )
+                            knock_back["vel"].scale_to_length(equipped_weapon.knock_back["vel"])
+
+                            knock_back["friction"] = - knock_back["vel"]
+                            knock_back["friction"].scale_to_length(equipped_weapon.knock_back["friction"])
+                            print("apply knock back", knock_back)
+
                         crit = self.get_crit()
-                        obj.deal_damage(self.modified_damages + crit,
-                                        crit > 0) if self.current_combo != self.last_attack else obj.deal_damage(
-                            self.modified_damages * self.max_combo_multiplier + crit, crit > 0)
-                        self.inventory.get_equiped("Weapon").start_special_effect(obj)
+                        obj.deal_damage(self.modified_damages + crit, crit > 0, knock_back=knock_back) \
+                            if self.current_combo != self.last_attack else \
+                            obj.deal_damage(
+                                self.modified_damages * self.max_combo_multiplier + crit,
+                                crit > 0,
+                                knock_back=knock_back
+                        )
+                        equipped_weapon.start_special_effect(obj)
                     if obj.hp <= 0:  # Check if its dead , give xp to the player
                         self.experience += obj.xp_available
                         obj.xp_available = 0

@@ -42,6 +42,7 @@ class PropGetter:
         custom_center = datas["ccty"] * self.get_scale(name) if "ccty" in DATAS[name] else None
         collide = datas["col"] if "col" in datas else True
         sort = datas["sort"] if "sort" in datas else True
+        reverse = datas["reverse"] if "reverse" in datas else False
         particle = None
         light_sources = []
         light_types = LightTypes()
@@ -72,7 +73,8 @@ class PropGetter:
                                             collide=collide,
                                             sort=sort,
                                             particle=particle,
-                                            light_sources=light_sources)
+                                            light_sources=light_sources,
+                                            reverse=reverse)
 
 
 class Prop:
@@ -147,8 +149,8 @@ class Prop:
 
         # ------------------- ANIMATION ------------------------------
         self.anim_manager = {
-            "idle": (self.idle if hasattr(self, "idle") else None, "loop"),
-            "interaction": (self.interaction_anim if hasattr(self, "interaction_anim") else None, "single"),
+            "idle": [self.idle if hasattr(self, "idle") else None, "loop"],
+            "interaction": [self.interaction_anim if hasattr(self, "interaction_anim") else None, "single"],
         }
         self.state = "idle"
         self.delay = 0
@@ -371,7 +373,18 @@ class Chest(Prop):
 
 
 class SimplePropObject(Prop):
-    def __init__(self, name, pos, custom_rect, custom_center, collide=True, sort=True, particle=None, light_sources=[]):
+
+    def __init__(self,
+                 name,
+                 pos,
+                 custom_rect,
+                 custom_center,
+                 collide=True,
+                 sort=True,
+                 particle=None,
+                 light_sources=[],
+                 reverse=False):
+
         super().__init__(
             pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
             idle_coord=COORDS[name],
@@ -390,6 +403,14 @@ class SimplePropObject(Prop):
         ]
         for l_source in self.light_sources:
             l_source.pos += pg.Vector2(self.rect.topleft)
+
+        if reverse:
+            for anim in self.anim_manager:
+                new_anim = []
+                if type(self.anim_manager[anim][0]) is list:
+                    for frame in self.anim_manager[anim][0]:
+                        new_anim.append(flip_vertical(frame))
+                    self.anim_manager[anim][0] = new_anim
 
     def update(self, screen, scroll):
         update = super(SimplePropObject, self).update(screen, scroll)
