@@ -7,13 +7,12 @@
   "m_hut_bed":{"x":307, "y":528, "w":66, "h":122, "it":  1, "sc": 3},
   "m_hut_fireplace":{"x":91, "y": 534, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144,
     "add_args": {
-      "polygon_light": [{"pos": [42, 179], "height": 55, "radius": 60, "dep_angle": 45, "end_angle": -45,
+      "polygon_light": [{"pos": [42, 179], "height": 55, "radius": 60, "dep_angle": -45, "end_angle": 90,
         "color": [207, 112, 23], "dep_alpha": 180
       }]
   }},
   "m_hut_table":{"x":170, "y": 533, "w":126, "h":75, "it":  1, "sc": 3},
   "m_hut_sofa":{"x":170, "y": 612, "w": 52, "h":133, "it":  1, "sc": 3},
-
   "table_2":{"x":225, "y": 612, "w":59, "h":94, "it":  1, "sc": 3},
 
   "tree": {"x":244, "y":418, "w":66, "h":78, "it":  1, "sc": 5, "crect":  [23, 40, 20, 38], "ccty": 75},
@@ -23,49 +22,38 @@
     "add_args": {"light_sources": [{"pos":  [11, 16], "radius": 100, "opacity": 150, "color": [255, 255, 51]},
                                    {"pos":  [56, 16], "radius": 100, "opacity": 150, "color": [255, 255, 51]}]
     }},
-
   "box": {"x":187, "y":421, "w":38, "h":45, "it":  1, "sc": 3},
-
   "street_light": {"x":105, "y":75, "w":68, "h":77, "it":  1, "sc": 3},
 
   "sign_all": {"x": 213,"y":348, "w":52, "h":66, "it":  1, "sc": 3,"crect": [22, 47, 8, 18], "ccty": 65},
-
   "sign_side_1": {"x":273 , "y":361, "w":52, "h":53, "it":  1, "sc": 3,"crect": [22, 38, 8, 15], "ccty": 65},
-
   "sign_hori_1": {"x":199 , "y":348, "w":8, "h":66, "it":  1, "sc": 3, "crect": [0, 47, 8, 18], "ccty": 65},
-
   "sign_1_3": {"x":141 , "y":348, "w":52, "h":66, "it":  1, "sc": 3, "crect": [22, 47, 8, 18], "ccty": 65},
-
   "sign_1_2": {"x":105 , "y":348, "w":30, "h":66, "it":  1, "sc": 3, "crect": [0, 47, 8, 18], "ccty": 65},
-
   "sign_1_2_d": {"x":334 , "y":361, "w":29, "h":53, "it":  1, "sc": 3,"crect": [0, 38, 8, 15], "ccty": 65},
 
   "full_fence": {"x":444 , "y":442, "w":538, "h":36, "it":  1, "sc": 3},
-
   "side_fence": {"x":972 , "y":487, "w":10, "h":255, "it":  1, "sc": 3},
-
   "half_fence": {"x":444 , "y":485, "w":234, "h":36, "it":  1, "sc": 3},
-
   "half_fence_reversed": {"x": 713, "y": 486, "w": 234, "h": 36, "it": 1, "sc": 3},
 
   "hori_road": {"x": 1046, "y": 379, "w": 330, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
   "hori_road_half": {"x": 1231, "y": 341, "w": 165, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-
-  "ver_road": {"x": 1193, "y": 56, "w": 34, "h": 320, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "ver_road_half": {"x": 1241, "y": 56, "w": 34, "h": 161, "it": 1, "sc": 3, "col":  false, "sort": false},
-
   "hori_turn":{"x": 1081, "y": 61, "w": 33, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
   "hori_end":{"x":  1085, "y": 134, "w": 29, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
   "hori_dirt": {"x": 1042, "y": 175, "w": 123, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
   "hori_sides": {"x": 1080, "y": 97, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
 
+  "ver_road": {"x": 1193, "y": 56, "w": 34, "h": 320, "it": 1, "sc": 3, "col":  false, "sort": false},
+  "ver_road_half": {"x": 1241, "y": 56, "w": 34, "h": 161, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_turn":{"x": 1080, "y": 212, "w": 34, "h": 33, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_end":{"x":  1116, "y": 212, "w": 34, "h": 31, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_dirt": {"x": 1041, "y": 49, "w": 34, "h": 123, "it": 1, "sc": 3, "col":  false, "sort": false},
   "ver_sides": {"x": 1044, "y": 212, "w": 34, "h": 34, "it": 1, "sc": 3, "col":  false, "sort": false},
-  "hill_left": {"x":1000, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3},
 
-  "hill_middle": {"x":1216, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3},
-
-  "hill_right": {"x":1002, "y": 592, "w": 158, "h":129, "it": 1, "sc": 3}
+  "hill_left": {"x":1000, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3, "crect":  [0, 17, 157, 100]},
+  "hill_middle": {"x":1216, "y": 448, "w": 158, "h": 129, "it": 1, "sc": 3, "crect":  [0, 17, 157, 100]},
+  "hill_end": {"x":1002, "y": 592, "w": 158, "h":129, "it": 1, "sc": 3, "crect":  [0, 17, 157, 100]},
+  "hill_end_mid": {"x":1214, "y": 596, "w": 158, "h":114, "it": 1, "sc": 3},
+  "hill_mid": {"x":1214, "y": 596, "w": 158, "h":114, "it": 1, "sc": 3, "reverse": true}
 }

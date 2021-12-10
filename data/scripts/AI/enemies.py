@@ -82,6 +82,13 @@ class Enemy:
             "up": self.walk_up
         }
 
+        # KNOCK BACK
+        self.knocked_back = False  # true if currently affected by a knock back
+        self.knock_back_duration = 0  # duration in ms of the knock back movement
+        self.start_knock_back = 0  # time of starting the knock back
+        self.knock_back_vel = pg.Vector2(0, 0)   # movement vel
+        self.knock_back_friction = pg.Vector2(0, 0)  # slowing down
+
         # ATTACK
         self.attacking = False
         self.attack_anim_manager = {
@@ -194,7 +201,7 @@ class Enemy:
                         # Update Enemy's rect
         self.rect = self.current_sprite.get_rect(topleft=self.pos)
 
-    def deal_damage(self, value: int, crit: bool, endurance_ignorance: bool = False):
+    def deal_damage(self, value: int, crit: bool, endurance_ignorance: bool = False, knock_back: dict = None):
 
         """Deal damages to its own instance, also triggers animations of hits,
         include critics and endurance ignorance."""
@@ -213,6 +220,14 @@ class Enemy:
             self.attackable = False
             self.dead = True
             self.hp = 0
+
+        if knock_back is not None:
+            print("applied second step")
+            self.knocked_back = True
+            self.knock_back_vel = knock_back["vel"]
+            self.knock_back_duration = knock_back["duration"]
+            self.knock_back_friction = knock_back["friction"]
+            self.start_knock_back = pg.time.get_ticks()
 
     def life_bar(self):
 
@@ -278,6 +293,16 @@ class Enemy:
 
         # update the damage pop ups
         self.update_dmg_popups(scroll)
+
+        # apply the knock back
+        if self.knocked_back:
+
+            if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration:
+                self.knocked_back = False
+
+            self.x += self.knock_back_vel[0]
+            self.y += self.knock_back_vel[1]
+            self.knock_back_vel -= self.knock_back_friction
 
         # update the pos of the enemy
         self.pos = self.x - scroll[0], self.y - scroll[1]

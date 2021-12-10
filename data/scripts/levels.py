@@ -16,7 +16,7 @@ from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
 from .AI.death_animator import DeathManager
-from .POSTPROCESSING.lights_manager import LightManager
+from .POSTPROCESSING.lights_manager import LightManager, PolygonLight, LightSource
 
 
 class GameState:
@@ -101,6 +101,7 @@ class GameState:
         # Light system
         self.light_state = light_state
         self.lights_manager = LightManager(self.screen)
+        self.additional_lights = []
 
     def load_objects(self, filename):
         # Open file
@@ -299,10 +300,118 @@ class GameState:
                         self.player.npc_text = ''
                         return exit_state
 
+    """These are now generation methods, to generate procedurally roads, hills and every other type of object
+    that is in open_world.json"""
+
+    def build_road(self, start_pos: tuple[int, int], n_road: int, type_r: str = "",
+                   start_type: str = "", end_type: str = "", types: list = []):
+        roads = []
+        current_pos = list(start_pos)
+        default = type_r if type_r != "" else "ver_road"
+        if types == []:
+            for i in range(n_road):
+                if end_type != "" and i == n_road - 1:
+                    road = end_type
+                elif start_type != "" and i == 0:
+                    road = start_type
+                else:
+                    road = default
+                new_road = self.get_new_road_object(road, current_pos)
+                roads.append(new_road)
+                if "hori" in road:
+                    current_pos[0] += new_road.current_frame.get_width()
+                else:
+                    current_pos[1] += new_road.current_frame.get_height()
+        else:
+            for index, road in enumerate(types):
+                new_road = self.get_new_road_object(road, current_pos)
+                if "hori" in road:
+                    current_pos[0] += new_road.current_frame.get_width()
+                else:
+                    current_pos[1] += new_road.current_frame.get_height()
+                roads.append(new_road)
+        print("Successfully generated", len(roads))
+        return roads
+
+    def generate_chunk(self, type_: str, x: int, y: int, row: int, col: int, step_x: int, step_y: int,
+                       randomize: int = 20):
+        return [
+            self.prop_objects[type_](
+                (x + c * step_x + int(gauss(0, randomize)), y + r * step_y + int(gauss(0, randomize))))
+            for c in range(col) for r in range(row)
+        ]
+
+    def generate_hills(self, direction: str, dep_pos: tuple[int, int],
+                       n_hills: int, mid_type: str = "left", end_type: str = "hill_end", no_begin: bool = False):
+
+        corner_left = "hill_left"
+        corner_right = "hill_end"
+        hill_middle = "hill_middle"
+        hill_middle_down = "hill_mid" if mid_type == "left" else "hill_end_mid"
+        sizes = {
+            corner_left: self.prop_objects[corner_left]((0, 0)).current_frame.get_size(),
+            corner_right: self.prop_objects[corner_right]((0, 0)).current_frame.get_size(),
+            hill_middle: self.prop_objects[hill_middle]((0, 0)).current_frame.get_size(),
+            hill_middle_down: self.prop_objects[hill_middle_down]((0, 0)).current_frame.get_size(),
+        }
+
+        current_pos = list(dep_pos)
+        hills = []
+
+        if not no_begin:
+            if direction == "right" or direction == "up" or direction == "down":
+                hills.append(self.prop_objects[corner_left](dep_pos))
+            else:
+                hills.append(self.prop_objects[corner_right](dep_pos))
+
+            match direction:
+                case "right":
+                    current_pos[0] += sizes[corner_left][0]
+                case "down":
+                    current_pos[1] += sizes[corner_left][1]
+                    current_pos[1] -= 102
+
+        for i in range(n_hills - 2):
+            new_hill = None
+            match direction:
+                case "right":
+                    new_hill = self.prop_objects[hill_middle](current_pos)
+                    current_pos[0] += sizes[hill_middle][0]
+                case "down":
+                    new_hill = self.prop_objects[hill_middle_down](current_pos)
+                    current_pos[1] += sizes[hill_middle_down][1]
+                    current_pos[1] -= 17 * 3
+                case _:
+                    pass
+            if new_hill is not None:
+                hills.append(new_hill)
+
+        if end_type != "none":
+            hills.append(self.prop_objects[end_type](current_pos))
+
+        return hills
+
+    def get_new_road_object(self, name, pos):
+        direction = "H" if "hori" in name else "V"  # get the direction
+        flip = {"H": "H" in name, "V": "V" in name}  # determine the axis to flip
+        if flip["V"] and flip["H"]:
+            name = name[2:]  # removing the useless letters to avoid KeyError
+        elif flip["V"] and not flip["H"] or flip["H"] and not flip["V"]:
+            name = name[1:]  # removing the useless letters to avoid KeyError
+        road_obj = self.prop_objects[name](pos)  # get the object
+
+        # apply the flip
+        if flip["H"]:
+            road_obj.idle[0] = flip_horizontal(road_obj.idle[0])
+        if flip["V"]:
+            road_obj.idle[0] = flip_vertical(road_obj.idle[0])
+
+        return road_obj
+
 
 class PlayerRoom(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects)
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_clear")
         self.objects = super().load_objects('data/database/levels/player_room.txt')
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -338,10 +447,45 @@ class PlayerRoom(GameState):
             }
         ]
 
+        self.additional_lights = [
+            PolygonLight(
+                pg.Vector2(79*3, 9*3),
+                68*3,
+                350,
+                50,
+                85,
+                (255, 255, 255),
+                dep_alpha=50,
+                horizontal=True,
+                additional_alpha=175
+            ),
+            PolygonLight(
+                pg.Vector2(347 * 3, 9 * 3),
+                68 * 3,
+                350,
+                50,
+                85,
+                (255, 255, 255),
+                dep_alpha=50,
+                horizontal=True,
+                additional_alpha=175
+            ),
+            PolygonLight(
+                pg.Vector2(254*3+1, 26*3),
+                49*3,
+                150,
+                25,
+                125,
+                (89, 144, 135),
+                dep_alpha=255,
+                horizontal=True
+            )
+        ]
+
 
 class Kitchen(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects)
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_clear")
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
         self.objects = super().load_objects('data/database/levels/kitchen.txt')
         self.exit_rects = {
@@ -352,6 +496,19 @@ class Kitchen(GameState):
             "player_room": (self.exit_rects["player_room"][0].bottomleft + pg.Vector2(75, 0)),
             "johns_garden": (self.exit_rects["johns_garden"][0].topleft + pg.Vector2(0, -200))
         }
+        self.additional_lights = [
+            PolygonLight(
+                pg.Vector2(103 * 3, 9 * 3),
+                68 * 3,
+                350,
+                50,
+                85,
+                (255, 255, 255),
+                dep_alpha=80,
+                horizontal=True,
+                additional_alpha=150
+            ),
+        ]
 
 
 class JohnsGarden(GameState):
@@ -434,14 +591,14 @@ class JohnsGarden(GameState):
                              type_r="ver_road", end_type="Vhori_sides"),
             # Cave Road
             *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 2 * vr_r_height), n_road=2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 2 * vr_r_height),
+                             n_road=2,
                              type_r="hori_road"),
 
             # Route 5 Bottom Right
             *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 498) * jh_sc + hr_s_height * 18), n_road=2,
                              type_r="ver_road", end_type="Vver_turn"),
-
 
             # Route 6 Bottom Right
             *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
@@ -472,7 +629,10 @@ class JohnsGarden(GameState):
                                  randomize=10),
             # Add grass details under those trees
             *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
-                                 randomize=20)
+                                 randomize=20),
+            # Add hills
+            *self.generate_hills("right", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800), 10, mid_type="hill_middle", end_type="hill_end"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+129*3-102), 5, no_begin=True, mid_type="left", end_type="hill_left")
         ]
 
         self.exit_rects = {
@@ -486,60 +646,6 @@ class JohnsGarden(GameState):
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
             "manos_hut": self.exit_rects["manos_hut"][0].bottomleft
         }
-
-    def build_road(self, start_pos: tuple[int, int], n_road: int, type_r: str = "",
-                   start_type: str = "", end_type: str = "", types: list = []):
-        roads = []
-        current_pos = list(start_pos)
-        default = type_r if type_r != "" else "ver_road"
-        if types == []:
-            for i in range(n_road):
-                if end_type != "" and i == n_road - 1:
-                    road = end_type
-                elif start_type != "" and i == 0:
-                    road = start_type
-                else:
-                    road = default
-                new_road = self.get_new_road_object(road, current_pos)
-                roads.append(new_road)
-                if "hori" in road:
-                    current_pos[0] += new_road.current_frame.get_width()
-                else:
-                    current_pos[1] += new_road.current_frame.get_height()
-        else:
-            for index, road in enumerate(types):
-                new_road = self.get_new_road_object(road, current_pos)
-                if "hori" in road:
-                    current_pos[0] += new_road.current_frame.get_width()
-                else:
-                    current_pos[1] += new_road.current_frame.get_height()
-                roads.append(new_road)
-        print("Successfully generated", len(roads))
-        return roads
-
-    def generate_chunk(self, type_, x, y, row, col, step_x, step_y, randomize=20):
-        return [
-            self.prop_objects[type_](
-                (x + c * step_x + int(gauss(0, randomize)), y + r * step_y + int(gauss(0, randomize))))
-            for c in range(col) for r in range(row)
-        ]
-
-    def get_new_road_object(self, name, pos):
-        direction = "H" if "hori" in name else "V"  # get the direction
-        flip = {"H": "H" in name, "V": "V" in name}  # determine the axis to flip
-        if flip["V"] and flip["H"]:
-            name = name[2:]  # removing the useless letters to avoid KeyError
-        elif flip["V"] and not flip["H"] or flip["H"] and not flip["V"]:
-            name = name[1:]  # removing the useless letters to avoid KeyError
-        road_obj = self.prop_objects[name](pos)  # get the object
-
-        # apply the flip
-        if flip["H"]:
-            road_obj.idle[0] = flip_horizontal(road_obj.idle[0])
-        if flip["V"]:
-            road_obj.idle[0] = flip_vertical(road_obj.idle[0])
-
-        return road_obj
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, self.W, self.H])

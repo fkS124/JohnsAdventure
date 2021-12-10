@@ -43,6 +43,13 @@ class Weapon:
         self.equiped = False
         self.rect = self.image.get_rect()
 
+        self.KB = False  # define if the knock back is applying to this weapon
+        self.knock_back = {
+            "duration": 0,
+            "vel": 0,
+            "friction": 0
+        }
+
     def start_special_effect(self, obj:object):
         # Here the devs can pass a function to start a special effect
 
@@ -90,6 +97,12 @@ class Knight_Sword(Weapon):
 
     def __init__(self):
         super().__init__(dmg=15, crit_chance=0.15)
+        self.KB = True
+        self.knock_back = {
+            "duration": 150,
+            "vel": 10,
+            "friction": 0.1
+        }
         self.icon = l_path("data/sprites/items/knight_sword_item.png", alpha=True)
         self.obj_bleeding = []
         self.start_bleed = {}

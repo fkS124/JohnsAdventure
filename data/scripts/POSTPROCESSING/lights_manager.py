@@ -19,13 +19,15 @@ class LightManager:
             "night": 128,
             "day": 0,
             "inside_dark": 100,
-            "inside": 50
+            "inside": 50,
+            "inside_clear": 50
         }
         self.colors = {
             "night": (0, 7, 20),
             "day": (255, 255, 255),
             "inside_dark": (0, 0, 0),
-            "inside": (0, 0, 0)
+            "inside": (0, 0, 0),
+            "inside_clear": (0, 0, 0)
         }
         self.main_layer = pg.Surface(self.DISPLAY.get_size(), pg.SRCALPHA)
 
@@ -38,7 +40,7 @@ class LightManager:
         for obj in new_level_instance.objects:
             if hasattr(obj, "light_sources"):
                 self.lights.extend(obj.light_sources)
-        print(self.lights)
+        self.lights.extend(new_level_instance.additional_lights)
         self.light_state = new_level_instance.light_state
 
     def update(self, current_level):
@@ -46,9 +48,9 @@ class LightManager:
         self.objects = copy(current_level.objects)
 
         # manage lights
-        if self.light_state != "day":
+        if self.light_state != "day" or "inside" in current_level.light_state:
             for light in self.lights:
-                    light.update(self.DISPLAY, current_level.scroll, self.main_layer)
+                light.update(self.DISPLAY, current_level.scroll, self.main_layer)
 
         # blit layer
         self.DISPLAY.blit(self.main_layer, (0, 0))
@@ -98,7 +100,9 @@ class PolygonLight:
                  dep_angle: int,  # degrees
                  end_angle: int,  # degrees
                  color: tuple[int, int, int],
-                 dep_alpha: int
+                 dep_alpha: int,
+                 horizontal: bool = False,
+                 additional_alpha: int = 0
                  ):
 
         self.pos = origin - pg.Vector2(radius, radius)
@@ -111,19 +115,25 @@ class PolygonLight:
         self.end_angle = end_angle
         self.step = 2
         self.n_circles = self.radius // self.step
+        self.horizontal = horizontal
+        self.undo_layer_alpha = additional_alpha
 
         self.surface = pg.Surface((self.radius*2, self.radius*2), pg.SRCALPHA)
         self.start_point = pg.Vector2((self.radius, self.radius))
-        self.top_point = self.start_point - pg.Vector2(0, height // 2)
-        self.bot_point = self.start_point + pg.Vector2(0, height // 2)
+        if not horizontal:
+            self.top_point = self.start_point - pg.Vector2(0, height // 2)
+            self.bot_point = self.start_point + pg.Vector2(0, height // 2)
+        else:
+            self.top_point = self.start_point + pg.Vector2(height // 2, 0)
+            self.bot_point = self.start_point - pg.Vector2(height // 2, 0)
 
         self.top_edge = pg.Vector2(
             self.radius + self.radius * cos(radians(self.dep_angle)),
             self.radius + self.radius * sin(radians(self.dep_angle))
         )
         self.down_edge = pg.Vector2(
-            self.radius + self.radius * cos(radians(self.end_angle)),
-            self.radius + self.radius * sin(radians(self.end_angle))
+            self.radius + self.radius * cos(radians(self.dep_angle+self.end_angle)),
+            self.radius + self.radius * sin(radians(self.dep_angle+self.end_angle))
         )
         self.draw_light(self.surface)
 
@@ -131,14 +141,13 @@ class PolygonLight:
         # we take a variable radius, as we will need to generate points according to different radius
         points = []
 
-        for i in range(0, self.dep_angle):
-            points.append(pg.Vector2(self.radius+radius*cos(radians(self.dep_angle-i)),
-                                     self.radius+radius*sin(radians(self.dep_angle-i))))
-
-        for i in range(0, abs(self.end_angle)):
-            points.append(pg.Vector2(self.radius+radius*cos(radians(-i)),
-                                     self.radius+radius*sin(radians(-i))))
-
+        angle = copy(self.dep_angle)
+        for i in range(self.end_angle):
+            angle += 1
+            points.append(pg.Vector2(
+                self.radius+radius*cos(radians(angle)),
+                self.radius+radius*sin(radians(angle))
+            ))
         return points
 
     def get_alpha(self, index_circle):
@@ -177,17 +186,23 @@ class PolygonLight:
         )
 
     def undo_layer(self, layer, pos):
+        vec = [
+             pg.Vector2(self.radius, self.radius - self.height // 2) if not self.horizontal else
+             pg.Vector2(self.radius + self.height // 2, self.radius),
+             pg.Vector2(self.radius, self.radius + self.height // 2) if not self.horizontal else
+             pg.Vector2(self.radius - self.height // 2, self.radius)
+        ]
         pts = self.get_points(self.radius)
         for pt in pts:
             pt += pos
         pg.draw.polygon(
             layer,
-            (0, 0, 0, 0),
+            (0, 0, 0, self.undo_layer_alpha),
             [
 
-                pos + pg.Vector2(self.radius, self.radius + self.height // 2),
+                pos + vec[0],
                 *pts,
-                pos + pg.Vector2(self.radius, self.radius - self.height // 2),
+                pos + vec[1],
             ]
         )
 
@@ -199,6 +214,7 @@ class PolygonLight:
     def update(self, screen, scroll, LAYER):
         self.undo_layer(LAYER, self.pos-scroll)
         screen.blit(self.surface, self.pos - scroll)
+
 
 
 class LightTypes:
