@@ -565,6 +565,8 @@ class ManosHut(GameState):
             # Όταν
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
             npc.Candy(pg.Vector2(205, 395)),  # TODO : Put a real position
+
+            Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
             # Furnitures
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),

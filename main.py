@@ -31,9 +31,8 @@ if __name__ == '__main__':
     game_instance: GameManager = None
     load_thread = threading.Thread(target=load_game).start()
 
-    pg.init()
+    pg.init() # Initialize pygame
     screen = GameManager.DISPLAY
-    font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 30)
     while game_instance is None:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -41,7 +40,6 @@ if __name__ == '__main__':
                 raise SystemExit
 
         screen.fill((0, 0, 0))
-        # screen.blit(font.render("Loading you sussy baka...", True, (0, 255, 0)), (0, 0))
 
         # TODO : MAKE IT LOOK BETTER
 

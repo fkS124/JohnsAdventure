@@ -277,11 +277,7 @@ class Mau(MovingNPC):
 
 class Candy(MovingNPC):
     """
-            Candy needs to be identical to mau, without the flop during the interaction
-            etc  on call -> npc.Candy(pos, status)  - > status: str "awake, sleeping"
-            Candy will
-
-            Addition: don't make her walk left/right just idle
+         Όταν
     """
 
     def __init__(self, pos):
@@ -292,10 +288,10 @@ class Candy(MovingNPC):
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
-            idle_right=[119, 87, 37, 27, 3, 2],
+            idle_right=[119, 87, 37, 27, 2, 2],
             move_anim=True,
-            move_right=[2, 86, 38, 29, 3, 3],
-            move_left=[2, 86, 38, 29, 3, 3, "flip"],
+            move_right=[2, 86, 38, 29, 2, 2],
+            move_left=[2, 86, 38, 29, 2, 2, "flip"],
         )
         self.direction = "right"
         self.anim_duration["idle"] = 1000

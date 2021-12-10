@@ -90,6 +90,7 @@ class Knight_Sword(Weapon):
 
     def __init__(self):
         super().__init__(dmg=15, crit_chance=0.15)
+        self.icon = l_path("data/sprites/items/knight_sword_item.png", alpha=True)
         self.obj_bleeding = []
         self.start_bleed = {}
         self.bleed_duration = 500
