@@ -69,6 +69,7 @@ class Enemy:
         # is stored (dicts are useful for multiple directions) "loop" if the animation has to be played in a loop,
         # "single" otherwise
 
+        # set some default values that will be replaced later
         self.sheet = pg.Surface((10, 10))
         self.idle = self.hit_anim = self.death_anim = self.walk_right = self.walk_left = self.walk_down = self.walk_up = self.attack_right = self.attack_left = self.attack_down = self.attack_up = []
 
@@ -88,10 +89,11 @@ class Enemy:
         self.start_knock_back = 0  # time of starting the knock back
         self.knock_back_vel = pg.Vector2(0, 0)   # movement vel
         self.knock_back_friction = pg.Vector2(0, 0)  # slowing down
+        self.knock_back_vel_y = 0  # jumpy effect vel
 
         # ATTACK
-        self.attacking = False
-        self.attack_anim_manager = {
+        self.attacking = False  # currently attacking -> True
+        self.attack_anim_manager = {  # dict to store all the animations
             "right": self.attack_right,
             "left": self.attack_left,
             "down": self.attack_down,
@@ -225,6 +227,8 @@ class Enemy:
             print("applied second step")
             self.knocked_back = True
             self.knock_back_vel = knock_back["vel"]
+
+            self.knock_back_vel_y = knock_back["vel"].length() // 4
             self.knock_back_duration = knock_back["duration"]
             self.knock_back_friction = knock_back["friction"]
             self.start_knock_back = pg.time.get_ticks()
@@ -300,8 +304,13 @@ class Enemy:
             if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration:
                 self.knocked_back = False
 
-            self.x += self.knock_back_vel[0]
-            self.y += self.knock_back_vel[1]
+            if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration / 2:
+                self.y += self.knock_back_vel_y * dt * 35
+            else:
+                self.y -= self.knock_back_vel_y * dt * 35
+
+            self.x += self.knock_back_vel[0] * dt * 35
+            self.y += self.knock_back_vel[1] * dt * 35
             self.knock_back_vel -= self.knock_back_friction
 
         # update the pos of the enemy
@@ -323,5 +332,6 @@ class Dummy(Enemy):
             idle_coo=[0, 0, 34, 48, 1, 4],
             hit_coo=[0, 48, 34, 48, 4, 4]
         )
+        self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4

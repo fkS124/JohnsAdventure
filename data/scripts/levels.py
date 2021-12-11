@@ -198,41 +198,63 @@ class GameState:
         self.player.base_vel = copy(self._PLAYER_VEL)
         self.dt = dt
 
-        """world_rect = self.world.get_rect()
-        # display background                         # TODO : fix this zoom effect pls (not urgent)
-        self.display.blit(
-            
-            pg.transform.scale(self.world, 
-            #(world_rect.x + self.player.camera.fov.x * 2, world_rect.x + self.player.camera.fov.y)
-            ), 
-            -camera.offset.xy
-        )"""
+        # blit the background
         self.screen.blit(self.world, -camera.offset.xy - self.offset_map)
 
+        # get the scroll value and update it
         self.scroll = camera.offset.xy
 
+        # store all the objects, and then will sort them according to their centery
         all_objects = []
+        # register the objects that will be removed on next frame
         to_remove = []
         for obj_ in self.objects:
-            if type(obj_) is not pg.Rect:
+            # the point of this loop is to set an argument on each objects' centery in order to sort them
+            # this sort is useful for the perspective
+
+            if type(obj_) is not pg.Rect:  # if the object is a rect, we just ignore it
+                # check if the object has a custom center (eg. Dummy)
                 if hasattr(obj_, 'custom_center'):
+                    # apply the custom center
                     obj_.centery = obj_.rect.y + obj_.custom_center
                 else:
+                    # just get the centery from the objects' rect
                     obj_.centery = obj_.rect.centery
+
+                    # check if the current object is a non sortable object (eg. roads), set the centery to 0
+                    # so it's always under everything
                     if hasattr(obj_, "sort"):
                         if not obj_.sort:
                             obj_.centery = 0
+
+                # append the objects in the list
                 all_objects.append(obj_)
+
+        # do the same as above, but just in the death animation managers objects
         for obj_2 in self.death_anim_manager.animations:
             obj_2.centery = obj_2.rect.centery
+        # add these objects to the list
         all_objects.extend(self.death_anim_manager.animations)
+
+        # append the player to the objects (he needs to be sorted and updated too)
         all_objects.append(self.player)
         self.player.centery = self.player.rect.centery
+
+        # update the objects, by ordering them considering their centery
         for obj in sorted(all_objects, key=attrgetter('centery')):
+
+            # method.__code__.co_varnames -> ("arg1", "arg2", "var1", "var2", "var...") of the method
+            # so we remove self argument (useless) using [1:x]
+            # and we stop when we reach arguments' count gotten by : method.__code__.co_argcount
+            # get all the arguments of the func in a list -> the arguments must be found inside this class (GameState)
+            # for eg. : def update(self, screen, scroll)
+            # self is ignored, screen and scroll are found by getattr(self, "screen") and getattr(self, "scroll")
+
             obj.update(*[getattr(self, arg)
                          for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
                        )
 
+            # add the dead enemies in the death manager
             if hasattr(obj, "IDENTITY"):
                 if obj.IDENTITY == "ENEMY":
                     if obj.dead:
@@ -241,20 +263,13 @@ class GameState:
                         self.death_anim_manager.input_death_animation(obj.current_sprite,
                                                                       obj.rect.topleft + self.scroll, scale)
 
+        # remove all the objects that need to be removed from self.objects
         for removing in to_remove:
             self.objects.remove(removing)
             del removing
 
-        """ Collision Algorithm and Entity Updater """
+        # Collision algorithm
         for obj in self.objects:
-            """
-            method.__code__.co_varnames -> ("arg1", "arg2", "var1", "var2", "var...") of the method
-            so we remove self argument (useless) using [1:x]
-            and we stop when we reach arguments' count gotten by : method.__code__.co_argcount
-            get all the arguments of the func in a list -> the arguments must be found inside this class (GameState)
-            for eg. : def update(self, screen, scroll)
-            self is ignored, screen and scroll are found by getattr(self, "screen") and getattr(self, "scroll")
-            """
 
             if hasattr(obj, "move_ability"):
                 objects = copy(self.objects)  # gets all objects
@@ -276,7 +291,7 @@ class GameState:
                         objects.remove(obj_)
         self.collision_system(self.player, objects)
 
-        # Light system
+        # Light system updating
         self.lights_manager.update(self)
 
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
@@ -305,10 +320,27 @@ class GameState:
 
     def build_road(self, start_pos: tuple[int, int], n_road: int, type_r: str = "",
                    start_type: str = "", end_type: str = "", types: list = []):
-        roads = []
-        current_pos = list(start_pos)
+        """Function to procedurally generate roads
+        Parameters
+        ----------
+        start_pos : tuple[int, int]
+                    The position of the first road.
+        n_road : int
+                 The number of roads.
+        type_r : str
+                 The type of the roads generated (except end and start)
+        start_type : str
+                     *Optional* The type of the road first generated
+        end_type : str
+                   *Optional* The type of the last generated road
+        types : list
+                *Optional* The generation will follow the list of types
+        """
+
+        roads = []  # list to store all the generated roads
+        current_pos = list(start_pos)  # first pos, will be incremented according to the added roads
         default = type_r if type_r != "" else "ver_road"
-        if types == []:
+        if not types:  # if types is empty
             for i in range(n_road):
                 if end_type != "" and i == n_road - 1:
                     road = end_type
@@ -334,20 +366,61 @@ class GameState:
         return roads
 
     def generate_chunk(self, type_: str, x: int, y: int, row: int, col: int, step_x: int, step_y: int,
-                       randomize: int = 20):
+                       randomize: int = 20) -> list:
+
+        """Generates a grid of objects, and randomize the positions a little, in order it not to look too much
+        grid-ish, and more realistic.
+        Parameters
+        ----------
+        type_ : str
+                The type of object that will be generated.
+        x : int
+            x position of the beginning of the grid.
+        y : int
+            y position of the beginning of the grid.
+        row : int
+              Number of rows.
+        col : int
+              Number of columns.
+        step_x : int
+                 Width separating each generated object.
+        step_y : int
+                 Height separating each generated object.
+        randomize : int
+                    *Optional* Using gaussian repartition, randomize is moving randomly each objects in the grid, in
+                    order to make the generation more realistic and less strict.
+        """
+
         return [
             self.prop_objects[type_](
                 (x + c * step_x + int(gauss(0, randomize)), y + r * step_y + int(gauss(0, randomize))))
             for c in range(col) for r in range(row)
         ]
 
-    def generate_hills(self, direction: str, dep_pos: tuple[int, int],
-                       n_hills: int, mid_type: str = "left", end_type: str = "hill_side_inner", no_begin: bool = False):
+    def generate_hills(self, direction: str, dep_pos: tuple[int, int], n_hills: int, mid_type: str = "left",
+                       end_type: str = "hill_side_inner", no_begin: bool = False) -> list:
+        """ Generate hills procedurally.
+        Parameters
+        ----------
+        direction : str
+                    Direction of the hill -> "down" to go down vertically, "right" to go right horizontally.
+        dep_pos : tuple[int, int]
+                  Basic position of the hill, the position of the first hill part.
+        n_hills : int
+                  The number of hills (counting the corners).
+        mid_type : str
+                   The type of the middle hills (the ones between the two ends).
+        end_type : str
+                   The type of the last hill.
+        no_begin : bool
+                   Begins directly the hill by a middle.
+        """
 
         corner_left = "hill_side_outer"
         corner_right = "hill_side_outer_rev"
         hill_middle = "hill_mid"
         hill_middle_down = "hill_mid" if mid_type == "left" else "hill_side_mid"
+        # dictionary containing all the sizes
         sizes = {
             corner_left: self.prop_objects[corner_left]((0, 0)).current_frame.get_size(),
             corner_right: self.prop_objects[corner_right]((0, 0)).current_frame.get_size(),
@@ -355,8 +428,9 @@ class GameState:
             hill_middle_down: self.prop_objects[hill_middle_down]((0, 0)).current_frame.get_size(),
         }
 
+        # first pos of the first hill, will be incremented
         current_pos = list(dep_pos)
-        hills = []
+        hills = []  # list that contains all the generated hills
 
         if not no_begin:
             if direction == "right" or direction == "up" or direction == "down":
@@ -364,6 +438,8 @@ class GameState:
             else:
                 hills.append(self.prop_objects[corner_right](dep_pos))
 
+            # according to the direction, increment the position for the next hill according to the size of the
+            # hill currently being added
             match direction:
                 case "right":
                     current_pos[0] += sizes[corner_left][0]
@@ -371,8 +447,11 @@ class GameState:
                     current_pos[1] += sizes[corner_left][1]
                     current_pos[1] -= 102
 
+        # n_hills - 2 because the ending and starting hills are generated outside the loop
         for i in range(n_hills - 2):
             new_hill = None
+            # according to the direction, increment the position for the next hill according to the size of the
+            # hill currently being added
             match direction:
                 case "right":
                     new_hill = self.prop_objects[hill_middle](current_pos)
@@ -380,12 +459,17 @@ class GameState:
                 case "down":
                     new_hill = self.prop_objects[hill_middle_down](current_pos)
                     current_pos[1] += sizes[hill_middle_down][1]
-                    current_pos[1] -= 51 #17 * 3
+
+                    # "cancel" the gap that the sprites are applying (can't take the height of the sprite without
+                    # generating a graphical gap
+                    current_pos[1] -= 51
                 case _:
                     pass
             if new_hill is not None:
+                # appends the generated hill to the list
                 hills.append(new_hill)
 
+        # add the last hill
         if end_type != "none":
             hills.append(self.prop_objects[end_type](current_pos))
 
@@ -632,7 +716,7 @@ class JohnsGarden(GameState):
                                  randomize=20),
             # Add hills
             *self.generate_hills("right", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800), 10, mid_type="hill_middle"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+129*3-102), 5, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_inner_rev")
+            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+160*3-102), 5, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer")
         ]
 
         self.exit_rects = {
