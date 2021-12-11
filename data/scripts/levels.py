@@ -652,7 +652,6 @@ class JohnsGarden(GameState):
             pg.Rect((mano_pos[0] + 116) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
             pg.Rect((mano_pos[0] + 159) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
 
-            # Road between mano and john homes
             *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc),
                              n_road=4, type_r="hori_road", end_type="hori_road_half"),
 
@@ -701,9 +700,13 @@ class JohnsGarden(GameState):
 
             # The game without the grass and trees take around 150mb of ram
             # Currently the trees take +100 mb of ram, so we need to be exact and precise with the numbers
+            
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 450), 8, mid_type="hill_middle", end_type="hill_side_inner_rev"),
+
             # Trees right from john's room
             *self.generate_chunk("tree", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
                                  randomize=10),
+
 
             # Trees right from manos hut
             *self.generate_chunk("tree", mano_pos[0] * mano_sc + 950, jh_pos[1] * jh_sc, 3, 3, 100 * 4, 100 * 3,
@@ -714,21 +717,27 @@ class JohnsGarden(GameState):
             # Add grass details under those trees
             *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
                                  randomize=20),
-            # Add hills
-            *self.generate_hills("right", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800), 10, mid_type="hill_middle"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+160*3-102), 5, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer")
+            
+            # Cave Borders
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_middle", end_type="hill_side_outer_rev"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer"),
+
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2400 + 160 * 8 - 31, jh_pos[1]*jh_sc+1400+160*3-102), 3, no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
+
+
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_middle", end_type="hill_side_inner_rev")
         ]
 
         self.exit_rects = {
-            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc, (jh_pos[1] + 341 - 82) * jh_sc, 100, 60),
+            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 280) * jh_sc , 100, 60),
                         "Go back to your house?"),
-            # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof)
-            "manos_hut": (pg.Rect((mano_pos[0] + 568 - 428) * mano_sc, (mano_pos[1] + 337 - 43) * mano_sc, 100, 50),
+            # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
+            "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43) * mano_sc, 100, 50),
                           "Enter Mano's hut ?")
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
-            "manos_hut": self.exit_rects["manos_hut"][0].bottomleft
+            "manos_hut": self.exit_rects["manos_hut"][0].midbottom
         }
 
     def update(self, camera, dt):
@@ -764,10 +773,12 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y))
         ]
 
+        #  Below are the hitboxes, the player spawns almost near them!
+
         self.spawn = {
-            "johns_garden": (1280 // 2, 720 // 2)
+            "johns_garden": (630, 490)
         }
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(1280 // 2, 720 * 3 // 4, 150, 150), "Go back to open world ?")
+            "johns_garden": (pg.Rect(560, 635, 150, 75), "Go back to open world ?")
         }

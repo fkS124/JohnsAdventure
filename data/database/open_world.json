@@ -55,8 +55,8 @@
   "hill_side_outer_rev": {"x":998, "y": 448, "w": 224, "h": 161, "it": 1, "sc": 3, "reverse": true ,"crect":  [0, 17, 224, 137]},
   "hill_mid": {"x":1229, "y": 448, "w": 224, "h": 161, "it": 1, "sc": 3, "crect":  [0, 17, 223, 137]},
 
-  "hill_side_inner":{"x":998, "y": 449, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137]},
-  "hill_side_inner_rev":{"x":998, "y": 449, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137]},
+  "hill_side_inner":{"x":998, "y": 450, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137]},
+  "hill_side_inner_rev":{"x":998, "y": 450, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137]},
 
 
   "hill_side_mid": {"x":1465, "y": 448, "w": 224, "h": 222, "it": 1, "sc": 3, "crect":  [0, 17, 223, 208]},
