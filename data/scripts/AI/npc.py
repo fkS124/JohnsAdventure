@@ -247,6 +247,7 @@ class MovingNPC(NPC):
         self.move()
 
     def update(self, screen, scroll):
+        self.update_interaction_rect(scroll)
         return super().update(screen, scroll)
 
 
@@ -288,22 +289,20 @@ class Candy(MovingNPC):
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
-            idle_right=[119, 87, 37, 27, 2, 2],
+            idle_down=[119, 87, 37, 27, 2, 2],
             move_anim=True,
             move_right=[2, 86, 38, 29, 2, 2],
             move_left=[2, 86, 38, 29, 2, 2, "flip"],
+            tell_story='Zzzz'
         )
-        self.direction = "right"
+        self.direction = "down"
+        self.state = "idle"
+        self.it_re_size = (100, 100)
+
         self.anim_duration["idle"] = 1000
         self.anim_duration["move"] = 250
-
         self.status = "sleeping"
-        self.it_re_size = (1, 1)
-
-        self.state = "idle"
         self.animate()
-
-        self.interactable = False
 
     def logic(self, scroll):
         if self.status == "awake":
@@ -342,7 +341,6 @@ class Manos(NPC):
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
-            # idk why the animation is weird pls fix it
             idle_down=[2, 120, 20, 45, 3, 3],
             tell_story='Sup john'
         )

@@ -325,9 +325,10 @@ class Player:
                         if equipped_weapon.KB:
                             knock_back["duration"] = equipped_weapon.knock_back["duration"]
 
-                            print(self.rect.topleft - self.camera.offset.xy, obj.rect.topleft)
+                            print(self.rect.topleft - self.camera.offset.xy + p.Vector2(15, 60), obj.rect.center)
                             knock_back["vel"] = p.Vector2(
-                                p.Vector2(obj.rect.topleft) - p.Vector2(self.rect.topleft - self.camera.offset.xy)
+                                p.Vector2(obj.rect.center)
+                                - p.Vector2(self.rect.topleft - self.camera.offset.xy + p.Vector2(15, 60))
                             )
                             knock_back["vel"].scale_to_length(equipped_weapon.knock_back["vel"])
 
