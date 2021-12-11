@@ -342,12 +342,12 @@ class GameState:
         ]
 
     def generate_hills(self, direction: str, dep_pos: tuple[int, int],
-                       n_hills: int, mid_type: str = "left", end_type: str = "hill_end", no_begin: bool = False):
+                       n_hills: int, mid_type: str = "left", end_type: str = "hill_side_inner", no_begin: bool = False):
 
-        corner_left = "hill_left"
-        corner_right = "hill_end"
-        hill_middle = "hill_middle"
-        hill_middle_down = "hill_mid" if mid_type == "left" else "hill_end_mid"
+        corner_left = "hill_side_outer"
+        corner_right = "hill_side_outer_rev"
+        hill_middle = "hill_mid"
+        hill_middle_down = "hill_mid" if mid_type == "left" else "hill_side_mid"
         sizes = {
             corner_left: self.prop_objects[corner_left]((0, 0)).current_frame.get_size(),
             corner_right: self.prop_objects[corner_right]((0, 0)).current_frame.get_size(),
@@ -380,7 +380,7 @@ class GameState:
                 case "down":
                     new_hill = self.prop_objects[hill_middle_down](current_pos)
                     current_pos[1] += sizes[hill_middle_down][1]
-                    current_pos[1] -= 17 * 3
+                    current_pos[1] -= 51 #17 * 3
                 case _:
                     pass
             if new_hill is not None:
@@ -631,8 +631,8 @@ class JohnsGarden(GameState):
             *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
                                  randomize=20),
             # Add hills
-            *self.generate_hills("right", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800), 10, mid_type="hill_middle", end_type="hill_end"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+129*3-102), 5, no_begin=True, mid_type="left", end_type="hill_left")
+            *self.generate_hills("right", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800), 10, mid_type="hill_middle"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc, jh_pos[1]*jh_sc+1800+129*3-102), 5, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_inner_rev")
         ]
 
         self.exit_rects = {

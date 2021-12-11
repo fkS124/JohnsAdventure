@@ -401,8 +401,12 @@ class SimplePropObject(Prop):
             LightTypes().get_light_object(light["type"], light["info"], light["scale"])
             for light in light_sources
         ]
+        
         for l_source in self.light_sources:
             l_source.pos += pg.Vector2(self.rect.topleft)
+
+        # VS 
+        #l_sources.pos = sum([pg.Vector2(self.rect.topleft) for source in self.light_sources])
 
         if reverse:
             for anim in self.anim_manager:
