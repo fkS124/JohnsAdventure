@@ -16,7 +16,8 @@ from .utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from .props import Chest
 from .PLAYER.items import Training_Sword, Knight_Sword
 from .AI.death_animator import DeathManager
-from .POSTPROCESSING.lights_manager import LightManager, PolygonLight, LightSource
+from .POSTPROCESSING.lights_manager import LightManager
+from .POSTPROCESSING.light_types import PolygonLight, LightSource
 
 
 class GameState:
@@ -419,7 +420,7 @@ class GameState:
         corner_left = "hill_side_outer"
         corner_right = "hill_side_outer_rev"
         hill_middle = "hill_mid"
-        hill_middle_down = "hill_mid" if mid_type == "left" else "hill_side_mid"
+        hill_middle_down = "hill_mid" if mid_type == "left" else mid_type
         # dictionary containing all the sizes
         sizes = {
             corner_left: self.prop_objects[corner_left]((0, 0)).current_frame.get_size(),
@@ -701,7 +702,7 @@ class JohnsGarden(GameState):
             # The game without the grass and trees take around 150mb of ram
             # Currently the trees take +100 mb of ram, so we need to be exact and precise with the numbers
             
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 450), 8, mid_type="hill_middle", end_type="hill_side_inner_rev"),
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 450), 8, mid_type="hill_mid", end_type="hill_side_inner_rev"),
 
             # Trees right from john's room
             *self.generate_chunk("tree", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
@@ -719,13 +720,13 @@ class JohnsGarden(GameState):
                                  randomize=20),
             
             # Cave Borders
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_middle", end_type="hill_side_outer_rev"),
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
             *self.generate_hills("down", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer"),
 
             *self.generate_hills("down", (jh_pos[0]*jh_sc + 2400 + 160 * 8 - 31, jh_pos[1]*jh_sc+1400+160*3-102), 3, no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
 
 
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_middle", end_type="hill_side_inner_rev")
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_mid", end_type="hill_side_inner_rev")
         ]
 
         self.exit_rects = {
