@@ -1,7 +1,6 @@
 import pygame as pg
 from copy import copy
-from math import sqrt, cos, radians, sin
-from pygame.gfxdraw import filled_polygon
+from .light_types import LightSource, PolygonLight
 
 
 class LightManager:
@@ -36,14 +35,24 @@ class LightManager:
         self.light_state = ""
 
     def init_level(self, new_level_instance):
-        self.lights = []
-        for obj in new_level_instance.objects:
-            if hasattr(obj, "light_sources"):
-                self.lights.extend(obj.light_sources)
-        self.lights.extend(new_level_instance.additional_lights)
-        self.light_state = new_level_instance.light_state
+        """
+        Initialize lights of a new level
+        :param new_level_instance: levels.GameState, instance of the newly initialized level
+        :return: None
+        """
+        self.lights = []  # empty the current lights
+        for obj in new_level_instance.objects:  # loop through the objects to check if they've light sources
+            if hasattr(obj, "light_sources"):  # detect the light source
+                self.lights.extend(obj.light_sources)  # add it/them
+        self.lights.extend(new_level_instance.additional_lights)  # add the "manually" added light sources
+        self.light_state = new_level_instance.light_state  # set the light state
 
     def update(self, current_level):
+        """
+        Update the lights.
+        :param current_level: levels.GameState, the current level being played.
+        :return: None
+        """
         # update current objects treatment
         self.objects = copy(current_level.objects)
 
@@ -60,164 +69,10 @@ class LightManager:
         self.main_layer.set_alpha(self.opacities[current_level.light_state])
 
 
-class LightSource:
-    """Basically drawing a simulated light source"""
-
-    def __init__(self, pos: pg.Vector2, radius: int, dep_opacity: int, color: tuple[int, int, int]):
-        self.surface = pg.Surface((radius*2, radius*2), pg.SRCALPHA)
-        self.radius = radius
-        self.pos = pos
-        self.n_circles = self.radius // 2
-        self.opacity = dep_opacity
-        self.color = color
-        self.inside_pos = [self.radius, self.radius]
-
-        self.draw_light_circle()
-
-    def get_alpha(self, i):
-        # function calculated to manage the growth of alpha -> f(x) = sqrt(x/n_circles)^4 * final_opacity
-        alpha = int((sqrt(i/self.n_circles)**4)*self.opacity)
-        return alpha if alpha <= 255 else 255
-
-    def draw_light_circle(self):
-        for i in range(self.n_circles):
-            pg.draw.circle(self.surface, (self.color[0], self.color[1], self.color[2], self.get_alpha(i)),
-                           self.inside_pos, int(self.radius - self.radius * i / self.n_circles)
-                           )
-
-    def update(self, screen, scroll, LAYER):
-
-        screen.blit(self.surface, self.pos-pg.Vector2(self.radius, self.radius)-scroll)
-        pg.draw.circle(LAYER, (0, 0, 0, 0), self.pos-scroll, self.radius)
-
-
-class PolygonLight:
-
-    def __init__(self,
-                 origin: pg.Vector2,
-                 height: int,
-                 radius: int,
-                 dep_angle: int,  # degrees
-                 end_angle: int,  # degrees
-                 color: tuple[int, int, int],
-                 dep_alpha: int,
-                 horizontal: bool = False,
-                 additional_alpha: int = 0
-                 ):
-
-        self.pos = origin - pg.Vector2(radius, radius)
-        self.origin = origin
-        self.height = height
-        self.radius = radius
-        self.color = color
-        self.opacity = dep_alpha
-        self.dep_angle = dep_angle
-        self.end_angle = end_angle
-        self.step = 2
-        self.n_circles = self.radius // self.step
-        self.horizontal = horizontal
-        self.undo_layer_alpha = additional_alpha
-
-        self.surface = pg.Surface((self.radius*2, self.radius*2), pg.SRCALPHA)
-        self.start_point = pg.Vector2((self.radius, self.radius))
-        if not horizontal:
-            self.top_point = self.start_point - pg.Vector2(0, height // 2)
-            self.bot_point = self.start_point + pg.Vector2(0, height // 2)
-        else:
-            self.top_point = self.start_point + pg.Vector2(height // 2, 0)
-            self.bot_point = self.start_point - pg.Vector2(height // 2, 0)
-
-        self.top_edge = pg.Vector2(
-            self.radius + self.radius * cos(radians(self.dep_angle)),
-            self.radius + self.radius * sin(radians(self.dep_angle))
-        )
-        self.down_edge = pg.Vector2(
-            self.radius + self.radius * cos(radians(self.dep_angle+self.end_angle)),
-            self.radius + self.radius * sin(radians(self.dep_angle+self.end_angle))
-        )
-        self.draw_light(self.surface)
-
-    def get_points(self, radius):
-        # we take a variable radius, as we will need to generate points according to different radius
-        points = []
-
-        angle = copy(self.dep_angle)
-        for i in range(self.end_angle):
-            angle += 1
-            points.append(pg.Vector2(
-                self.radius+radius*cos(radians(angle)),
-                self.radius+radius*sin(radians(angle))
-            ))
-        return points
-
-    def get_alpha(self, index_circle):
-        alpha = int((sqrt(index_circle / self.n_circles) ** 4) * self.opacity)
-        return alpha if alpha <= 255 else 255
-
-    def draw_polygon(self, surface, radius, alpha):
-
-        pts = self.get_points(radius)
-        pg.draw.polygon(
-            surface,
-            (self.color[0], self.color[1], self.color[2], alpha),
-            [
-                self.top_point,
-                *pts,
-                self.bot_point,
-            ]
-        )
-        pg.draw.polygon(
-            surface,
-            (self.color[0], self.color[1], self.color[2], alpha),
-            [
-                self.top_point,
-                pts[-1],
-                self.start_point
-            ]
-        )
-        pg.draw.polygon(
-            surface,
-            (self.color[0], self.color[1], self.color[2], alpha),
-            [
-                self.bot_point,
-                pts[0],
-                self.start_point
-            ]
-        )
-
-    def undo_layer(self, layer, pos):
-        vec = [
-             pg.Vector2(self.radius, self.radius - self.height // 2) if not self.horizontal else
-             pg.Vector2(self.radius + self.height // 2, self.radius),
-             pg.Vector2(self.radius, self.radius + self.height // 2) if not self.horizontal else
-             pg.Vector2(self.radius - self.height // 2, self.radius)
-        ]
-        pts = self.get_points(self.radius)
-        for pt in pts:
-            pt += pos
-        pg.draw.polygon(
-            layer,
-            (0, 0, 0, self.undo_layer_alpha),
-            [
-
-                pos + vec[0],
-                *pts,
-                pos + vec[1],
-            ]
-        )
-
-    def draw_light(self, surface):
-
-        for i in range(0, self.n_circles):
-            self.draw_polygon(surface, self.radius-i*self.step, self.get_alpha(i))
-
-    def update(self, screen, scroll, LAYER):
-        self.undo_layer(LAYER, self.pos-scroll)
-        screen.blit(self.surface, self.pos - scroll)
-
-
-
 class LightTypes:
+
+    """Class to reference all the lights available.
+    It's useful for the props automatic generation, according to open_world.json file."""
 
     light_types = {
         "polygon_light": PolygonLight,
@@ -228,6 +83,17 @@ class LightTypes:
         pass
 
     def get_light_object(self, light_name, info, scale):
+
+        """
+        Returns a light object, with the proper size and position (according to scale)
+        :param light_name: str, type of the light (must be referenced in self.light_types)
+        :param info: dict, characteristics of the light
+        :param scale: int, scale of the sprite
+        :return: light object -> PolygonLight or LightSource
+        """
+
+        if light_name not in self.light_types:
+            raise ValueError(f"Light type {light_name} is unknown.")
 
         args = []
         for key, item in info.items():
