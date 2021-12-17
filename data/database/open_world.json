@@ -1,5 +1,5 @@
 {
-  "john_house": {"x":728, "y":82, "w":270, "h":258, "it":  1, "sc": 3, "crect": [22, 82, 225, 175], "ccty":200},
+  "john_house": {"x":728, "y":102, "w":270, "h":257, "it":  1, "sc": 3, "crect": [22, 82, 225, 175], "ccty":200},
 
   "manos_hut":{"x":428, "y":43, "w":282, "h":345, "it":  1, "sc": 3, "crect":  [0, 123, 282, 170], "ccty": 277,
     "add_args":  {"particle":  {"name":  "smoke", "pos":  [80, 122], "size":  [25, 2], "player": "player"}

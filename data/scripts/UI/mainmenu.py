@@ -1,14 +1,6 @@
-'''
-Credits @Marios325346, @ƒkS124
-
-The Main menu, where the player start his adventure! 
-
-'''
-
 import pygame as p
 import json
 from ..utils import scale, load, resource_path
-
 
 class Menu:
 
@@ -35,6 +27,7 @@ class Menu:
         )
 
         self.mouse_icon = ui.parse_sprite("mouse.png") # Mouse cannot be scaled
+        
         # Buttons
         self.btns = [
             [
@@ -179,7 +172,7 @@ class Menu:
 
     def update(self, mouse):
         # Menu background
-
+        
 
         if p.time.get_ticks() - self.start_time < 4500:
 

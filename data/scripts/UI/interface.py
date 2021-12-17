@@ -1,58 +1,121 @@
 import pygame as pg
 import json
-from ..utils import scale, resource_path
+from ..utils import scale, resource_path, l_path, get_sprite
 
 class Interface:
-    def __init__(self, screen, ui, f, dt):
-        self.screen, self.f, self.dt = screen, f, dt
-        self.icon = scale(ui.parse_sprite('interface_button.png').convert(), 8)
-        self.current_text_index = self.timer = 0
-        self.text_pos = ( screen.get_width() // 2 - 420, screen.get_height() // 2 + 110) # Position of the first sentence
+
+    def __init__(self, screen, ui_background) -> None:
+        '''
+            This System is mathematically taking each letter in all sizes.
+
+            How to use:
+                my_font = Font('font_name.extension') / # font_big.png 
+
+                
+
+                my_font.render(surface -> Pygame.Surface, 'text here' -> Str, position -> Tuple)
         
+        '''
+        self.screen = screen # Screen surface is needed to blit the font surfaces
+
+        # We might need a more detailed font
+        self.img = scale(l_path('data/scripts/UI/interaction_font.png'), 2)
+
+        # The json will be switched soon
         with open(resource_path('data/database/language.json')) as f: 
-            self.data = json.load(f); f.close() # Read Json and close it
+            self.data = json.load(f);
+
+        # Your sprite sheet must be absolute identical to this list
+        self.alphabet = [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+            'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q',
+            'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+            '!', '"', '(', ')', '$', '?'
+        ]
+
+        # To get mathematically the width of the characters (assuming there are no gaps between them)
+        character_width = self.img.get_width() // len(self.alphabet)
+        character_height = self.img.get_height()
         
-        self.sound = pg.mixer.Sound(resource_path('data/sound/letter_sound.wav')); self.sound.set_volume(0.2) # Insert music and change sound
-        self.text_display = ['' for i in range(4)] # Create 4 empty text renders
-        self.text_surfaces = [self.f.render(self.text_display[i], True, (0,0,0)) for i in range(4)] # font render each of them
-
-    def reset(self): self.current_text_index  =  -1  # Resets text
-
-    def draw(self, path):
-
-        # Blit Background UI
-        self.screen.blit(self.icon, (155 , self.screen.get_height() // 2 + 80))
+        # Here contains the surfaces of the sprite sheet lexer
+        self.text = [get_sprite(self.img, character_width * x, 0, character_width, character_height) for x in range(len(self.alphabet))]
         
-        # Tries to take text from npc json else its custom text
-        try: 
-            text = self.data[path]['text']
-        except KeyError:
-            text = path
+        self.current_gui_index = 0  
 
-        self.timer += self.dt # Speed of text/delta_time
+        self.timer = 0
+
+        self.ui_bg = ui_background
+        self.pos = (screen.get_width() // 2 - 420, screen.get_height() // 2 + 110)
+        self.sentence_end = False 
+
+    def reset(self):
+        '''
+            Resets the browsing index
+        '''
+        self.current_gui_index  =  -1  
 
 
-        if self.timer > 0.030 * 2:
-            self.current_text_index += 1 # Next letter
-            if self.current_text_index < len(text) - 1:
+    def _get_data(self, entity):
+        '''
+            Try/except method will be temporary until the script is ready and implemented into json
+        '''
+        try:
+            text = self.data[entity]['txt']
+        except:
+            text = entity
+        return text
 
-                # Goes to the next key
-                self.current_text_index += 1
+    def draw(self, txt, dt):
+        """
+        :param surf: Screen surface
+        :param txt: Text content
+               How to use:
+                   variable_containing_class.render(Surface, 'Your content here', Position)
 
-                # This is for playing sounds in all keys except space
-                # if text[self.current_text_index] != ' ':  
-                #    self.sound.play()
-            
-            
-            # --- UPDATE CONTENT ---
-            
-            self.text_display = [text[44 * i : min(self.current_text_index, 44 * (i + 1))] for i in range(4)] # Update letters strings
-            
-            self.text_surfaces = [self.f.render(text, True, (0,0,0)) for text in self.text_display]  # Transform them into a surface
-            
-            # Reset timer
+
+                   \n : To make a new line
+
+                   Example: Apples are\nGreen and Red
+                   Output:
+                       Apples are
+                       Green and Red
+
+        :param pos:  (X,Y) coordinates
+        """
+
+        # Draw background UI
+        self.screen.blit(self.ui_bg, (155 , self.screen.get_height() // 2 + 80))
+
+        text = self._get_data(txt)
+        self.timer += dt
+        
+        if self.timer > 0.030 * 2: # 0.030 is the dt
+            if self.current_gui_index < len(text):
+                self.current_gui_index += 1
+                # if text[self.current_gui_index] != ' ':  
+                #    self.sound.play()  <- This will soon be implented
+            else:
+                # Something for the UI later on.
+                self.sentence_end = True 
+            # Reset the timer
             self.timer = 0
 
-        # Display the keywords
-        for i, surface in enumerate(self.text_surfaces): 
-            self.screen.blit(surface, (self.text_pos[0], self.text_pos[1] + i * 30))
+        # Renders the text based on the currect_gui_index
+        self.rendering(self.screen, text[:self.current_gui_index], self.pos)
+
+    def rendering(self, surf, txt, pos):
+        x_gap = y_gap = 0
+        # For each letter passed
+        for t in txt:
+            # Browse the alphabet and blit the correct letter
+            for i in range(len(self.alphabet)):
+                if t.upper() == self.alphabet[i]:
+                    surf.blit(self.text[i], (pos[0] + x_gap, pos[1] + y_gap))
+
+            # Space
+            x_gap += self.text[0].get_width() + 1
+
+            if '\n' == t:
+                y_gap += self.text[0].get_height() + 2
+                x_gap = 0  # Reset X position

@@ -77,7 +77,7 @@ class GameManager:
         self.sound_manager = SoundManager()
         self.loading_screen = LoadingScreen(self.DISPLAY)
         self.menu_manager = Menu(self.DISPLAY, self.blacksword, self.ui)
-        self.interface = Interface(self.DISPLAY, self.ui, self.font, self.dt)
+        self.interface = Interface(self.DISPLAY, scale(self.ui.parse_sprite('interface_button.png'), 8))
         self.pause_menu = PauseMenu(self.DISPLAY, self.ui)
 
         # ------------- PLAYER ----------------
@@ -150,8 +150,9 @@ class GameManager:
                 # 52 48 are players height and width
                 self.player.rect.x - 52 - self.player.camera.offset.x,
                 self.player.rect.y - self.player.camera.offset.y - 48
-
-            ))
+                ), 
+                self.dt # <- is needed for the NPC interaction
+            ) 
             self.pause()
             self.player.camera.method.draw()
 

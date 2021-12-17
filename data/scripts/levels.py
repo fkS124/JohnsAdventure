@@ -512,7 +512,7 @@ class PlayerRoom(GameState):
                 "duration": 0,
                 "text": f"Hello Player. Welcome to John's Adventure.",
                 "waiting_end": 4000,
-                "zoom": 2
+                "zoom": 1.4
             },
             {
                 "pos": (1100, 225),
@@ -533,6 +533,8 @@ class PlayerRoom(GameState):
         ]
 
         self.additional_lights = [
+
+            # Windows 
             PolygonLight(
                 pg.Vector2(79*3, 9*3),
                 68*3,
@@ -543,7 +545,8 @@ class PlayerRoom(GameState):
                 dep_alpha=50,
                 horizontal=True,
                 additional_alpha=175
-            ),
+            ),     
+
             PolygonLight(
                 pg.Vector2(347 * 3, 9 * 3),
                 68 * 3,
@@ -555,6 +558,8 @@ class PlayerRoom(GameState):
                 horizontal=True,
                 additional_alpha=175
             ),
+
+            # John's Computer
             PolygonLight(
                 pg.Vector2(254*3+1, 26*3),
                 49*3,
@@ -562,7 +567,7 @@ class PlayerRoom(GameState):
                 25,
                 125,
                 (89, 144, 135),
-                dep_alpha=255,
+                dep_alpha= 185,
                 horizontal=True
             )
         ]

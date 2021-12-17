@@ -273,7 +273,6 @@ class Player:
             return self.modified_damages * crit_chance
         return 0
 
-    # This should belong in collision system >:(((
     def check_content(self, pos):
         position = (self.rect.topleft - self.camera.offset.xy)
         itr_box = p.Rect(*position, self.rect.w // 2, self.rect.h // 2)
@@ -461,7 +460,7 @@ class Player:
                 self.restart_animation = True
                 # RESET ANIMATION HERE
 
-    def user_interface(self, m, player_pos):
+    def user_interface(self, m, player_pos, dt):
         if self.camera_status != "auto":
             # Health bar
             p.draw.rect(
@@ -515,7 +514,7 @@ class Player:
 
         # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
-            self.npc_catalog.draw(self.npc_text)
+            self.npc_catalog.draw(self.npc_text, dt)
 
         # if not self.inventory
         if self.show_mouse:
@@ -727,7 +726,7 @@ class Player:
         for key, cam_mode in self.camera_mode.items():
             if type(self.camera.method) is type(cam_mode):
                 self.camera_status = key
-                return
+                break
 
     def controls(self, pos):
         '''
