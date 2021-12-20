@@ -53,8 +53,6 @@ class LightManager:
         :param current_level: levels.GameState, the current level being played.
         :return: None
         """
-        # update current objects treatment
-        self.objects = copy(current_level.objects)
 
         # manage lights
         if self.light_state != "day" or "inside" in current_level.light_state:

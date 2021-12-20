@@ -18,6 +18,7 @@ from .PLAYER.items import Training_Sword, Knight_Sword
 from .AI.death_animator import DeathManager
 from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
+from sys import getsizeof
 
 
 class GameState:
@@ -34,7 +35,7 @@ class GameState:
 
         # -------- WORLD's OBJECTS ----------
         self.player = player_instance  # get player to pass it as an argument in certain func of obj
-        self._PLAYER_VEL = copy(self.player.base_vel)
+        self._PLAYER_VEL = copy(self.player.DEFAULT_VEL)
 
         self.objects = []
         self.scroll = self.player.camera.offset.xy
@@ -363,7 +364,7 @@ class GameState:
                 else:
                     current_pos[1] += new_road.current_frame.get_height()
                 roads.append(new_road)
-        print("Successfully generated", len(roads))
+        print("Successfully generated", len(roads), "roads.")
         return roads
 
     def generate_chunk(self, type_: str, x: int, y: int, row: int, col: int, step_x: int, step_y: int,
@@ -533,43 +534,15 @@ class PlayerRoom(GameState):
         ]
 
         self.additional_lights = [
-
             # Windows 
-            PolygonLight(
-                pg.Vector2(79*3, 9*3),
-                68*3,
-                350,
-                50,
-                85,
-                (255, 255, 255),
-                dep_alpha=50,
-                horizontal=True,
-                additional_alpha=175
-            ),     
+            PolygonLight(pg.Vector2(79*3, 9*3), 68*3, 350, 50, 85, (255, 255, 255), dep_alpha=50, horizontal=True,
+                         additional_alpha=175),
 
-            PolygonLight(
-                pg.Vector2(347 * 3, 9 * 3),
-                68 * 3,
-                350,
-                50,
-                85,
-                (255, 255, 255),
-                dep_alpha=50,
-                horizontal=True,
-                additional_alpha=175
-            ),
+            PolygonLight(pg.Vector2(347 * 3, 9 * 3), 68 * 3, 350, 50, 85, (255, 255, 255), dep_alpha=50,
+                         horizontal=True, additional_alpha=175),
 
             # John's Computer
-            PolygonLight(
-                pg.Vector2(254*3+1, 26*3),
-                49*3,
-                150,
-                25,
-                125,
-                (89, 144, 135),
-                dep_alpha= 185,
-                horizontal=True
-            )
+            PolygonLight(pg.Vector2(254*3+1, 26*3), 49*3, 150, 25, 125, (89, 144, 135), dep_alpha=185, horizontal=True)
         ]
 
 
@@ -587,17 +560,8 @@ class Kitchen(GameState):
             "johns_garden": (self.exit_rects["johns_garden"][0].topleft + pg.Vector2(0, -200))
         }
         self.additional_lights = [
-            PolygonLight(
-                pg.Vector2(103 * 3, 9 * 3),
-                68 * 3,
-                350,
-                50,
-                85,
-                (255, 255, 255),
-                dep_alpha=80,
-                horizontal=True,
-                additional_alpha=150
-            ),
+            PolygonLight(pg.Vector2(103 * 3, 9 * 3), 68 * 3, 350, 50, 85, (255, 255, 255), dep_alpha=80,
+                         horizontal=True, additional_alpha=150),
         ]
 
 
@@ -605,8 +569,8 @@ class JohnsGarden(GameState):
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="day")
-        self._PLAYER_VEL = 10 * 3  # 3 freq
+        super().__init__(DISPLAY, player_instance, prop_objects, light_state="night")
+        self._PLAYER_VEL = 10 * 3   # 3 freq
 
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \
@@ -635,11 +599,14 @@ class JohnsGarden(GameState):
         self.objects = [
             # .prop_objects["box"]((200, 1200)),
             # Fences of john's house (values are calculated for scale = 3 considering this won't change)
-            self.prop_objects["full_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
-            self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 300)),
-            self.prop_objects["half_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 1611, jh_pos[1] * 3 + 1064)),
-            self.prop_objects["half_fence_reversed"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 702, jh_pos[1] * 3 + 1064)),
-            self.prop_objects["side_fence"]((jh_pos[0] * 3 + jh_siz[0] * 1.5 - 30, jh_pos[1] * 3 + 300)),
+
+            self.prop_objects["hori_fence_rev"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100)*jh_sc)),
+            self.prop_objects["hori_fence"](((jh_pos[0]-83) * jh_sc + jh_siz[0], (jh_pos[1]+100) * jh_sc)),
+            self.prop_objects["side_fence"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100)*jh_sc)),
+            self.prop_objects["side_fence"](((jh_pos[0]-83+233-9) * jh_sc + jh_siz[0], (jh_pos[1]+100) * jh_sc)),
+            self.prop_objects["hori_fence_rev"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100+254)*jh_sc)),
+            self.prop_objects["hori_fence"](((jh_pos[0]-83)*jh_sc + jh_siz[0], (jh_pos[1]+100+254)*jh_sc)),
+
             # All the objects contained in open_world_pos.json
             *[self.prop_objects[object_](
                 (pos[0] * self.get_scale(object_), pos[1] * self.get_scale(object_)))
@@ -658,12 +625,12 @@ class JohnsGarden(GameState):
             pg.Rect((mano_pos[0] + 116) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
             pg.Rect((mano_pos[0] + 159) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
 
-            *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc),
+            *self.build_road(start_pos=((jh_pos[0] + 879 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc),
                              n_road=4, type_r="hori_road", end_type="hori_road_half"),
 
             # john dirt road
             *self.build_road(start_pos=((jh_pos[0] + 846 - 727) * jh_sc, (jh_pos[1] + 361 - 82) * jh_sc),
-                             n_road=2, start_type="ver_dirt", end_type="ver_sides"),
+                             n_road=2, start_type="ver_dirt", end_type="Vhori_turn"),
 
             # Manos dirt road
             *self.build_road(start_pos=((jh_pos[0] - 246) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width,
@@ -671,38 +638,38 @@ class JohnsGarden(GameState):
                              n_road=2),
 
             *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc), n_road=3, type_r="hori_road",
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc), n_road=3, type_r="hori_road",
                              end_type="Vhori_sides"),
 
             # Route 4
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height), n_road=3,
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc + hr_s_height), n_road=3,
                              type_r="ver_road", end_type="Vhori_sides"),
             # Cave Road
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc + hr_s_height + 2 * vr_r_height),
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc + hr_s_height + 2 * vr_r_height),
                              n_road=2,
                              type_r="hori_road"),
 
             # Route 5 Bottom Right
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 498) * jh_sc + hr_s_height * 18), n_road=2,
-                             type_r="ver_road", end_type="Vver_turn"),
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 498 - 3) * jh_sc + hr_s_height * 18), n_road=2,
+                             type_r="ver_road", end_type="Hver_turn"),
 
             # Route 6 Bottom Right
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
-                                        (jh_pos[1] + 361 - 82 + 172 - 50) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
+                                        (jh_pos[1] + 361 - 82 + 172-50-3-65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
                              n_road=3, type_r="hori_road"),
 
             # Route 7 -> Top Right
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height),
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height),
                              n_road=3, type_r="ver_road"),
 
             # Route 8 -> Top right of map
-            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49) * jh_sc - 3 * vr_r_height - 33 * 3),
-                             n_road=4, type_r="hori_road", start_type="hori_turn"),
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height - 33 * 3),
+                             n_road=4, type_r="hori_road", start_type="VHhori_turn"),
 
             # The game without the grass and trees take around 150mb of ram
             # Currently the trees take +100 mb of ram, so we need to be exact and precise with the numbers
@@ -733,7 +700,6 @@ class JohnsGarden(GameState):
 
             *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_mid", end_type="hill_side_inner_rev")
         ]
-
         self.exit_rects = {
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 280) * jh_sc , 100, 60),
                         "Go back to your house?"),

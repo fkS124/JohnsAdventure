@@ -67,7 +67,7 @@ class PolygonLight:
                            self.radius+radius*sin(radians(self.dep_angle+i))) for i in range(self.end_angle)]
 
     def get_alpha(self, index_circle) -> int:
-        alpha = int((sqrt(index_circle / self.radius // 2) ** 4) * self.style["alpha"])
+        alpha = int((sqrt(index_circle / (self.radius // 2)) ** 4) * self.style["alpha"])
         return alpha if alpha <= 255 else 255
 
     def draw_polygon(self, surface, radius, alpha) -> None:
