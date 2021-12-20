@@ -11,9 +11,13 @@ from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .UI.pause_menu import PauseMenu
 from .utils import resource_path, l_path
-from .props import PropGetter
+from .props import PropGetter, init_sheets, del_sheets
+from threading import Thread
+from pympler import asizeof, summary
+import gc
 
 from .levels import (
+    GameState,
     PlayerRoom,
     Kitchen,
     JohnsGarden,
@@ -91,20 +95,15 @@ class GameManager:
 
         # ----------- GAME STATE ------------------
         self.state = first_state
+        self.first_state = False
         self.prop_objects = PropGetter(self.player).PROP_OBJECTS
         self.state_manager = {
-            "player_room": PlayerRoom(self.DISPLAY, self.player, self.prop_objects),
-            "kitchen": Kitchen(self.DISPLAY, self.player, self.prop_objects),
-            "johns_garden": JohnsGarden(self.DISPLAY, self.player, self.prop_objects),
-            "manos_hut": ManosHut(self.DISPLAY, self.player, self.prop_objects)
+            "player_room": PlayerRoom,
+            "kitchen": Kitchen,
+            "johns_garden": JohnsGarden,
+            "manos_hut": ManosHut,
         }
-        keys = [key for key in self.state_manager[first_state].spawn]
-        self.player.rect.topleft = self.state_manager[first_state].spawn[keys[0]]
-        self.state_manager[self.state].lights_manager.init_level(self.state_manager[self.state])
-
-        # first pos of the player (next to his bed)
-        if not debug and first_state == "player_room":
-            self.player.rect.topleft = (self.DISPLAY.get_width() // 2 - 120, self.DISPLAY.get_height() // 2 - 20)
+        self.game_state: GameState = None
 
         # ------------ DEBUG ----------------------
         self.debug = debug
@@ -126,8 +125,8 @@ class GameManager:
 
                 if upd == "quit":
                     self.pause_menu.quit_pause()
-                    self.loading = True
-                    self.loading_screen.start("menu", duration=1000, text=True, cat=True, key_end=False)
+                    self.menu = True
+                    del self.game_state
                     self.player.paused = False
                     self.menu_manager.start_game = False
                     break
@@ -185,6 +184,52 @@ class GameManager:
             self.framerate.tick(self.FPS)
             pg.display.update()
 
+    def start_new_level(self, level_id, last_state="none", first_state=False):
+
+        if hasattr(self, "game_state"):
+            if self.game_state is not None:
+                self.game_state.objects.clear()
+            del self.game_state
+            gc.collect()
+        self.state = level_id
+
+        init_sheets()
+
+        def load_new_level(parent, level_):
+            print("Started loading thread :", level_)
+            print(parent.state_manager[level_])
+            parent.game_state = parent.state_manager[level_](parent.DISPLAY, parent.player, parent.prop_objects)
+            print("Loading thread terminated.")
+
+        loading_thread = Thread(target=load_new_level, args=(self, level_id))
+        loading_thread.start()
+
+        while loading_thread.is_alive():
+
+            for event in pg.event.get():
+
+                if event.type == pg.QUIT:
+                    del loading_thread
+                    pg.quit()
+                    raise SystemExit
+
+            self.DISPLAY.fill((255, 0, 0))
+
+            pg.display.update()
+
+        if last_state == "none":
+            keys = [key for key in self.game_state.spawn]
+            self.player.rect.topleft = self.game_state.spawn[keys[0]]
+        else:
+            self.player.rect.topleft = self.game_state.spawn[last_state]
+
+        if first_state and not self.debug:
+            self.player.rect.topleft = (self.DISPLAY.get_width() // 2 - 120, self.DISPLAY.get_height() // 2 - 20)
+            self.first_state = True
+
+        self.game_state.lights_manager.init_level(self.game_state)
+        del_sheets()
+
     def update(self):
 
         """
@@ -195,6 +240,7 @@ class GameManager:
         if not self.debug:
             self.pg_loading_screen()
         else:
+            self.start_new_level(self.state, first_state=True)
             self.menu = False
             self.loading = False
 
@@ -206,35 +252,18 @@ class GameManager:
 
                 if self.menu_manager.start_game:  # start the game
                     self.menu = False
-                    self.loading = True
-                    self.loading_screen.start(self.state, duration=2500, main_loading=True, cat=True, text=False,
-                                              key_end=False)
+                    self.loading = False
 
-            elif self.loading:  # update the loading screen
-
-                update_return = self.loading_screen.update()
-                if update_return is not None:
-                    if update_return["next_state"] != "menu":
-                        self.state = update_return["next_state"]
-                        self.state_manager[self.state].lights_manager.init_level(self.state_manager[self.state])
-                        self.loading = False
-                        if update_return["next_music"] is not None:
-                            self.sound_manager.play_music(update_return["next_music"])
-                    else:
-                        self.menu = True
-                        self.loading = False
+                    self.start_new_level(self.state, first_state=not self.first_state)
 
             else:
                 self.DISPLAY.fill((0, 0, 0))
-                update = self.state_manager[self.state].update(self.player.camera, self.dt)
+                update = self.game_state.update(self.player.camera, self.dt)
                 if update is not None:  # if a change of state is detected
-                    self.loading = True  # start a loading screen (update="next_state_name")
-                    self.loading_screen.start(update, text=True, duration=750, key_end=False)
-                    if self.state in self.state_manager[update].spawn:
-                        self.player.rect.topleft = self.state_manager[update].spawn[self.state]
+                    self.start_new_level(update, last_state=self.state)
 
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''
-                if not self.state_manager[self.state].ended_script and not self.debug:
+                if not self.game_state.ended_script and not self.debug:
                     self.camera_script_handler()
                 else:
                     self.player.set_camera_to("follow")
@@ -243,7 +272,7 @@ class GameManager:
 
     def start_new_src_part(self):
 
-        c_level = self.state_manager[self.state]
+        c_level = self.game_state
         cam_script = c_level.camera_script
         src_index = c_level.cam_index
 
@@ -266,17 +295,17 @@ class GameManager:
         # print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
 
     def camera_script_handler(self):
-        c_level = self.state_manager[self.state]
+        c_level = self.game_state
         cam_script = c_level.camera_script
         src_index = c_level.cam_index
         camera = self.player.camera
 
         if not self.scripting:
             if src_index + 1 < len(cam_script):
-                self.state_manager[self.state].cam_index += 1
+                self.game_state.cam_index += 1
                 self.start_new_src_part()
             else:
-                self.state_manager[self.state].ended_script = True
+                self.game_state.ended_script = True
                 return
 
         if not camera.method.moving_cam and not camera.method.zooming_out and not self.ended:
@@ -329,7 +358,7 @@ class Debugging:
         if not self.no_rect:
             if not self.game.menu and not self.game.loading:
                 scroll = self.player.camera.offset.xy
-                objects = copy(self.game.state_manager[self.game.state].objects)
+                objects = copy(self.game.game_state.objects)
                 objects.append(self.player)
 
                 for obj in objects:
@@ -352,7 +381,7 @@ class Debugging:
                                 col_rect.size = obj.d_collision[2:]
                             pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
-                exit_rects = self.game.state_manager[self.game.state].exit_rects
+                exit_rects = self.game.game_state.exit_rects
                 for exit_rect in exit_rects:
                     r = copy(exit_rects[exit_rect][0])
                     r.topleft -= scroll

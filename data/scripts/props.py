@@ -11,6 +11,29 @@ with open(DATA_PATH) as datas:
     DATAS = json.load(datas)
 COORDS = {name: [DATAS[name]["x"], DATAS[name]["y"], DATAS[name]["w"],
                  DATAS[name]["h"], DATAS[name]["sc"], DATAS[name]["it"]] for name in DATAS}
+sheets_translator = {
+    "houses": 'data/sprites/world/c1_bds.png',
+    "hills": 'data/sprites/world/hills.png',
+    "open_world": 'data/sprites/world/open_world_dec1.png',
+    # TODO -> needs to be deleted when the manos hut furniture get deleted from spritesheet
+    "temp_open_world": 'data/sprites/world/world_sheet.png'
+}
+sheets = {}
+
+
+def init_sheets():
+    global sheets
+    sheets = {'data/sprites/world/c1_bds.png': l_path('data/sprites/world/c1_bds.png'),
+              'data/sprites/world/hills.png': l_path('data/sprites/world/hills.png'),
+              'data/sprites/world/open_world_dec1.png': l_path('data/sprites/world/open_world_dec1.png'),
+              'data/sprites/items/chest.png': l_path('data/sprites/items/chest.png'),
+              # TODO -> needs to be deleted when the manos hut furniture get deleted from spritesheet
+              'data/sprites/world/world_sheet.png': l_path('data/sprites/world/world_sheet.png')}
+
+
+def del_sheets():
+    global sheets
+    del sheets
 
 
 class PropGetter:
@@ -39,6 +62,8 @@ class PropGetter:
         for i in range(len(custom_rect)):
             custom_rect[i] *= self.get_scale(name)
 
+        sheet = sheets_translator[datas["sheet"]]
+
         custom_center = datas["ccty"] * self.get_scale(name) if "ccty" in DATAS[name] else None
         collide = datas["col"] if "col" in datas else True
         sort = datas["sort"] if "sort" in datas else True
@@ -55,7 +80,7 @@ class PropGetter:
                     final_args.append(self.player)
                 else:
                     final_args = args[1:]
-                particle = PARTICLE_EFFECTS[args[0]](*(final_args))
+                particle = PARTICLE_EFFECTS[args[0]](*final_args)
 
             for l_type in light_types.light_types:
                 if l_type in datas["add_args"]:
@@ -66,15 +91,8 @@ class PropGetter:
                         ]
                     )
 
-        return lambda pos: SimplePropObject(name,
-                                            pos,
-                                            custom_rect,
-                                            custom_center,
-                                            collide=collide,
-                                            sort=sort,
-                                            particle=particle,
-                                            light_sources=light_sources,
-                                            reverse=reverse)
+        return lambda pos: SimplePropObject(sheet, name, pos, custom_rect, custom_center, collide=collide, sort=sort,
+                                            particle=particle, light_sources=light_sources, reverse=reverse)
 
 
 class Prop:
@@ -115,7 +133,7 @@ class Prop:
 
         # ---------------- SPRITE SHEET LOADING -----------------------
         if sprite_sheet != "":
-            self.sprite_sheet = l_path(sprite_sheet)
+            self.sprite_sheet = sprite_sheet
 
             if idle_coord is not None:
                 self.idle = self.load_from_spritesheet(idle_coord)
@@ -237,10 +255,10 @@ class Prop:
             return None
         if coords[-1] == "flip":
             return [flip_vertical(
-                scale(get_sprite(self.sprite_sheet, coords[0] + coords[2] * i, coords[1], coords[2], coords[3]),
+                scale(get_sprite(sheets[self.sprite_sheet], coords[0] + coords[2] * i, coords[1], coords[2], coords[3]),
                       coords[4])) for i in range(coords[5])]
         return [
-            scale(get_sprite(self.sprite_sheet, coords[0] + coords[2] * i, coords[1], coords[2], coords[3]), coords[4])
+            scale(get_sprite(sheets[self.sprite_sheet], coords[0] + coords[2] * i, coords[1], coords[2], coords[3]), coords[4])
             for i in range(coords[5])]
 
 
@@ -374,41 +392,28 @@ class Chest(Prop):
 
 class SimplePropObject(Prop):
 
-    def __init__(self,
-                 name,
-                 pos,
-                 custom_rect,
-                 custom_center,
-                 collide=True,
-                 sort=True,
-                 particle=None,
-                 light_sources=[],
-                 reverse=False):
+    def __init__(self, sheet, name, pos, custom_rect, custom_center, collide=True, sort=True, particle=None,
+                 light_sources=[], reverse=False):
 
-        super().__init__(
-            pos=pos, sprite_sheet='data/sprites/world/world_sheet.png',
-            idle_coord=COORDS[name],
-            custom_collide_rect=(custom_rect if custom_rect != [0, 0, 0, 0] else None),
-            custom_center=custom_center,
-            collision=collide
-        )
+        super().__init__(pos=pos, sprite_sheet=sheet, idle_coord=COORDS[name],
+                         custom_collide_rect=(custom_rect if custom_rect != [0, 0, 0, 0] else None),
+                         custom_center=custom_center, collision=collide)
+        # if False, then the prop isn't included in the sorting algorithm (for perspective)
         self.sort = sort
+
+        # particle effect associated with this prop
         self.particle_effect = particle
-        if particle is not None:
+        if particle is not None:  # repositioning the particle according to scale
             self.particle_effect.pos[0] = self.particle_effect.pos[0] * 3 + self.rect.x
             self.particle_effect.pos[1] = self.particle_effect.pos[1] * 3 + self.rect.y
-        self.light_sources = [
-            LightTypes().get_light_object(light["type"], light["info"], light["scale"])
-            for light in light_sources
-        ]
-        
-        for l_source in self.light_sources:
+
+        # getting all the lights sources
+        self.light_sources = [LightTypes().get_light_object(light["type"], light["info"], light["scale"])
+                              for light in light_sources]
+        for l_source in self.light_sources:  # repositioning the lights
             l_source.pos += pg.Vector2(self.rect.topleft)
 
-        # VS 
-        #l_sources.pos = sum([pg.Vector2(self.rect.topleft) for source in self.light_sources])
-
-        if reverse:
+        if reverse:  # reversing the animations
             for anim in self.anim_manager:
                 new_anim = []
                 if type(self.anim_manager[anim][0]) is list:
@@ -418,6 +423,5 @@ class SimplePropObject(Prop):
 
     def update(self, screen, scroll):
         update = super(SimplePropObject, self).update(screen, scroll)
-        if self.particle_effect is not None:
-            self.particle_effect.update(screen)
+        p_effect = self.particle_effect.update(screen) if self.particle_effect is not None else None
         return update

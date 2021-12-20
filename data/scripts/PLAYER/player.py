@@ -7,6 +7,9 @@ import pygame as p
 import math
 from copy import copy
 from random import random
+
+import pygame.mask
+
 from ..sound_manager import SoundManager
 from ..utils import load, get_sprite, scale, flip_vertical, resource_path, l_path
 from .inventory import Inventory
@@ -20,6 +23,8 @@ debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
 
 
 class Player:
+    DEFAULT_VEL = 6
+
     def __init__(self, screen, font, ux, ui, data):
         self.screen, self.InteractPoint = screen, 0
         self.sound_manager = SoundManager(sound_only=True)
@@ -342,7 +347,7 @@ class Player:
                                 self.modified_damages * self.max_combo_multiplier + crit,
                                 crit > 0,
                                 knock_back=knock_back
-                        )
+                            )
                         equipped_weapon.start_special_effect(obj)
                     if obj.hp <= 0:  # Check if its dead , give xp to the player
                         self.experience += obj.xp_available
@@ -625,7 +630,7 @@ class Player:
 
         self.update_attack(pos)
 
-        if not self.attacking and not self.dashing :
+        if not self.attacking and not self.dashing:
             angle = math.atan2(
                 m[1] - (self.rect.top + 95 - self.camera.offset.y),
                 m[0] - (self.rect.left + 10 - self.camera.offset.x),
@@ -675,7 +680,7 @@ class Player:
                 dash_vel = 0
 
             ''' Animation '''
-            # fks will get rid of the frame paddding and use frame time
+            # fks will get rid of the frame padding and use frame time
             if self.a_index >= 27:
                 self.a_index = 0
             self.a_index += 1
@@ -700,7 +705,36 @@ class Player:
             self.screen.blit(self.current_frame_ring, self.current_frame_ring.get_rect(
                 center=self.rect.topleft - self.camera.offset.xy + p.Vector2(15, 80)))
 
-    def handler(self, dt):
+    def check_for_interaction(self, exit_rects):
+        # TODO: find a font + adapt the texts + add a "background" to the font
+
+        position = (self.rect.topleft - self.camera.offset.xy) - p.Vector2(17, -45)
+        itr_box = p.Rect(*position, self.rect.w // 2, self.rect.h // 2)
+
+        text = ""
+
+        for object_ in self.rooms_objects:
+            if hasattr(object_, "IDENTITY"):
+                if object_.IDENTITY == "NPC":
+                    if object_.interactable:
+                        if object_.interaction_rect is not None:
+                            object_.highlight = itr_box.colliderect(object_.interaction_rect)
+                            if object_.highlight:
+                                text = f"Press {p.key.name(self.data['controls']['interact'])} to interact with " \
+                                       f"{object_.__class__.__name__}"
+
+        for destination, exit_rect in exit_rects.items():
+            exit_rect_ = copy(exit_rect[0])
+            exit_rect_.topleft -= self.camera.offset.xy
+            if exit_rect_.colliderect(itr_box):
+                p.draw.rect(self.screen, (255, 255, 255, 128), exit_rect_, 2)
+                text = f"Press {p.key.name(self.data['controls']['interact'])} to go in " \
+                       f"{destination} room."
+
+        render = p.font.Font(None, 35).render(text, True, (255, 255, 255))
+        self.screen.blit(render, (10, 10))
+
+    def handler(self, dt, exit_rects):
         player_p = (
             # 52 48 are players height and width
             self.rect.x - 52 - self.camera.offset.x,
@@ -710,17 +744,18 @@ class Player:
 
         self.leveling()
         self.controls(player_p)
+        self.check_for_interaction(exit_rects)
         self.animation_handing(dt, m, player_p)
-        if type(self.camera.method) is not type(self.camera_mode["auto"]):
+        if not isinstance(type(self.camera.method), type(self.camera_mode["auto"])):
             self.movement(m, player_p)
 
         # Update the camera: ALWAYS LAST LINE
         self.update_camera_status()
         self.camera.scroll()
 
-    def update(self, dt):
+    def update(self, dt, exit_rects):
         # Function that handles everything :brain:
-        self.handler(dt)
+        self.handler(dt, exit_rects)
 
     def update_camera_status(self):
         for key, cam_mode in self.camera_mode.items():

@@ -48,6 +48,7 @@ class NPC:
         self.velocity = pg.Vector2(1, 1)
         self.interacting = False
         self.interactable = True
+        self.highlight = False
 
         # SPRITESHEET
         self.sprite_sheet = load(resource_path(sprite_sheet_path))
@@ -140,6 +141,19 @@ class NPC:
                                                 *self.it_re_size)
         self.interaction_rect.topleft -= scroll
 
+    def render_highlight(self, screen, scroll):
+        outline = pg.mask.from_surface(self.image).to_surface()
+        outline.set_colorkey((0, 0, 0))
+        outline.set_alpha(155)
+        thickness = 2
+        pos = self.rect.topleft - scroll
+        screen.blits([
+            (outline, pos + p.Vector2(thickness, 0)),
+            (outline, pos + p.Vector2(-thickness, 0)),
+            (outline, pos + p.Vector2(0, -thickness)),
+            (outline, pos + p.Vector2(0, thickness))
+        ])
+
     def logic(self, scroll):
         self.state_manager()
         self.animate()
@@ -147,6 +161,8 @@ class NPC:
 
     def update(self, screen, scroll):
         self.logic(scroll)
+        if self.highlight:
+            self.render_highlight(screen, scroll)
         screen.blit(self.image, (self.rect.x - scroll[0], self.rect.y - scroll[1]))
         # pg.draw.rect(screen, (0, 0, 255), self.interaction_rect, 1)
 
