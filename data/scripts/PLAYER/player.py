@@ -16,10 +16,17 @@ from .inventory import Inventory
 from .player_stats import UpgradeStation
 from .camera import Camera, Follow, Border, Auto
 from ..particle_system import DustManager
+from ..UI.UI_animation import InteractionName
 
 p.font.init()
 font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
 debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+key_translator = {
+    "player_room": "Player's Room",
+    "johns_garden": "Open world",
+    "kitchen": "Kitchen",
+    "manos_hut": "Mano's hut"
+}
 
 
 class Player:
@@ -40,7 +47,6 @@ class Player:
 
         # Mouse icon for the inventory and some other things
         self.mouse_icon = ui.parse_sprite("mouse.png")
-        self.show_mouse = False
 
         # For displaying npc text
         self.npc_catalog = ux
@@ -212,7 +218,7 @@ class Player:
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (
-            self.inventory.get_equiped("Weapon").damage if self.inventory.get_equiped("Weapon") is not None else 0)
+            self.inventory.get_equipped("Weapon").damage if self.inventory.get_equipped("Weapon") is not None else 0)
 
         self.upgrade_station = UpgradeStation(self.screen, ui,
                                               p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
@@ -253,6 +259,9 @@ class Player:
         self.attacking_hitbox_size = (self.rect.height, self.rect.width)
         self.rooms_objects = []
 
+        # animation for interaction purposes
+        self.UI_interaction_anim: list[InteractionName] = []
+
     def set_camera_to(self, _KEY):
         '''
             Look above for "Player's Camera Settings" for more info!
@@ -273,7 +282,7 @@ class Player:
 
     def get_crit(self):
         crit = random()
-        crit_chance = self.inventory.get_equiped("Weapon").critical_chance
+        crit_chance = self.inventory.get_equipped("Weapon").critical_chance
         if crit < crit_chance:
             return self.modified_damages * crit_chance
         return 0
@@ -320,7 +329,7 @@ class Player:
             if hasattr(obj, "attackable"):
                 if obj.attackable:
                     if self.attacking_hitbox.colliderect(obj.rect):
-                        equipped_weapon = self.inventory.get_equiped("Weapon")
+                        equipped_weapon = self.inventory.get_equipped("Weapon")
 
                         # This is where it will play the object's hit sound NOT THE SWORD
                         self.sound_manager.play_sound("dummyHit")
@@ -357,7 +366,7 @@ class Player:
 
         click_time = p.time.get_ticks()
 
-        if not self.attacking and self.inventory.get_equiped("Weapon") is not None:
+        if not self.attacking and self.inventory.get_equipped("Weapon") is not None:
             self.attacking = True
             self.last_attacking_click = click_time
             self.sound_manager.play_sound("woodenSword")  # Play first hit
@@ -510,20 +519,16 @@ class Player:
 
         # recalculate the damages, considering the equiped weapon
         self.modified_damages = self.damage + (
-            self.inventory.get_equiped("Weapon").damage \
-                if self.inventory.get_equiped("Weapon") is not None else 0
+            self.inventory.get_equipped("Weapon").damage \
+                if self.inventory.get_equipped("Weapon") is not None else 0
         )
-        equiped = self.inventory.get_equiped("Weapon")
+        equiped = self.inventory.get_equipped("Weapon")
         if hasattr(equiped, "special_effect"):
             equiped.special_effect(self)
 
         # if player presses interaction key and is in a interaction zone
         if self.Interactable and self.is_interacting:
             self.npc_catalog.draw(self.npc_text, dt)
-
-        # if not self.inventory
-        if self.show_mouse:
-            self.screen.blit(self.mouse_icon, self.mouse_icon.get_rect(center=m))
 
     def set_looking(self, dir_: str, pos):
         '''
@@ -707,32 +712,67 @@ class Player:
 
     def check_for_interaction(self, exit_rects):
         # TODO: find a font + adapt the texts + add a "background" to the font
+        # gets all the ui animations tags (to know if an animation is already existing)
+        all_current_animations = [anim.tag for anim in self.UI_interaction_anim]
+        # player's interaction rect
+        itr_box = p.Rect(*((self.rect.topleft - self.camera.offset.xy) - p.Vector2(17, -45)),
+                         self.rect.w // 2, self.rect.h // 2)
+        text = ""  # shown text (will be reassigned if an interaction is possible)
 
-        position = (self.rect.topleft - self.camera.offset.xy) - p.Vector2(17, -45)
-        itr_box = p.Rect(*position, self.rect.w // 2, self.rect.h // 2)
-
-        text = ""
-
-        for object_ in self.rooms_objects:
+        for object_ in self.rooms_objects:  # loop through objects to show interactable NPCs
             if hasattr(object_, "IDENTITY"):
                 if object_.IDENTITY == "NPC":
                     if object_.interactable:
                         if object_.interaction_rect is not None:
                             object_.highlight = itr_box.colliderect(object_.interaction_rect)
                             if object_.highlight:
-                                text = f"Press {p.key.name(self.data['controls']['interact'])} to interact with " \
-                                       f"{object_.__class__.__name__}"
+                                text = object_.__class__.__name__
+                elif object_.IDENTITY == "PROP":
+                    if object_.name == "chest":
+                        object_.highlight = itr_box.colliderect(object_.interaction_rect) and not object_.has_interacted
+                        if object_.highlight:
+                            text = object_.__class__.__name__
 
+        # look for usable exit rect
         for destination, exit_rect in exit_rects.items():
-            exit_rect_ = copy(exit_rect[0])
-            exit_rect_.topleft -= self.camera.offset.xy
+            exit_rect_ = copy(exit_rect[0])  # get the exit rect
+            exit_rect_.topleft -= self.camera.offset.xy  # apply scroll
+            # get the current animation (if there is one)
+            UI_anim = self.UI_interaction_anim[all_current_animations.index(str(id(exit_rect)))] \
+                if str(id(exit_rect)) in all_current_animations else None
+            # check for the possible interaction
             if exit_rect_.colliderect(itr_box):
-                p.draw.rect(self.screen, (255, 255, 255, 128), exit_rect_, 2)
-                text = f"Press {p.key.name(self.data['controls']['interact'])} to go in " \
-                       f"{destination} room."
+                # draw the exit rect
+                p.draw.rect(self.screen, (255, 255, 255), exit_rect_, 2)
+                if UI_anim is None:
+                    self.UI_interaction_anim.append(  # generate new animation
+                        InteractionName(
+                            str(id(exit_rect)),  # name
+                            self.screen,  # display
+                            p.Vector2(exit_rect[0].topright),  # pos
+                            f"{key_translator[destination] if destination in key_translator else destination}",  # name
+                            p.font.Font(None, 25), p.Color(255, 255, 255)  # font + color
+                        ))
+                else:  # restart the dying animation if the collision with the rect happens again
+                    UI_anim.restart()
+            else:
+                if UI_anim is not None:
+                    if not UI_anim.dying:
+                        UI_anim.kill()
 
+        # render the name of the next animation (TODO: choose if we remove it or not)
         render = p.font.Font(None, 35).render(text, True, (255, 255, 255))
-        self.screen.blit(render, (10, 10))
+        self.screen.blit(render, render.get_rect(center=(self.screen.get_width()//2, 25)))
+
+    def update_ui_animations(self, dt):
+        to_remove = []
+        for UI_anim in self.UI_interaction_anim:
+            alive = UI_anim.update(self.camera.offset.xy, dt)
+            if not alive:
+                to_remove.append(UI_anim)
+
+        for remove in to_remove:
+            self.UI_interaction_anim.remove(remove)
 
     def handler(self, dt, exit_rects):
         player_p = (
@@ -745,8 +785,9 @@ class Player:
         self.leveling()
         self.controls(player_p)
         self.check_for_interaction(exit_rects)
+        self.update_ui_animations(dt)
         self.animation_handing(dt, m, player_p)
-        if not isinstance(type(self.camera.method), type(self.camera_mode["auto"])):
+        if self.camera_status != "auto":
             self.movement(m, player_p)
 
         # Update the camera: ALWAYS LAST LINE
@@ -764,9 +805,9 @@ class Player:
                 break
 
     def controls(self, pos):
-        '''
+        """
             Getting input from the user
-        '''
+        """
         for e in p.event.get():
             keys = p.key.get_pressed()
             self.click = False
@@ -787,7 +828,7 @@ class Player:
             dash = a['dash']
             inv = a['inventory']
             itr = a['interact']
-            self.velocity = p.Vector2(-self.base_vel, self.base_vel) if not (self.paused) else p.Vector2(0, 0)
+            self.velocity = p.Vector2(-self.base_vel, self.base_vel) if not self.paused else p.Vector2(0, 0)
 
             # Reset Interaction
             if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
@@ -816,10 +857,8 @@ class Player:
 
                     # Temporar until we get a smart python ver
                     if e.key == inv and self.camera_status != "auto":
-                        self.show_mouse = True
                         self.inventory.set_active()
-                        if not self.inventory.show_menu:
-                            self.show_mouse = False
+                        self.upgrade_station.set_active()
 
                     if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu:
                         self.start_dash()
@@ -835,10 +874,17 @@ class Player:
                         case 1:
                             click_result1 = self.inventory.handle_clicks(e.pos)
                             click_result2 = self.upgrade_station.handle_clicks(e.pos)
+                            changed_activities = False
+                            if self.inventory.show_menu and self.upgrade_station.show_menu:
+                                if not self.inventory.im_rect.collidepoint(e.pos) and not self.upgrade_station.us_rect.collidepoint(e.pos):
+                                    self.inventory.set_active()
+                                    self.upgrade_station.set_active()
+                                    changed_activities = True
+
                             # Attack only when player is not in inv
-                            if not self.inventory.show_menu and not self.upgrade_station.show_menu and click_result1 != "changed_activity" and click_result2 != "changed_activity":
+                            if not self.inventory.show_menu and not self.upgrade_station.show_menu \
+                                    and not changed_activities:
                                 self.attack(pos)
-                                self.show_mouse = False
                             self.click = True
                             # scroll up
                         case 4:

@@ -305,6 +305,7 @@ class Chest(Prop):
         self.new = self.font.render("NEW !", True, (255, 255, 0))
 
         self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255, 255, 255))
+        self.highlight = False
 
     def animate_new_items(self, screen, scroll):
 
@@ -364,8 +365,24 @@ class Chest(Prop):
             screen.blit(txt, txt.get_rect(center=self.UI_button[self.id_button].get_rect(
                 center=self.rect.center - scroll - pg.Vector2(0, 78 - ((self.id_button) * 2))).center))
 
+    def render_highlight(self, screen, scroll):
+        outline = pg.mask.from_surface(self.current_frame).to_surface()
+        outline.set_colorkey((0, 0, 0))
+        outline.set_alpha(155)
+        thickness = 2
+        pos = self.rect.topleft - scroll
+        screen.blits([
+            (outline, pos + pg.Vector2(thickness, 0)),
+            (outline, pos + pg.Vector2(-thickness, 0)),
+            (outline, pos + pg.Vector2(0, -thickness)),
+            (outline, pos + pg.Vector2(0, thickness))
+        ])
+
     def update(self, screen, scroll, player):
         self.player = player
+
+        if self.highlight:
+            self.render_highlight(screen, scroll)
 
         # Draw and move Chest
         super().update(screen, scroll)

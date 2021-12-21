@@ -18,8 +18,8 @@ class LightManager:
             "night": 128,
             "day": 0,
             "inside_dark": 100,
-            "inside": 50,
-            "inside_clear": 50
+            "inside": 75,
+            "inside_clear": 75
         }
         self.colors = {
             "night": (0, 7, 20),

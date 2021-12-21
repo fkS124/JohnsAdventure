@@ -26,6 +26,7 @@ class Camera:
         """
 
         self.player = player
+        self.method = None
 
         # The gap between the player and camera
         self.offset = vec(0, 0)
@@ -55,12 +56,12 @@ class Camera:
         )  # end of CONST
 
     def set_method(self, method):
-        '''
+        """
         The gear to switch between Camera types
         1.   Auto: Camera moves on its own
         2. Follow: Camera follows X object
         3. Border: Camera is locked player cant go outside of it
-        '''
+        """
         self.method = method
 
     def scroll(self):
@@ -153,12 +154,12 @@ class Follow(CamScroll):
 
 
 class Border(CamScroll):
-    '''
+    """
 
     Once player has reached a specific point,
     the camera will stop moving.
 
-    '''
+    """
 
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player, status="Border")
@@ -252,8 +253,8 @@ class Auto(CamScroll):
         )
 
         distx, disty = abs(pos[0] - self.looking_at[0]), abs(pos[1] - self.looking_at[1])
-        self.dx = math.cos(angle) * abs((distx) / (duration / 20 * math.cos(angle)))
-        self.dy = math.sin(angle) * abs((disty) / (duration / 20 * math.sin(angle)))
+        self.dx = math.cos(angle) * abs(distx / (duration / 20 * math.cos(angle)))
+        self.dy = math.sin(angle) * abs(disty / (duration / 20 * math.sin(angle)))
         self.delay_mvt = pygame.time.get_ticks()
         self.target = pos
 
@@ -317,8 +318,6 @@ class Auto(CamScroll):
             # print(dx, dy, self.dx, self.dy, self.looking_at, self.target)
 
         if self.zooming_out:
-
-            print(pygame.time.get_ticks(), self.start_time_zoom_out, self.duration_zoom_out, self.d_fov, pygame.time.get_ticks()-self.start_time_zoom_out)
 
             if abs(self.fov-self.target_zoom_out) < 0.01:
                 self.zooming_out = False
