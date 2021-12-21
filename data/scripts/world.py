@@ -150,10 +150,12 @@ class GameManager:
                 self.player.rect.x - 52 - self.player.camera.offset.x,
                 self.player.rect.y - self.player.camera.offset.y - 48
                 ), 
-                self.dt # <- is needed for the NPC interaction
+                self.dt  # <- is needed for the NPC interaction
             ) 
             self.pause()
             self.player.camera.method.draw()
+            if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
+                self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
 
         if self.debug:
             self.debugger.update()
@@ -192,6 +194,7 @@ class GameManager:
             del self.game_state
             gc.collect()
         self.state = level_id
+        self.player.UI_interaction_anim.clear()
 
         init_sheets()
 

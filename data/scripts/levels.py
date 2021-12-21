@@ -570,7 +570,7 @@ class JohnsGarden(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, light_state="night")
-        self._PLAYER_VEL = 10 * 3   # 3 freq
+        self._PLAYER_VEL = 10   # 3 freq
 
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \
@@ -685,10 +685,10 @@ class JohnsGarden(GameState):
             *self.generate_chunk("tree", mano_pos[0] * mano_sc + 950, jh_pos[1] * jh_sc, 3, 3, 100 * 4, 100 * 3,
                                  randomize=40),
             # Trees left from manos hut
-            *self.generate_chunk("tree", mano_pos[0] * mano_sc - 750, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
+            *self.generate_chunk("tree", mano_pos[0] * mano_sc - 730, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
                                  randomize=10),
             # Add grass details under those trees
-            *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
+            *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1340, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
                                  randomize=20),
             
             # Cave Borders
@@ -704,7 +704,7 @@ class JohnsGarden(GameState):
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 280) * jh_sc , 100, 60),
                         "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
-            "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43) * mano_sc, 100, 50),
+            "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
                           "Enter Mano's hut ?")
         }
         self.spawn = {
