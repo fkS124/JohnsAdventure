@@ -3,6 +3,11 @@ import pygame as pg
 
 class ParticleManager:
 
+    """
+    Parent class to create new particle effects.
+    Gain some time on basic functions like clear, update, add_particle...
+    """
+
     def __init__(self, player):
         self.player = player
         self.particles = []
@@ -34,11 +39,23 @@ class ParticleManager:
             if update == "kill":
                 to_remove.append(particle)
 
+        # remove all the killed particles
         for removing in to_remove:
             self.particles.remove(removing)
 
 
 class Particle:
+
+    """
+    Parent class for every particle, defines the main functions.
+    Like :
+    - Behavior(self):
+        Which describes the behavior of the particle, namely its motion.
+    - Logic(self):
+        Function to decide when the particle has to move, change its shape, etc...
+    - Render(self):
+        Basically calling the logic and drawing the particle on the screen, eventually telling if killed or not
+    """
 
     def __init__(self, image, pos, last_time, camera):
         self.image = image
@@ -63,6 +80,6 @@ class Particle:
         self.behavior()
 
     def render(self, screen):
-        self.logic()
-        screen.blit(self.image, self.rect.topleft - self.camera.offset.xy)
-        return "kill" if pg.time.get_ticks() - self.begin_time > self.last_time else None
+        self.logic()  # apply the logic to the particle (moves, animation...)
+        screen.blit(self.image, self.rect.topleft - self.camera.offset.xy)  # draw the particle
+        return "kill" if pg.time.get_ticks() - self.begin_time > self.last_time else None  # check if has to be killed

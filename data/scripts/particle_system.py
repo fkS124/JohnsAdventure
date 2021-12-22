@@ -80,9 +80,7 @@ class DustParticle(Particle):
         """
             Gives a wiggly effect into the particles 
         """
-        self.rect.y += -self.dy \
-            if pg.time.get_ticks() - self.begin_time < self.last_time // 2 \
-                else self.dy
+        self.rect.y += -self.dy if pg.time.get_ticks() - self.begin_time < self.last_time // 2 else self.dy
 
 
 class SmokeManager(ParticleManager):
@@ -131,23 +129,17 @@ class SmokeParticle(Particle):
         self.dep_pos = pos
         pg.draw.circle(self.image, color, (radius // 4, radius // 4), radius // 4)
         self.image = scale(self.image, 4.5)
-        self.image.set_alpha(180)
-        self.dx = 1
-        self.dy = 1
+        self.dp = pg.Vector2(1, 1)
         self.max_height = max_height
         self.delay = pg.time.get_ticks()
-        self.l = choice([True, False])
+        self.cond = choice([True, False])
 
     def behavior(self):
-        self.rect.y -= self.dy
         self.image.set_alpha(180 - ((pg.time.get_ticks() - self.begin_time) / self.last_time) * 180)
         if pg.time.get_ticks() - self.delay > 200:
-            self.l = not self.l
+            self.cond = not self.cond
             self.delay = pg.time.get_ticks()
-
-        # Gets a random value considering the gaussian repartion. 
-        randr_g = gauss(self.dx, 1)     
-        self.rect.x += -randr_g if self.l else randr_g
+        self.rect.topleft += pg.Vector2(-gauss(self.dp[0], 1) if self.cond else gauss(self.dp[0], 1), -self.dp[1])
 
     def render(self, screen):
         update = super().render(screen)
