@@ -18,7 +18,19 @@ from .PLAYER.items import Training_Sword, Knight_Sword
 from .AI.death_animator import DeathManager
 from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
-from sys import getsizeof
+
+
+def get_cutscene_played(id_: str):
+    with open(resource_path('data/database/cutscenes.json'), "r") as data:
+        return json.load(data)[id_]
+
+
+def play_cutscene(id_: str):
+    with open(resource_path('data/database/cutscenes.json'), "r") as data:
+        data = json.load(data)
+    data[id_] = True
+    with open(resource_path('data/database/cutscenes.json'), "w") as data2:
+        json.dump(data, data2, indent=2)
 
 
 class GameState:
@@ -26,7 +38,8 @@ class GameState:
     It handles every objects and handle their update method's arguments.
     (These args can of course be different than other objects of the list)"""
 
-    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, light_state="day"):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, id_: str, light_state="day"):
+        self.id = id_
 
         # ------- SCREEN -----------------
         self.display, self.screen = DISPLAY, DISPLAY
@@ -280,7 +293,8 @@ class GameState:
                 for obj_ in copy(objects):
                     if hasattr(obj_, "IDENTITY"):
                         if obj_.IDENTITY == "PROP":
-                            if not obj_.collidable:
+                            if not obj_.collidable or pg.Vector2(obj.rect.center).distance_to(obj_.rect.center) > \
+                                    max(obj.rect.size) + max(obj_.rect.size):
                                 objects.remove(obj_)
                 self.collision_system(obj, objects)  # handle collisions
 
@@ -289,7 +303,9 @@ class GameState:
         for obj_ in copy(objects):
             if hasattr(obj_, "IDENTITY"):
                 if obj_.IDENTITY == "PROP":
-                    if not obj_.collidable:
+                    if not obj_.collidable or \
+                            pg.Vector2(self.player.rect.topleft).distance_to(obj_.rect.center) > \
+                            max(obj_.rect.size) + max(self.player.rect.size):
                         objects.remove(obj_)
         self.collision_system(self.player, objects)
 
@@ -497,7 +513,7 @@ class GameState:
 
 class PlayerRoom(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_clear")
+        super().__init__(DISPLAY, player_instance, prop_objects, "player_room", light_state="inside_clear")
         self.objects = super().load_objects('data/database/levels/player_room.txt')
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -548,7 +564,7 @@ class PlayerRoom(GameState):
 
 class Kitchen(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_clear")
+        super().__init__(DISPLAY, player_instance, prop_objects, "kitchen", light_state="inside_clear")
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
         self.objects = super().load_objects('data/database/levels/kitchen.txt')
         self.exit_rects = {
@@ -569,7 +585,7 @@ class JohnsGarden(GameState):
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="night")
+        super().__init__(DISPLAY, player_instance, prop_objects, "johns_garden", light_state="night")
         self._PLAYER_VEL = 10   # 3 freq
 
         # Get the positions and the sprites' informations from the json files
@@ -720,7 +736,7 @@ class JohnsGarden(GameState):
 class ManosHut(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, light_state="inside_dark")
+        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="inside_dark")
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))

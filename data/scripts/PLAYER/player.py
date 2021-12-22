@@ -477,51 +477,32 @@ class Player:
     def user_interface(self, m, player_pos, dt):
         if self.camera_status != "auto":
             # Health bar
-            p.draw.rect(
-                self.screen, (255, 0, 0),
-                p.Rect(
-                    self.hp_box_rect.x, self.hp_box_rect.y + 20,
-                    self.health, 25)
-            )
+            p.draw.rect(self.screen, (255, 0, 0),p.Rect(self.hp_box_rect.x, self.hp_box_rect.y + 20, self.health, 25))
 
             # Dash Cooldown bar
-            p.draw.rect(
-                self.screen, (0, 255, 0),
-                p.Rect(
-                    self.hp_box_rect.x, self.hp_box_rect.y + 90,
-                    self.dash_width, 15)
-            )
+            p.draw.rect(self.screen, (0, 255, 0), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y + 90, self.dash_width,
+                                                         15))
 
             # Experience bar
-            p.draw.rect(
-                self.screen, (0, 255, 255),
-                p.Rect(
-                    self.hp_box_rect.x, self.hp_box_rect.y + 60,
-                    self.experience_width, 15
-                )
-            )
+            p.draw.rect(self.screen, (0, 255, 255), p.Rect(self.hp_box_rect.x, self.hp_box_rect.y + 60,
+                                                           self.experience_width, 15))
 
             # Player UI
             self.screen.blit(self.health_box, self.hp_box_rect)
 
             # Heart Icon
-            self.screen.blit(
-                self.heart,
-                (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15)
-            )
+            self.screen.blit(self.heart, (self.hp_box_rect.x + 3, self.hp_box_rect.y + 15))
 
             # Level status button goes here
             self.upgrade_station.update(self)
 
             # Inventory Icon
-            self.inventory.update(
-                self)  # sending its own object in order that the inventory can access to the player's damages
+            self.inventory.update(self)
+            # sending its own object in order that the inventory can access to the player's damages
 
         # recalculate the damages, considering the equiped weapon
-        self.modified_damages = self.damage + (
-            self.inventory.get_equipped("Weapon").damage \
-                if self.inventory.get_equipped("Weapon") is not None else 0
-        )
+        self.modified_damages = self.damage + (self.inventory.get_equipped("Weapon").damage \
+                                               if self.inventory.get_equipped("Weapon") is not None else 0)
         equiped = self.inventory.get_equipped("Weapon")
         if hasattr(equiped, "special_effect"):
             equiped.special_effect(self)
@@ -824,14 +805,13 @@ class Player:
                 self.Right = keys[a["left"]]
                 self.Left = keys[a["right"]]
 
-            interact = a['interact']
             dash = a['dash']
             inv = a['inventory']
             itr = a['interact']
             self.velocity = p.Vector2(-self.base_vel, self.base_vel) if not self.paused else p.Vector2(0, 0)
 
             # Reset Interaction
-            if True in [self.Up, self.Down, self.Right, self.Left] or self.InteractPoint == 3:
+            if True in [self.Up, self.Down, self.Right, self.Left]:
                 self.walking = True
                 self.InteractPoint, self.Interactable = 0, False
                 self.is_interacting = False
@@ -864,9 +844,15 @@ class Player:
                         self.start_dash()
 
                     if e.key == itr:
-                        self.Interactable = True
-                        self.check_content(pos)
-                        self.InteractPoint += 1
+                        if self.InteractPoint + 1 >= 3:  # if interaction point is 3, then reset the animation
+                            self.InteractPoint = 0
+                            self.Interactable = False
+                            self.is_interacting = False
+                            self.npc_catalog.reset()
+                        else:  # else do the usual things
+                            self.Interactable = True
+                            self.check_content(pos)
+                            self.InteractPoint += 1
 
                 case p.MOUSEBUTTONDOWN:
                     match e.button:

@@ -131,7 +131,7 @@ class LoadingScreen:
             self.john_text.fill((0, 0, 0))
             self.john_text.blit(self.txt_jhn, (0, 0))
             pg.draw.rect(self.john_text, (0, 0, 0, 0),
-                         [(self.john_text_rect.width) / (self.duration) * (pg.time.get_ticks() - self.start_loading), 0,
+                         [self.john_text_rect.width / self.duration * (pg.time.get_ticks() - self.start_loading), 0,
                           self.john_text_rect.width, self.john_text_rect.height])
             self.screen.blit(self.txt_jhn_bg, self.john_text_rect)
             self.screen.blit(self.john_text, self.john_text_rect)

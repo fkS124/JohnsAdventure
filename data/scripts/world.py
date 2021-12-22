@@ -1,10 +1,7 @@
-from copy import copy
-import pygame as pg
 from .PLAYER.player import Player
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
 from .sound_manager import SoundManager
-from .AI import npc
 from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
@@ -12,10 +9,11 @@ from .UI.pause_menu import PauseMenu
 from .utils import resource_path, l_path, UI_Spritesheet
 from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
-from pympler import asizeof, summary
 import gc
 
 from .levels import (
+    get_cutscene_played,
+    play_cutscene,
     GameState,
     PlayerRoom,
     Kitchen,
@@ -265,10 +263,12 @@ class GameManager:
                     self.start_new_level(update, last_state=self.state)
 
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''
-                if not self.game_state.ended_script and not self.debug:
+                if not self.game_state.ended_script and not self.debug and not get_cutscene_played(self.game_state.id):
                     self.camera_script_handler()
+                    self.FPS = 60
                 else:
                     self.player.set_camera_to("follow")
+                    self.FPS = 35
 
             self.routine()
 
@@ -308,6 +308,7 @@ class GameManager:
                 self.start_new_src_part()
             else:
                 self.game_state.ended_script = True
+                play_cutscene(self.game_state.id)
                 return
 
         if not camera.method.moving_cam and not camera.method.zooming_out and not self.ended:
