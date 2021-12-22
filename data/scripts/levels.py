@@ -514,7 +514,17 @@ class GameState:
 class PlayerRoom(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "player_room", light_state="inside_clear")
-        self.objects = super().load_objects('data/database/levels/player_room.txt')
+        self.objects = [ #super().load_objects('data/database/levels/player_room.txt')
+            Rect(0, 0, 1280, 133),
+            Rect(1270, 134, 10, 586),
+            Rect(0, 0, 1280, 133),
+            Rect(0, 711, 1280, 9),
+            npc.Mau((150, 530), (300, 100)),
+            Rect(10, 90, 430, 360),
+            Rect(5, 500, 72, 214),
+            Rect(450, 40, 410, 192),
+            Rect(36, 400, 77, 94)
+        ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
             "kitchen": (pg.Rect(1008, 148, 156, 132), "Go down?")
@@ -566,7 +576,18 @@ class Kitchen(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "kitchen", light_state="inside_clear")
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
-        self.objects = super().load_objects('data/database/levels/kitchen.txt')
+        self.objects = [#super().load_objects('data/database/levels/kitchen.txt')
+            Rect(0, 0, 1280, 133),
+            Rect(1270, 134, 10, 586),
+            Rect(0, 0, 1280, 133),
+            Rect(0, 711, 1280, 9),
+            npc.Cynthia((570, 220)),
+            Chest((910, 140), {"items": Training_Sword(), "coins": 50}),
+            Rect(20, 250, 250, 350),
+            Rect(280, 300, 64, 256),
+            Rect(10, 0, 990, 230),
+            Rect(1020, 440, 256, 200)
+        ]
         self.exit_rects = {
             "player_room": (pg.Rect(1054, 68, 138, 119), "Back to your room?"),
             "johns_garden": (pg.Rect(551, 620, 195, 99), "Go outside?")
@@ -717,7 +738,7 @@ class JohnsGarden(GameState):
             *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_mid", end_type="hill_side_inner_rev")
         ]
         self.exit_rects = {
-            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 280) * jh_sc , 100, 60),
+            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc , 100, 60),
                         "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
             "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
