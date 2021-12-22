@@ -14,21 +14,15 @@ class DustManager(ParticleManager):
         self.display = display
         self.color = [255, 255, 255]
         self.size = (intensity // 2, intensity // 2)
-
         self.last_player_pos = copy(self.player.rect.midbottom)
 
+    # Checks if the rect has moved at all 
     def trigger_check(self) -> bool:
-        if self.get_pl_rect().midbottom != self.last_player_pos:
-            return True
-        return False
+        return self.get_pl_rect().midbottom != self.last_player_pos
 
+    # Returns a RGB of Higher values by degree, showcasing a darker colour.
     def darker(self, color, degree):
-        col = list(copy(color))
-        for px in range(len(col)):
-            col[px] -= degree
-            if col[px] < 0:
-                col[px] = 0
-        return col
+        return [max(c - degree, 0) for c in color]
 
     def get_pl_rect(self):
         pl_rect = copy(self.player.rect)
@@ -51,17 +45,18 @@ class DustManager(ParticleManager):
             pl_rect = self.get_pl_rect()
             self.last_player_pos = copy(pl_rect.midbottom)
 
-            try:
-                for i in range(1):
-                    self.add_particles(
-                        self.size,
-                        (pl_rect.centerx + (randint(min(val[0]), max(val[0]))),
-                         pl_rect.bottom - randint(min(val[1]), max(val[1]))),
-                        self.darker(self.display.get_at(
-                            (int(self.last_player_pos[0] - self.player.camera.offset.x),
-                             int(self.last_player_pos[1] + 1 - self.player.camera.offset.y))
-                        ), 20),
-                        400
+            # Suppressing the error when the player is in a loading situation
+            # Or edge of the background
+            try:    
+                self.add_particles(
+                    self.size,
+                    (pl_rect.centerx + (randint(min(val[0]), max(val[0]))),
+                        pl_rect.bottom - randint(min(val[1]), max(val[1]))),
+                    self.darker(self.display.get_at(
+                        (int(self.last_player_pos[0] - self.player.camera.offset.x),
+                            int(self.last_player_pos[1] + 1 - self.player.camera.offset.y))
+                    ), 20),
+                    400
                     )
             except Exception as e:
                 print(e)
@@ -82,10 +77,12 @@ class DustParticle(Particle):
         self.dy = 1
 
     def behavior(self):
-        if pg.time.get_ticks() - self.begin_time < self.last_time // 2:
-            self.rect.y -= self.dy
-        else:
-            self.rect.y += self.dy
+        """
+            Gives a wiggly effect into the particles 
+        """
+        self.rect.y += -self.dy \
+            if pg.time.get_ticks() - self.begin_time < self.last_time // 2 \
+                else self.dy
 
 
 class SmokeManager(ParticleManager):
@@ -110,9 +107,7 @@ class SmokeManager(ParticleManager):
                                randint(*self.duration))
 
     def trigger_check(self) -> bool:
-        if self.last_len != len(self.particles):
-            return True
-        return False
+        return self.last_len != len(self.particles)
 
     def logic(self) -> bool:
 
@@ -149,10 +144,10 @@ class SmokeParticle(Particle):
         if pg.time.get_ticks() - self.delay > 200:
             self.l = not self.l
             self.delay = pg.time.get_ticks()
-        if self.l:
-            self.rect.x -= gauss(self.dx, 1)
-        else:
-            self.rect.x += gauss(self.dx, 1)
+
+        # Gets a random value considering the gaussian repartion. 
+        randr_g = gauss(self.dx, 1)     
+        self.rect.x += -randr_g if self.l else randr_g
 
     def render(self, screen):
         update = super().render(screen)

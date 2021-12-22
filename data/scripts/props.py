@@ -1,6 +1,5 @@
 import pygame as pg
 from .utils import *
-from .backend import UI_Spritesheet
 from .particle_system import PARTICLE_EFFECTS
 import json
 from .POSTPROCESSING.lights_manager import LightTypes

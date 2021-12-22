@@ -1,6 +1,5 @@
 from copy import copy
 import pygame as pg
-from .backend import UI_Spritesheet
 from .PLAYER.player import Player
 from .PLAYER.inventory import *
 from .AI.enemies import Dummy
@@ -10,7 +9,7 @@ from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .UI.pause_menu import PauseMenu
-from .utils import resource_path, l_path
+from .utils import resource_path, l_path, UI_Spritesheet
 from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
 from pympler import asizeof, summary

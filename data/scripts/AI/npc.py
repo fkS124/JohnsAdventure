@@ -6,13 +6,9 @@ This script contains our lovely npcs!
 
 '''
 from random import choice
-import pygame as p
 import pygame as pg
 from pygame import sprite
-from ..utils import load, get_sprite, flip_vertical, scale, resource_path
-from ..backend import UI_Spritesheet
-
-
+from ..utils import load, get_sprite, flip_vertical, scale, resource_path, UI_Spritesheet
 class NPC:
     """Base class for every NPC."""
 
@@ -148,10 +144,10 @@ class NPC:
         thickness = 2
         pos = self.rect.topleft - scroll
         screen.blits([
-            (outline, pos + p.Vector2(thickness, 0)),
-            (outline, pos + p.Vector2(-thickness, 0)),
-            (outline, pos + p.Vector2(0, -thickness)),
-            (outline, pos + p.Vector2(0, thickness))
+            (outline, pos + pg.Vector2(thickness, 0)),
+            (outline, pos + pg.Vector2(-thickness, 0)),
+            (outline, pos + pg.Vector2(0, -thickness)),
+            (outline, pos + pg.Vector2(0, thickness))
         ])
 
     def logic(self, scroll):
