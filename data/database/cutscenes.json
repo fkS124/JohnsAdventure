@@ -1,5 +1,5 @@
 {
-  "player_room": true,
+  "player_room": false,
   "johns_garden": true,
   "kitchen": true,
   "manos_hut": true
