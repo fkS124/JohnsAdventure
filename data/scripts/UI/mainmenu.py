@@ -37,7 +37,7 @@ class Menu:
             for i in range(3)
         ]
 
-        self.f = p.font.Font(resource_path("data/database/pixelfont.ttf"), 28)
+        self.f = p.font.Font(resource_path("data/database/menu-font.ttf"), 24)
 
         self.btns_text = [
             self.f.render("Play", True, (255, 255, 255)),
@@ -82,7 +82,8 @@ class Menu:
 
     ''' Utils '''
 
-    def get_data(self, path):
+    @staticmethod
+    def get_data(path):
         with open(resource_path(path), 'r') as f:
             return json.load(f)
 
@@ -92,52 +93,32 @@ class Menu:
 
     # This function is for centering the keywords in control section
     def draw_txt(self, txt, rect, surf):
-        render = self.f.render(txt, True, (0, 0, 0))
-        pos = surf.get_size()  # Get the size of the button img
         y_gap = 8  # Y coords for the text
-        x_gap = pos[0] // 2
-        # Check its length and tweak X coords
-        match len(txt):  # lgtm [py/syntax-error]
-            case 1:
-                x_gap -= 12
-            case 5:
-                x_gap -= 55
-            case 10:  # its 9 letters + space
-                render = self.f.render(txt[-5:], True, (0, 0, 0))  # Overwite text surface
-                x_gap -= 55
-            case _:
-                pass
-
-        self.screen.blit(render, (rect[0] + x_gap, rect[1] + y_gap))
+        x_gap = surf.get_width() // 2
+        x_gap -= 55 if len(txt) == 5 or len(txt) == 10 else (12 if len(txt) else 0)
+        self.screen.blit(self.f.render(txt, True, (0, 0, 0))
+                         if len(txt) != 10 else self.f.render(txt[-5:], True, (0, 0, 0)),
+                         (rect[0] + x_gap, rect[1] + y_gap))
 
     def buttons_menu(self, m):
         # Black outline
-        self.screen.blit(self.title_logo[0],
-                         (self.half_w + 20 - self.title_logo[0].get_width() // 2, self.half_h - 190))
+        self.screen.blit(self.title_logo[0], (self.half_w + 20 - self.title_logo[0].get_width() // 2,
+                                              self.half_h - 190))
         # White Texture
-        self.screen.blit(self.title_logo[1],
-                         (self.half_w + 20 - self.title_logo[1].get_width() // 2, self.half_h - 192))
+        self.screen.blit(self.title_logo[1], (self.half_w + 20 - self.title_logo[1].get_width() // 2,
+                                              self.half_h - 192))
 
         # Draw buttons and also their hover image if the user hovers over it
         for i, btn in enumerate(self.btns):
-            b = self.screen.blit(btn[1], self.btns_rects[i]) \
-                if self.btns_rects[i].collidepoint(m) \
-                else \
-                self.screen.blit(btn[0], self.btns_rects[i])
-
-            t = self.screen.blit(self.btns_text[i], (
-            self.btns_rects[i][0] + self.btns_text[0].get_width() // 4, self.btns_rects[i][1] + 5)) \
-                if i == 1 else \
-                self.screen.blit(
-                    self.btns_text[i],
-                    (self.btns_rects[i][0] + self.btns_text[0].get_width() // 2 + 15, self.btns_rects[i][1] + 5)
-                )
+            self.screen.blit(btn[1]if self.btns_rects[i].collidepoint(m) else btn[0], self.btns_rects[i])
+            self.screen.blit(self.btns_text[i], self.btns_text[i].get_rect(centerx=self.half_w,
+                                                                           centery=self.btns_rects[i].centery - 2))
 
     def settings_menu(self, m):
-        ''' Settings '''
+        """ Settings """
         if self.show_settings:
             self.screen.blit(self.settings_bg, (
-            self.half_w - self.settings_bg.get_width() // 2, self.half_h - self.settings_bg.get_height() // 2))
+                self.half_w - self.settings_bg.get_width() // 2, self.half_h - self.settings_bg.get_height() // 2))
 
             if self.controls_error:
                 self.screen.blit(self.f.render("Please put another key!", True, (0, 0, 0)),

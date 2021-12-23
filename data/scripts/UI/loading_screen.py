@@ -20,7 +20,7 @@ class LoadingScreen:
         self.font_color = (255, 255, 255)
 
         # text
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
 
         # animation
         self.current_time = pg.time.get_ticks()
@@ -58,76 +58,26 @@ class LoadingScreen:
             center=(self.screen.get_width() // 2, self.screen.get_height() // 2))  # placing
         self.has_to_kill = False  # indicates if the loading screen has to be killed
 
-    def get_key(self):
-        with open(resource_path("data/database/data.json"), "r") as f:
-            return json.load(f)["controls"]["interact"]
+    def init(self, load_type: str, duration: int = 500):
+        match load_type:
+            case "loading...":
+                pass
+            case "main_loading":
+                self.start_loading = pg.time.get_ticks()
+                self.duration = duration
 
-    def start(self, next_state: str, end_music: str = None, text: bool = True, cat: bool = True, duration: int = 0,
-              main_loading: bool = False, key_end: bool = True):
+    def draw(self, screen: pg.Surface, load_type: str):
 
-        """Setup everything to start a new loading screen. 
-        New arguments can be added, in order to add new loading options."""
-
-        self.has_to_kill = False
-        self.ended_loading = False
-        self.start_loading = pg.time.get_ticks()
-        self.next_state = next_state
-        self.end_music = end_music
-        self.main_loading = main_loading
-        self.key_end = key_end
-        self.text = text
-        self.cat = cat
-        if duration != 0:
-            self.duration = duration
-
-    def handle_events(self):
-
-        """Handle events, (quiting without error and detecting the key to continue)"""
-
-        for event in pg.event.get():
-            match event.type:
-                case pg.QUIT:
-                    pg.quit()
-                    raise SystemExit
-                case pg.KEYDOWN:
-                    if event.key == self.get_key() and self.ended_loading:
-                        self.has_to_kill = True
-
-    def update(self):
-
-        """Main function that gathers everything of the loading screen, 
-        return {dictionary} means the end of the loading screen,
-        """
-
-        # handle events (only not to have error if the player quits)
-        self.handle_events()
-
-        # draw background
-        self.screen.fill(self.bg_color)
-
-        # update time
-        self.current_time = pg.time.get_ticks()
-
-        if self.text:
-            # animate dots
-            if self.current_time - self.delay_dot_anim > 250:
+        if load_type == "loading...":
+            if pg.time.get_ticks() - self.delay_dot_anim > 250:
                 self.index_dot_anim = (self.index_dot_anim + 1) % 3
-                self.delay_dot_anim = self.current_time
+                self.delay_dot_anim = pg.time.get_ticks()
             # render loading text -> "Loading..."
             loading_text = self.font.render(f"Loading {'.' * (self.index_dot_anim + 1)}", True, self.font_color)
             # blit loading text
-            self.screen.blit(loading_text, loading_text.get_rect(bottomleft=(50, self.H - 50)))
+            screen.blit(loading_text, loading_text.get_rect(bottomleft=(50, self.H - 50)))
 
-        if self.cat:
-            # animate cat
-            if self.current_time - self.delay_cat_anim > 100:
-                self.index_cat_anim = (self.index_cat_anim + 1) % len(self.cat_sprites)
-                self.delay_cat_anim = self.current_time
-            # blit cat
-            self.screen.blit(self.cat_sprites[self.index_cat_anim],
-                             self.cat_sprites[self.index_cat_anim].get_rect(bottomright=(self.W - 50, self.H - 50)))
-
-        if self.main_loading:
+        elif load_type == "main_loading":
             self.john_text.fill((0, 0, 0))
             self.john_text.blit(self.txt_jhn, (0, 0))
             pg.draw.rect(self.john_text, (0, 0, 0, 0),
@@ -136,9 +86,9 @@ class LoadingScreen:
             self.screen.blit(self.txt_jhn_bg, self.john_text_rect)
             self.screen.blit(self.john_text, self.john_text_rect)
 
-        if self.ended_loading:
+        elif load_type == "ended":
             if pg.time.get_ticks() - self.delay_blinking > 20:
-                self.delay_blinking = self.current_time
+                self.delay_blinking = pg.time.get_ticks()
 
                 if self.decreasing:  # decrease key's alpha
                     if self.text_key.get_alpha() - 10 < 0:
@@ -151,18 +101,18 @@ class LoadingScreen:
 
             self.screen.blit(self.text_key, self.text_key_rect)  # blit the key text
 
-            if self.has_to_kill:
-                return {"next_state": self.next_state, "next_music": self.end_music}
+    def get_key(self):
+        with open(resource_path("data/database/data.json"), "r") as f:
+            return json.load(f)["controls"]["interact"]
 
-        # check if the loading duration is passed
-        if pg.time.get_ticks() - self.start_loading > self.duration and not self.key_end:
-            return {"next_state": self.next_state, "next_music": self.end_music}
+    def update(self):
+        # Useless function, but we can keep it as they are templates for loading screen animations
 
-        if pg.time.get_ticks() - self.start_loading > self.duration and self.key_end and not self.ended_loading:
-            # if the loading duration has ended, desactivate all effects to display the key asking
-            self.main_loading = False
-            self.cat = False
-            self.text = False
-            self.ended_loading = True
-            self.delay_blinking = self.current_time
-            self.text_key.set_alpha(0)
+        if self.cat:
+            # animate cat
+            if self.current_time - self.delay_cat_anim > 100:
+                self.index_cat_anim = (self.index_cat_anim + 1) % len(self.cat_sprites)
+                self.delay_cat_anim = self.current_time
+            # blit cat
+            self.screen.blit(self.cat_sprites[self.index_cat_anim],
+                             self.cat_sprites[self.index_cat_anim].get_rect(bottomright=(self.W - 50, self.H - 50)))
