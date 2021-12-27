@@ -11,6 +11,11 @@ from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
 import gc
 
+from .PLAYER.player_sub.tools import set_camera_to
+
+from .PLAYER.player_sub.animation_handler import user_interface
+
+
 from .levels import (
     get_cutscene_played,
     play_cutscene,
@@ -142,7 +147,7 @@ class GameManager:
         self.dt = self.framerate.tick(self.FPS) / 1000
 
         if not self.menu and not self.loading:  # if the game is playing
-            self.player.user_interface(pg.mouse.get_pos(), (
+            user_interface(self.player, pg.mouse.get_pos(), (
                 # 52 48 are players height and width
                 self.player.rect.x - 52 - self.player.camera.offset.x,
                 self.player.rect.y - self.player.camera.offset.y - 48
@@ -284,7 +289,7 @@ class GameManager:
                     self.camera_script_handler()
                     self.FPS = 60
                 else:
-                    self.player.set_camera_to("follow")
+                    set_camera_to(self.player.camera, self.player.camera_mode, "follow")
                     self.FPS = 35
 
             self.routine()
@@ -295,7 +300,7 @@ class GameManager:
         cam_script = c_level.camera_script
         src_index = c_level.cam_index
 
-        self.player.set_camera_to("auto")
+        set_camera_to(self.player.camera, self.player.camera_mode, "auto")
         self.scripting = True
         self.ended = False
 
@@ -337,11 +342,11 @@ class GameManager:
                 if pg.time.get_ticks() - self.end > self.s_dt_to_wait_on_end:
                     self.scripting = False
                     if self.s_next_cam is not None:
-                        self.player.set_camera_to(self.s_next_cam)
+                        set_camera_to(self.player.camera, self.player.camera_mode, self.s_next_cam)
             else:
                 self.scripting = False
                 if self.s_next_cam is not None:
-                    self.player.set_camera_to(self.s_next_cam)
+                    set_camera_to(self.player.camera, self.player.camera_mode, self.s_next_cam)
 
 
 class Debugging:

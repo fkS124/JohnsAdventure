@@ -326,7 +326,7 @@ class Dummy(Enemy):
     def __init__(self, screen: pg.Surface, pos: tuple[int, int], hp: int = 100, xp_drop=210):
         super().__init__(screen, pos, hp=100, xp_drop=210, custom_rect=[8 * 4, 34 * 4, (24 - 8) * 4, (47 - 34) * 4])
         self.load_animation(
-            resource_path("data/sprites/dummy.jpeg"),
+            resource_path("data/sprites/dummy.png"),
             idle="static",
             hit_anim="animated",
             idle_coo=[0, 0, 34, 48, 1, 4],

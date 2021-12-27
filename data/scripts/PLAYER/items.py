@@ -97,7 +97,14 @@ class Training_Sword(Weapon):
     def __init__(self):
         super().__init__(dmg=5, crit_chance=0.1)
         self.icon = l_path("data/sprites/items/wooden_sword_item.png", alpha=True)
-
+        
+        # This knockback is temporar, we will update the system when its time
+        self.KB = False
+        self.knock_back = {
+            "duration": 150,
+            "vel": 10,
+            "friction": 0.1
+        }
 
 class Knight_Sword(Weapon):
 

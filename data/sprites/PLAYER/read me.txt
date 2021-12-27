@@ -1,0 +1,1 @@
+When its time to update the player, make sure the script takes from this sheet and not the old john.png
