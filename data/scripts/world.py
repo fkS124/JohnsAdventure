@@ -23,7 +23,8 @@ from .levels import (
     PlayerRoom,
     Kitchen,
     JohnsGarden,
-    ManosHut
+    ManosHut,
+    Cave
 )
 
 
@@ -104,6 +105,7 @@ class GameManager:
             "kitchen": Kitchen,
             "johns_garden": JohnsGarden,
             "manos_hut": ManosHut,
+            "cave": Cave
         }
         self.loaded_states: dict[str: GameState] = {}
         self.game_state: GameState = None
@@ -247,6 +249,8 @@ class GameManager:
         self.game_state.lights_manager.init_level(self.game_state)
         # unload the sheets (theoretically supposed to save RAM
         del_sheets()
+        # stop the player from moving
+        self.player.Right, self.player.Right, self.player.Up, self.player.Down = (False, False, False, False)
 
     def update(self):
 

@@ -7,8 +7,10 @@ import pygame as p
 import math
 from copy import copy
 from random import random
-from .player_sub.tools import get_crit, set_camera_to, leveling, update_camera_status, movement
-from .player_sub.tools import update_ui_animations, check_content, check_for_interaction, check_for_hitting, attack
+from .player_sub.tools import (
+    get_crit, set_camera_to, leveling, update_camera_status, movement, update_ui_animations, check_content,
+    check_for_interaction, check_for_hitting, attack, get_john
+)
 from .player_sub.animation_handler import animation_handing, update_attack
 
 from .player_sub.dash import start_dash, update_dash
@@ -62,88 +64,22 @@ class Player:
         # States
         self.walking = False
 
-        # Animation
-        self.sheet = l_path('data/sprites/john.png')
-
+        # --------------- ANIMATION
+        self.sheet = l_path('data/sprites/PLAYER/_newjohn.png')
         self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
-        
         self.current_frame_ring = self.lvl_up_ring[0]
-
         self.delay_rlu = 0
         self.id_rlu = 0
         self.a_index = 0
+        self.anim = get_john(self)
 
-        self.anim = {
-            # Right ANIMATION
-            'right': [],
-            'right_a_1': [],
-            'right_a_2': [],
-            # Up ANIMATION
-            'up': [],
-            'up_a_1': [],
-            'up_a_2': [],
-            # Down ANIMATION
-            'down': [],
-            'down_a_1': [],
-            'down_a_2': [],
-
-            # Dash ANIMATION
-            'dash_r': [],
-            'dash_u': [],
-            'dash_d': []
-        }
-
-        def get_j(row, col):
-            return scale(get_sprite(self.sheet, 46 * row, 52 * col, 46, 52), 3)
-
-        # This for loop is reliable only for the current spritesheet
-        # W :46
-        # H: 52
-        x_gap = y_gap = 0
-        for key, value in self.anim.items():
-            temp_list = []  # Holds the 5 frames
-            for i in range(5):
-                temp_list.append(get_j(x_gap, y_gap))
-                x_gap += 1
-            self.anim[key] = temp_list  # Update the item key
-            # It has reached the end of spritesheet
-            if x_gap > 13:
-                x_gap = 0
-                y_gap += 1
-
-        # Load the reverse frames to the dict for the left animation
-        self.anim['left'] = [
-            flip_vertical(sprite) for sprite in self.anim['right']
-        ]
-
-        self.anim['left_a_1'] = [
-            flip_vertical(sprite) for sprite in self.anim['right_a_1']
-        ]
-
-        self.anim['left_a_2'] = [
-            flip_vertical(sprite) for sprite in self.anim['right_a_2']
-        ]
-
-        self.anim['dash_l'] = [
-            flip_vertical(sprite) for sprite in self.anim['dash_r']
-        ]
-
-        """
-
-            Player Content
-
-        """
+        # ---------------- PLAYER CONTENT
 
         self.rect = self.anim['right'][0].get_rect()  # This gets changed later
-
         self.dust_particle_effet = DustManager(10, self, self.screen)
 
-        """
-
-            Camera Settings
-
-        """
+        # ----------------- CAMERA SETTINGS
         self.camera = Camera(self, screen)
         self.camera_mode = {
 
@@ -171,7 +107,7 @@ class Player:
         self.restart_animation = True
         self.attacking_frame = self.anim['left_a_2'][self.index_attack_animation]
 
-        ''' Stats'''
+        # ------------------- STATS
 
         # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width /
         # max_hp * hp
@@ -204,18 +140,14 @@ class Player:
         self.upgrade_station = UpgradeStation(self.screen, ui,
                                               p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
 
-        ''' UI '''
+        # ---------------------------- UI
         self.health_box = scale(ui.parse_sprite('health'), 5)
         self.heart = scale(ui.parse_sprite('heart'), 4)
-        self.hp_box_rect = self.health_box.get_rect(
-            topleft=(
-                self.screen.get_width() - self.health_box.get_width() - 90,
-                20
-            )
-        )
+        self.hp_box_rect = self.health_box.get_rect(topleft=(self.screen.get_width() - self.health_box.get_width() - 90,
+                                                             20))
 
-        '''  Combat System '''
-        self.crosshair = ui.parse_sprite("mouse_cursor"),
+        # --------------------------- COMBAT SYSTEM
+        self.crosshair = ui.parse_sprite("mouse_cursor"),  # USELESS ?
         self.attack_pointer = l_path('data/ui/attack_pointer.png', True)
         self.attacking = False
         self.current_combo = 0
