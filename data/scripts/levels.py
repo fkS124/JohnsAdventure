@@ -315,11 +315,19 @@ class GameState:
         # MUST BE REWORKED -> supposed to track if the player is interacting with exit rects
         for exit_state, exit_rect in self.exit_rects.items():
 
-            exit_rect = pg.Rect(exit_rect[0].x, exit_rect[0].y, *exit_rect[0].size), exit_rect[1]
             itr_box = p.Rect(
                 *(self.player.rect.topleft - pg.Vector2(17, -45)),
                 self.player.rect.w // 2, self.player.rect.h // 2
             )
+
+            if exit_state[-1] == "useless":
+                break
+
+            if len(exit_rect) == 3 and exit_rect[-1] == "mandatory":
+                if itr_box.colliderect(exit_rect[0]):
+                    return exit_state
+
+            exit_rect = pg.Rect(exit_rect[0].x, exit_rect[0].y, *exit_rect[0].size), exit_rect[1]
 
             if itr_box.colliderect(exit_rect[0]):
                 match self.player.InteractPoint:
@@ -416,7 +424,7 @@ class GameState:
         ]
 
     def generate_hills(self, direction: str, dep_pos: tuple[int, int], n_hills: int, mid_type: str = "left",
-                       end_type: str = "hill_side_inner", no_begin: bool = False) -> list:
+                       end_type: str = "hill_side_inner", no_begin: bool = False, start_type: str = "none") -> list:
         """ Generate hills procedurally.
         Parameters
         ----------
@@ -432,6 +440,8 @@ class GameState:
                    The type of the last hill.
         no_begin : bool
                    Begins directly the hill by a middle.
+        start_type : str
+                     Type of first hill
         """
 
         corner_left = "hill_side_outer"
@@ -450,7 +460,7 @@ class GameState:
         current_pos = list(dep_pos)
         hills = []  # list that contains all the generated hills
 
-        if not no_begin:
+        if not no_begin and start_type == "none":
             if direction == "right" or direction == "up" or direction == "down":
                 hills.append(self.prop_objects[corner_left](dep_pos))
             else:
@@ -463,6 +473,14 @@ class GameState:
                     current_pos[0] += sizes[corner_left][0]
                 case "down":
                     current_pos[1] += sizes[corner_left][1]
+                    current_pos[1] -= 102
+        elif not no_begin and start_type != "none":
+            hills.append(self.prop_objects[start_type](dep_pos))
+            match direction:
+                case "right":
+                    current_pos[0] += sizes[start_type][0]
+                case "down":
+                    current_pos[1] += sizes[start_type][1]
                     current_pos[1] -= 102
 
         # n_hills - 2 because the ending and starting hills are generated outside the loop
@@ -514,7 +532,7 @@ class GameState:
 class PlayerRoom(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "player_room", light_state="inside_clear")
-        self.objects = [ #super().load_objects('data/database/levels/player_room.txt')
+        self.objects = [  # super().load_objects('data/database/levels/player_room.txt')
             Rect(0, 0, 1280, 133),
             Rect(1270, 134, 10, 586),
             Rect(0, 0, 1280, 133),
@@ -606,7 +624,7 @@ class JohnsGarden(GameState):
     """Open world state of the game -> includes john's house, mano's hut, and more..."""
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, "johns_garden", light_state="night")
+        super().__init__(DISPLAY, player_instance, prop_objects, "johns_garden", light_state="day")
         self._PLAYER_VEL = 10   # 3 freq
 
         # Get the positions and the sprites' informations from the json files
@@ -631,6 +649,7 @@ class JohnsGarden(GameState):
         hr_s_width = self.sprite_info["hori_sides"]["w"] * self.sprite_info["hori_sides"]["sc"]
         hr_s_height = self.sprite_info["hori_sides"]["h"] * self.sprite_info["hori_sides"]["sc"]
         vr_r_height = self.sprite_info["ver_road"]["h"] * self.sprite_info["ver_road"]["sc"]
+        hills_height = self.sprite_info["hill_mid"]["h"] * self.sprite_info["hill_mid"]["sc"]
 
         # Use super().load_objects() , when every model is ready
         self.objects = [
@@ -661,6 +680,8 @@ class JohnsGarden(GameState):
             pg.Rect((mano_pos[0] + 165) * mano_sc, (mano_pos[1] + 324) * mano_sc, 75 * mano_sc, 4 * mano_sc),
             pg.Rect((mano_pos[0] + 116) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
             pg.Rect((mano_pos[0] + 159) * mano_sc, (mano_pos[1] + 322) * mano_sc, 6 * mano_sc, 20 * mano_sc),
+            # cave barrier
+            pg.Rect((4826, 6054, 130, 500)),
 
             *self.build_road(start_pos=((jh_pos[0] + 879 - 727) * jh_sc, (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc),
                              n_road=4, type_r="hori_road", end_type="hori_road_half"),
@@ -683,9 +704,9 @@ class JohnsGarden(GameState):
                                         (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc + hr_s_height), n_road=3,
                              type_r="ver_road", end_type="Vhori_sides"),
             # Cave Road
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc + hr_s_height + 2 * vr_r_height),
-                             n_road=2,
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 3 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 240 - 49 - 3) * jh_sc + hr_s_height + 2 * vr_r_height),
+                             n_road=3,
                              type_r="hori_road"),
 
             # Route 5 Bottom Right
@@ -729,29 +750,42 @@ class JohnsGarden(GameState):
                                  randomize=20),
             
             # Cave Borders
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer"),
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True,
+                                 mid_type="hill_side_mid", end_type="hill_side_outer"),
 
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2400 + 160 * 8 - 31, jh_pos[1]*jh_sc+1400+160*3-102), 3, no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2400 + 160 * 8 - 31, jh_pos[1]*jh_sc+1400+160*3-102), 4,
+                                 no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2395 + 160 * 8 - 31,
+                                          jh_pos[1]*jh_sc+1500+160*3-102+4*hills_height),
+                                 mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev", n_hills=4,
+                                 start_type="hill_side_outer_rev"),
 
-
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31, jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True, mid_type="hill_mid", end_type="hill_side_inner_rev")
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31,
+                                           jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True,
+                                 mid_type="hill_mid", end_type="hill_side_inner_rev")
         ]
         self.exit_rects = {
-            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc , 100, 60),
+            "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
                         "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
             "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
-                          "Enter Mano's hut ?")
+                          "Enter Mano's hut ?"),
+            "cave": (pg.Rect(4956, 6130, 100, 500), "Enter the cave ?", "mandatory"),
+            "cave2": (pg.Rect(4956, 6130, 300, 500), "Enter the cave ?", "useless")
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
-            "manos_hut": self.exit_rects["manos_hut"][0].midbottom
+            "manos_hut": self.exit_rects["manos_hut"][0].midbottom,
+            "cave": self.exit_rects["cave2"][0].midright + pg.Vector2(80, -140)
         }
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, self.W, self.H])
-        return super().update(camera, dt)
+        update = super().update(camera, dt)
+        pg.draw.rect(self.screen, (0, 0, 0), [4400-camera.offset.x, 5800-camera.offset.y, 400, 800])
+        return update
 
 
 class ManosHut(GameState):
@@ -791,3 +825,41 @@ class ManosHut(GameState):
         self.exit_rects = {
             "johns_garden": (pg.Rect(560, 635, 150, 75), "Go back to open world ?")
         }
+
+
+class Cave(GameState):
+
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(Cave, self).__init__(DISPLAY, player_instance, prop_objects, "cave", light_state="day")
+        self._PLAYER_VEL = 10
+
+        hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
+        hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
+
+        self.objects = [
+            # exit invisible wall
+            pg.Rect(hills_width*9+200, hills_height*5-50, 200, 500),
+
+            # generate "walls" (hills)
+            *self.generate_hills("right", (0, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
+            *self.generate_hills("down", (hills_width*9, hills_height-300), 6, no_begin=True, mid_type="hill_side_mid",
+                                 end_type="hill_side_outer"),
+            *self.generate_hills("down", (0, hills_height-280), 10, start_type="hill_side_outer_rev", mid_type="hill_side_mid_rev", end_type="none"),
+            *self.generate_hills("right", (0, hills_height*8), 10, mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),
+            *self.generate_hills("down", (hills_width*9, hills_height*6-300), start_type="hill_side_outer",
+                                 n_hills=4, mid_type="hill_side_mid", end_type="none")
+        ]
+
+        self.spawn = {
+            "johns_garden": (hills_width*9-100, hills_height*5+100)
+        }
+
+        self.exit_rects = {
+            "johns_garden": (pg.Rect(hills_width*9, hills_height*5-50, 200, 500), "Go back to open world ?")
+        }
+
+    def update(self, camera, dt):
+        # TODO: choose a color
+        pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
+        return super(Cave, self).update(camera, dt)

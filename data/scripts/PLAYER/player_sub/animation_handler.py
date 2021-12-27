@@ -1,30 +1,27 @@
 import pygame as p
-import math 
+import math
 
 from .dash import update_dash
 
 
-
 def animate_level_up_ring(player):
-    
     if player.ring_lu:
         if p.time.get_ticks() - player.delay_rlu > 150:
             player.delay_rlu = p.time.get_ticks()
-            
+
             if player.id_rlu + 1 < len(player.lvl_up_ring):
                 player.id_rlu += 1
             else:
                 player.ring_lu = False
                 player.id_rlu = 0
-                
+
             player.curr_frame_ring = player.lvl_up_ring[player.id_rlu]
             player.screen.blit(player.curr_frame_ring, player.curr_frame_ring.get_rect(
-                center= player.rect.topleft - player.camera.offset.xy + p.Vector2(15,80)
+                center=player.rect.topleft - player.camera.offset.xy + p.Vector2(15, 80)
             ))
-    
-    
-def animation_handing(player, dt, m, pos):
 
+
+def animation_handing(player, dt, m, pos):
     player.dust_particle_effet.update(player.screen)
 
     # Draw the Ring
@@ -52,13 +49,13 @@ def animation_handing(player, dt, m, pos):
 
         if player.camera_status != "auto" and not player.inventory.show_menu and not player.upgrade_station.show_menu:
             if 135 >= angle > 45:
-                set_looking(player,"up", pos)
+                set_looking(player, "up", pos)
             elif 225 >= angle > 135:
-                set_looking(player,"left", pos)
+                set_looking(player, "left", pos)
             elif 315 >= angle > 225:
-                set_looking(player,"down", pos)
+                set_looking(player, "down", pos)
             else:
-                set_looking(player,"right", pos)
+                set_looking(player, "right", pos)
         else:
             "we will put a str from camera instead of 'right' later on."
             set_looking(player, "right", pos)
@@ -67,14 +64,13 @@ def animation_handing(player, dt, m, pos):
 
     # Level UP ring
     animate_level_up_ring(player)
-    
-    
+
 
 def set_looking(player, dir_: str, pos):
-    '''
-        This function is for coordinating the hitbox
+    """
+        This function is for coordinating the hit box
         and also playing the looking animation
-    '''
+    """
     if dir_ == "up":
         player.looking_up, player.looking_down, player.looking_right, player.looking_left = True, False, False, False
     elif dir_ == "down":
@@ -88,20 +84,22 @@ def set_looking(player, dir_: str, pos):
         player.screen.blit(player.anim[dir_][player.a_index // 7], pos)
     else:
         player.screen.blit(player.anim[dir_][0], pos)
-        
-        
+
+
 def user_interface(player, m, player_pos, dt):
     if player.camera_status != "auto":
         # Health bar
-        p.draw.rect(player.screen, (255, 0, 0), p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 20, player.health, 25))
+        p.draw.rect(player.screen, (255, 0, 0),
+                    p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 20, player.health, 25))
 
-        # Dash Cooldown bar
-        p.draw.rect(player.screen, (0, 255, 0), p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 90, player.dash_width,
-                                                        15))
+        # Dash Cool down bar
+        p.draw.rect(player.screen, (0, 255, 0),
+                    p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 90, player.dash_width,
+                           15))
 
         # Experience bar
         p.draw.rect(player.screen, (0, 255, 255), p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 60,
-                                                        player.experience_width, 15))
+                                                         player.experience_width, 15))
 
         # Player UI
         player.screen.blit(player.health_box, player.hp_box_rect)
@@ -116,19 +114,20 @@ def user_interface(player, m, player_pos, dt):
         player.inventory.update(player)
         # sending its own object in order that the inventory can access to the player's damages
 
-    # recalculate the damages, considering the equiped weapon
-    player.modified_damages = player.damage + (player.inventory.get_equipped("Weapon").damage \
-                                            if player.inventory.get_equipped("Weapon") is not None else 0)
-    equiped = player.inventory.get_equipped("Weapon")
-    if hasattr(equiped, "special_effect"):
-        equiped.special_effect(player)
+    # recalculate the damages, considering the equipped weapon
+    player.modified_damages = player.damage + (player.inventory.get_equipped("Weapon").damage
+                                               if player.inventory.get_equipped("Weapon") is not None else 0)
+    equipped = player.inventory.get_equipped("Weapon")
+    if hasattr(equipped, "special_effect"):
+        equipped.special_effect(player)
 
     # if player presses interaction key and is in a interaction zone
     if player.Interactable and player.is_interacting:
         player.npc_catalog.draw(player.npc_text, dt)
-        
+
+
 def update_attack(player, pos):
-    ''' This function is for updating the players hitbox based on the mouse position and also updating his animation'''
+    """ This function is for updating the players hit box based on the mouse position and also updating his animation"""
 
     # print("Up:", player.looking_up, "Down:", player.looking_down, "Left:", player.looking_left, "Right:", player.looking_right)
     # print("Current combo :", player.current_combo, "Time elapsed :", p.time.get_ticks()-player.last_attacking_click, "Cooldown :", p.time.get_ticks()-player.last_attacking_click>player.attack_cooldown, "Index :", player.index_attack_animation)
@@ -137,24 +136,24 @@ def update_attack(player, pos):
 
         # sets the attacking hitbox according to the direction
         rect = p.Rect(player.rect.x - player.camera.offset.x - 50, player.rect.y - player.camera.offset.y - 40,
-                        *player.rect.size)
+                      *player.rect.size)
 
         # Some tweaks to attacking sprite
         temp = pos
 
         if player.looking_up:
             player.attacking_hitbox = p.Rect(rect.x, rect.y - player.attacking_hitbox_size[0],
-                                            player.attacking_hitbox_size[1], player.attacking_hitbox_size[0])
+                                             player.attacking_hitbox_size[1], player.attacking_hitbox_size[0])
         elif player.looking_down:
             player.attacking_hitbox = p.Rect(rect.x, rect.bottom, player.attacking_hitbox_size[1],
-                                            player.attacking_hitbox_size[0])
+                                             player.attacking_hitbox_size[0])
         elif player.looking_left:
             player.attacking_hitbox = p.Rect(rect.x - player.attacking_hitbox_size[1], rect.y,
-                                            player.attacking_hitbox_size[1], player.attacking_hitbox_size[0])
+                                             player.attacking_hitbox_size[1], player.attacking_hitbox_size[0])
             temp = pos[0] - 2, pos[1]  # Fix Image position
         elif player.looking_right:
             player.attacking_hitbox = p.Rect(rect.right, rect.y, player.attacking_hitbox_size[1],
-                                            player.attacking_hitbox_size[0])
+                                             player.attacking_hitbox_size[0])
             temp = pos[0] + 2, pos[1]  # Fix Image position
 
         # p.draw.rect(player.screen, (255, 0, 0), player.attacking_hitbox, 2)
@@ -191,7 +190,8 @@ def update_attack(player, pos):
         player.screen.blit(player.attacking_frame, temp)
 
         # reset the whole thing if the combo reach his end and the animation of the last hit ended too
-        if player.current_combo == player.last_attack and not player.restart_animation and not player.index_attack_animation:
+        if player.current_combo == player.last_attack and not player.restart_animation and \
+                not player.index_attack_animation:
             player.attacking = False  # stop attack
             player.current_combo = 0  # reset combo number
             player.next_combo_available = True  # allow to attack again
