@@ -33,9 +33,9 @@ def get_crit(mod_dmg, wpn):
 
 def load_attack_anim(player, sheet):
     sheet_settings = {
-        'right_a_1': {'row': 0, 'col': 0, 'frames': 8, "sheet": "weapon"},
-        'right_a_2': {'row': 0, 'col': 8, 'frames': 8, "sheet": "weapon"},
-        'stab_r': {'row': 0, 'col': 16, 'frames': 6, "sheet": "weapon"},
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 7, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 7, 'frames': 7, "sheet": "weapon"},
+        'stab_r': {'row': 0, 'col': 14, 'frames': 5, "sheet": "weapon"},
         'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
         'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
         'stab_u': {'row': 1, 'col': 10, 'frames': 7, "sheet": "weapon"},
@@ -290,10 +290,10 @@ def check_for_hitting(player):
 
 def attack(player, pos):
     click_time = pygame.time.get_ticks()
+    player.last_attacking_click = click_time
 
     if not player.attacking and player.inventory.get_equipped("Weapon") is not None:
         player.attacking = True
-        player.last_attacking_click = click_time
         player.sound_manager.play_sound("woodenSword")  # Play first hit
         player.current_combo += 1
         player.next_combo_available = False
@@ -302,7 +302,7 @@ def attack(player, pos):
 
     else:
         # if its time to show the next combo, make sure player isn't moving else cancel
-        if player.next_combo_available and not True in [player.Up, player.Down, player.Left, player.Right]:
+        if player.next_combo_available and True not in [player.Up, player.Down, player.Left, player.Right]:
             if click_time - player.last_attacking_click > player.attack_speed:
                 player.attacking = False
                 player.current_combo = 0
