@@ -704,40 +704,25 @@ class JohnsGarden(GameState):
                                         (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc + hr_s_height), n_road=3,
                              type_r="ver_road", end_type="Vhori_sides"),
             # Cave Road
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 3 * hr_r_width + hhr_r_width + hr_s_width * 2,
+            *self.build_road(start_pos=((jh_pos[0] - 247) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 240 - 49 - 3) * jh_sc + hr_s_height + 2 * vr_r_height),
-                             n_road=3,
+                             n_road=2,
                              type_r="hori_road"),
 
-            # Route 5 Bottom Right
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 498 - 3) * jh_sc + hr_s_height * 18), n_road=2,
-                             type_r="ver_road", end_type="Hver_turn"),
 
-            # Route 6 Bottom Right
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
-                                        (jh_pos[1] + 361 - 82 + 172-50-3-65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
-                             n_road=3, type_r="hori_road"),
 
-            # Route 7 -> Top Right
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height),
-                             n_road=3, type_r="ver_road"),
 
-            # Route 8 -> Top right of map
-            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
-                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height - 33 * 3),
-                             n_road=4, type_r="hori_road", start_type="VHhori_turn"),
-
-            # The game without the grass and trees take around 150mb of ram
-            # Currently the trees take +100 mb of ram, so we need to be exact and precise with the numbers
+            # Hills above the john's and mano's hut
+            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 250), 8, mid_type="hill_mid", end_type="hill_side_inner_rev"),
             
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 450), 8, mid_type="hill_mid", end_type="hill_side_inner_rev"),
-
+            *self.generate_hills("down", (jh_pos[0]*jh_sc - 600 + 3 * 224 * 7, jh_pos[1]*jh_sc - 224 * 7 + 102), 4, no_begin=True, mid_type="hill_side_mid_rev", end_type = "none"),
+            
+            # Collision at the top right of the john's home fenches
+            Rect(jh_pos[0]*jh_sc + 224 * 5 + 75, jh_pos[1]*jh_sc + 200, 64, 128),
+            
             # Trees right from john's room
             *self.generate_chunk("tree", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
                                  randomize=10),
-
 
             # Trees right from manos hut
             *self.generate_chunk("tree", mano_pos[0] * mano_sc + 950, jh_pos[1] * jh_sc, 3, 3, 100 * 4, 100 * 3,
@@ -749,23 +734,59 @@ class JohnsGarden(GameState):
             *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1340, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
                                  randomize=20),
             
-            # Cave Borders
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400), 10, mid_type="hill_mid",
+            
+            # "_________________ Right place of the map_________________"
+            
+            # Big Hill B
+            *self.generate_hills("right", (7200, 720), 3, mid_type="hill_mid", end_type="hill_side_outer_rev"),
+            *self.generate_hills("down", (7200, 720), 11, no_begin=True, mid_type="hill_side_mid", end_type="hill_side_outer"),
+            *self.generate_hills("right", (7200, 720 + 140 * 3 * 13 + 102), 3, mid_type="hill_mid", end_type="hill_side_inner_rev"),
+            
+            
+            # Route 7 -> Top Right
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height),
+                             n_road=3, type_r="ver_road"),
+
+            # Route 8 -> Top right of map
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height - 33 * 3),
+                             n_road=4, type_r="hori_road", start_type="VHhori_turn"),
+            
+            
+            # Route 5 Bottom Right
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
+                                        (jh_pos[1] + 498 - 3) * jh_sc + hr_s_height * 18), n_road=2,
+                             type_r="ver_road", end_type="Hver_turn"),
+
+            # Route 6 Bottom Right
+            *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
+                                        (jh_pos[1] + 361 - 82 + 172-50-3-65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
+                             n_road=2, type_r="hori_road"),
+
+            # """_________________Cave Borders_________________"""   
+            # Top
+            *self.generate_hills("right", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc+1400), 6, mid_type="hill_mid",
                                  end_type="hill_side_outer_rev"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc - 2400, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True,
+            # Bottom   
+            *self.generate_hills("right", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc + 1400 + 160 * 3 * 9 + 102), 6, mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),  
+            
+            # Left Border
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True,
                                  mid_type="hill_side_mid", end_type="hill_side_outer"),
 
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2400 + 160 * 8 - 31, jh_pos[1]*jh_sc+1400+160*3-102), 4,
+            # Right up border
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600 + 3 * 224 * 5, jh_pos[1]*jh_sc+1400+160*3-102), 4,
                                  no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 2395 + 160 * 8 - 31,
+            
+            # Right down border
+            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600 + 3 * 224 * 5,
                                           jh_pos[1]*jh_sc+1500+160*3-102+4*hills_height),
                                  mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev", n_hills=4,
                                  start_type="hill_side_outer_rev"),
-
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 2400 + 160 * 4 + 31,
-                                           jh_pos[1]*jh_sc+1400 + 160 * 26 - 102 + 10), 10, no_begin=True,
-                                 mid_type="hill_mid", end_type="hill_side_inner_rev")
         ]
+        
         self.exit_rects = {
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
                         "Go back to your house?"),
@@ -775,12 +796,12 @@ class JohnsGarden(GameState):
             
             # mandatory forced level switch, useless requires input
             # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
-            "cave": (pg.Rect(4956, 6130, 200, 500), "Enter the cave ?", "mandatory")
+            "cave": (pg.Rect(5350, 6130, 200, 380), "Enter the cave ?", "mandatory")
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
             "manos_hut": self.exit_rects["manos_hut"][0].midbottom,
-            "cave": self.exit_rects["cave"][0].midright + pg.Vector2(80, -140)
+            "cave": self.exit_rects["cave"][0].midright + pg.Vector2(120, -140)
         }
 
     def update(self, camera, dt):
