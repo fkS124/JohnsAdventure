@@ -31,28 +31,80 @@ def get_crit(mod_dmg, wpn):
     return 0
 
 
+def load_attack_anim(player, sheet):
+    sheet_settings = {
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 8, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 8, 'frames': 8, "sheet": "weapon"},
+        'stab_r': {'row': 0, 'col': 16, 'frames': 6, "sheet": "weapon"},
+        'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
+        'stab_u': {'row': 1, 'col': 10, 'frames': 7, "sheet": "weapon"},
+        'down_a_1': {'row': 2, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'down_a_2': {'row': 2, 'col': 5, 'frames': 5, "sheet": "weapon"},
+        'stab_d': {'row': 2, 'col': 10, 'frames': 6, "sheet": "weapon"},
+    }
+
+    for key in sheet_settings:
+        player.anim[key] = [get_player(sheet, sheet_settings[key]["col"] + i, sheet_settings[key]["row"])
+                            for i in range(sheet_settings[key]["frames"])]
+
+    player.anim['left_a_1'] = [flip_vertical(sprite) for sprite in player.anim['right_a_1']]
+    player.anim['left_a_2'] = [flip_vertical(sprite) for sprite in player.anim['right_a_2']]
+    player.anim['stab_l'] = [flip_vertical(sprite) for sprite in player.anim['stab_r']]
+
+
 def get_john(player):
+    sheet_settings = {
+        # MOVEMENT
+        "right": {'row': 1, 'col': 0, 'frames': 5}, "idle_r": {'row': 0, 'col': 0, 'frames': 2},
+        "idle_d": {'row': 0, 'col': 4, 'frames': 2}, "idle_u": {'row': 0, 'col': 2, 'frames': 2},
+        "down": {'row': 3, 'col': 0, 'frames': 5}, "up": {'row': 2, 'col': 0, 'frames': 5},
+        "dash_r": {'row': 4, 'col': 0, 'frames': 5}, "dash_d": {'row': 6, 'col': 0, 'frames': 5},
+        "dash_u": {'row': 5, 'col': 0, 'frames': 5},
+        # ATTACK
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 8, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 8, 'frames': 8, "sheet": "weapon"},
+        'stab_r': {'row': 0, 'col': 16, 'frames': 6, "sheet": "weapon"},
+        'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
+        'stab_u': {'row': 1, 'col': 10, 'frames': 7, "sheet": "weapon"},
+        'down_a_1': {'row': 2, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'down_a_2': {'row': 2, 'col': 5, 'frames': 5, "sheet": "weapon"},
+        'stab_d': {'row': 2, 'col': 10, 'frames': 6, "sheet": "weapon"},
+    }
+
     anim = {
         # Right ANIMATION
-        'right': [], 'right_a_1': [], 'right_a_2': [],
+        'right': [], 'right_a_1': [], 'right_a_2': [], 'stab_r': [],
         # Up ANIMATION
-        'up': [], 'up_a_1': [], 'up_a_2': [],
+        'up': [], 'up_a_1': [], 'up_a_2': [], 'stab_u': [],
         # Down ANIMATION
-        'down': [], 'down_a_1': [], 'down_a_2': [],
+        'down': [], 'down_a_1': [], 'down_a_2': [], 'stab_d': [],
         # Dash ANIMATION
-        'dash_r': [], 'dash_u': [], 'dash_d': []
+        'dash_r': [], 'dash_u': [], 'dash_d': [],
+        # Idle ANIMATION
+        'idle_r': [], 'idle_l': [], 'idle_u': [], 'idle_d': []
     }
     x_gap = y_gap = 0
-    for key, value in anim.items():
-        temp_list = [get_player(player.sheet, x_gap+i, y_gap) for i in range(1, 6)]  # Holds the 5 frames
-        anim[key] = temp_list  # Update the item key
-        x_gap += 5 if x_gap + 5 <= 13 else -x_gap
-        y_gap += 1 if x_gap + 5 > 13 else 0
+    for key in anim:
+        if key in sheet_settings:
+            sheet = player.sheet
+            if "sheet" in sheet_settings[key]:
+                weapon = player.inventory.get_equipped("Weapon")
+                if weapon is not None:
+                    sheet = weapon.sheet
+                elif "weapon" in sheet_settings[key]["sheet"]:
+                    sheet = player.default_attack_sheet
+
+            anim[key] = [get_player(sheet, sheet_settings[key]["col"] + i, sheet_settings[key]["row"])
+                         for i in range(sheet_settings[key]["frames"])]
 
     # Load the reverse frames to the dict for the left animation
     anim['left'] = [flip_vertical(sprite) for sprite in anim['right']]
     anim['left_a_1'] = [flip_vertical(sprite) for sprite in anim['right_a_1']]
     anim['left_a_2'] = [flip_vertical(sprite) for sprite in anim['right_a_2']]
+    anim['stab_l'] = [flip_vertical(sprite) for sprite in anim['stab_r']]
+    anim['idle_l'] = [flip_vertical(sprite) for sprite in anim['idle_r']]
     anim['dash_l'] = [flip_vertical(sprite) for sprite in anim['dash_r']]
     return anim
 
@@ -127,16 +179,6 @@ def movement(player, m, pos):
                 player.direction = "left"
         else:  # He is attacking
             dash_vel = 0
-
-        ''' We must get rid of this '''
-        ''' Animation '''
-        # fks will get rid of the frame padding and use frame time
-        if player.a_index >= 27:
-            player.a_index = 0
-        player.a_index += 1
-    # Player is looking at the inventory, stop animation
-    else:
-        player.a_index = 0  # Play only first frame
 
     # This stops the player animation from running, his movement as well
     if not player.Up and not player.Down and not player.Right and not player.Left:

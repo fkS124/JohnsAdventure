@@ -26,7 +26,7 @@ class UpgradeStation:
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
         
         # 
-        self.rect_t_level = self.t_level.get_rect(center = (self.bu_rect.centerx, self.bu_rect.centery))
+        self.rect_t_level = self.t_level.get_rect(center=(self.bu_rect.centerx, self.bu_rect.centery))
 
         self.up_st_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
         
@@ -44,7 +44,6 @@ class UpgradeStation:
                       Endurance(self.player_instance.endurance),
                       CritChance(self.player_instance.critical_chance)]
         self.index_scroll = 0  # Useful to track the scrolling
-        
 
         self.txt_pt_av = self.font.render(f"Upgrade points available : {self.new_points_available}", True, (0, 0, 0))
 
@@ -67,7 +66,7 @@ class UpgradeStation:
 
     def update(self, parent_class):
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
-        self.rect_t_level = self.t_level.get_rect(midtop=self.bu_rect.midtop)
+        self.rect_t_level = self.t_level.get_rect(midtop=self.bu_rect.midtop+pg.Vector2(0, 10))
 
         additionals = [parent_class.inventory.get_equipped("Weapon")]  # support for multiples equiped items
         for stat in self.stats:
@@ -119,7 +118,7 @@ class UpgradeStation:
     def get_equiped(self, type_: str):
 
         for item in self.items:
-            if item.type == type_ and item.equiped:
+            if item.type == type_ and item.equipped:
                 return item
 
     def handle_clicks(self, pos):

@@ -1,7 +1,9 @@
 from math import ceil
 import pygame as pg
 from copy import copy
-from ..utils import l_path, load, get_sprite, smooth_scale, scale, resource_path           
+from ..utils import l_path, load, get_sprite, smooth_scale, scale, resource_path
+from .player_sub.tools import load_attack_anim
+
 
 class Items:
     """This class will contain all the objects"""
@@ -26,22 +28,23 @@ class Items:
 
 class Weapon:
 
-    def __init__(self, dmg:int, crit_chance:float):
-        
+    def __init__(self, dmg: int, crit_chance: float, sheet: str):
+
         self.icon = pg.Surface((25, 25))
         self.type = "Weapon"
-        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 14)  
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 14)
         self.text = self.font.render(self.__class__.__name__, True, (0, 0, 0))
         self.stat = self.font.render(" +1", True, (255, 0, 255))
         self.eq = self.font.render(">", True, (255, 0, 0))  # to replace with an image later on
         self.damage = dmg
         self.critical_chance = crit_chance
 
-        self.image = pg.Surface((self.text.get_width()+self.stat.get_width()+self.eq.get_width(), self.text.get_height()))
-        self.image.fill((239,159,26))
+        self.image = pg.Surface(
+            (self.text.get_width() + self.stat.get_width() + self.eq.get_width(), self.text.get_height()))
+        self.image.fill((239, 159, 26))
         self.image.blit(self.text, (0, 0))
         self.image.blit(self.stat, (self.text.get_width(), 0))
-        self.equiped = False
+        self.equipped = False
         self.rect = self.image.get_rect()
 
         self.KB = False  # define if the knock back is applying to this weapon
@@ -51,7 +54,9 @@ class Weapon:
             "friction": 0
         }
 
-    def start_special_effect(self, obj:object):
+        self.sheet = l_path(sheet)
+
+    def start_special_effect(self, obj: object):
         # Here the devs can pass a function to start a special effect
 
         pass
@@ -63,8 +68,9 @@ class Weapon:
 
     def update(self, surf, pos, dmg, add_pos=(0, 0)):
         d_dmg = self.damage - dmg  # getting the difference from the player's damages and the current item's damages
-        txt_stat = (" +" if d_dmg >= 0 else " ")+str(d_dmg) if not self.equiped else ""
-        color = (0, 255, 0) if d_dmg > 0 else ((100 if d_dmg == 0 else 255), (100 if d_dmg == 0 else 0), (100 if d_dmg == 0 else 0))  # grey if the d_dmg is 0, green if > 0, red if < 0
+        txt_stat = (" +" if d_dmg >= 0 else " ") + str(d_dmg) if not self.equipped else ""
+        color = (0, 255, 0) if d_dmg > 0 else ((100 if d_dmg == 0 else 255), (100 if d_dmg == 0 else 0), (
+            100 if d_dmg == 0 else 0))  # grey if the d_dmg is 0, green if > 0, red if < 0
         self.stat = self.font.render(txt_stat, True, color)  # resetting the stat rendering
 
         self.image.fill((239, 159, 26))
@@ -73,31 +79,33 @@ class Weapon:
         if rect.collidepoint(pg.mouse.get_pos()):
             self.image.fill((219, 139, 6))
 
-        if not self.equiped:
+        if not self.equipped:
             self.image.blit(self.text, (0, 0))
             self.image.blit(self.stat, (self.text.get_width(), 0))
         else:
             self.image.blit(self.eq, (0, 0))
             self.image.blit(self.text, (self.eq.get_width(), 0))
-            self.image.blit(self.stat, (self.text.get_width()+self.eq.get_width(), 0))
+            self.image.blit(self.stat, (self.text.get_width() + self.eq.get_width(), 0))
         self.rect.topleft = pos
         surf.blit(self.image, pos)
 
-    def handle_clicks(self, pos):
-        if self.rect.collidepoint(pos): 
-            return self.set_equiped() # Un/Equips clicked item
+    def handle_clicks(self, pos, player):
+        if self.rect.collidepoint(pos):
+            return self.set_equiped(player)   # Un/Equips clicked item
 
-    def set_equiped(self):
-        self.equiped = not self.equiped
-        return self.equiped, self.type, self
+    def set_equiped(self, player):
+        self.equipped = not self.equipped
+        if self.equipped:
+            load_attack_anim(player, self.sheet)
+        return self.equipped, self.type, self
 
 
 class Training_Sword(Weapon):
 
     def __init__(self):
-        super().__init__(dmg=5, crit_chance=0.1)
+        super().__init__(dmg=5, crit_chance=0.1, sheet="data/sprites/PLAYER/sword_sprite_reference.png")
         self.icon = l_path("data/sprites/items/wooden_sword_item.png", alpha=True)
-        
+
         # This knockback is temporar, we will update the system when its time
         self.KB = False
         self.knock_back = {
@@ -106,10 +114,11 @@ class Training_Sword(Weapon):
             "friction": 0.1
         }
 
+
 class Knight_Sword(Weapon):
 
     def __init__(self):
-        super().__init__(dmg=15, crit_chance=0.15)
+        super().__init__(dmg=15, crit_chance=0.15, sheet="data/sprites/PLAYER/sword_sprite_reference.png")
         self.KB = True
         self.knock_back = {
             "duration": 150,
@@ -122,10 +131,10 @@ class Knight_Sword(Weapon):
         self.bleed_duration = 500
         self.last_tick = {}
         self.tick_cd = 50
-        self.bleed_damages = ceil(self.damage*0.01)
+        self.bleed_damages = ceil(self.damage * 0.01)
         self.affecting_bleed = {}
 
-    def start_special_effect(self, obj:object):
+    def start_special_effect(self, obj: object):
         if obj not in self.obj_bleeding:
             self.obj_bleeding.append(obj)
             self.start_bleed[id(obj)] = pg.time.get_ticks()
@@ -142,7 +151,7 @@ class Knight_Sword(Weapon):
         """Apply bleeding effect, if the cooldown has passed, """
 
         for obj in self.obj_bleeding:
-            
+
             if pg.time.get_ticks() - self.start_bleed[id(obj)] > self.bleed_duration:
                 self.affecting_bleed[id(obj)] = False
             else:
@@ -155,7 +164,6 @@ class Knight_Sword(Weapon):
 
 
 class ItemSorter:
-
     weapons = {
         "Training_Sword": Training_Sword,
         "Knight_Sword": Knight_Sword

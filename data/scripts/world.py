@@ -426,6 +426,11 @@ class Debugging:
                 pl_col_rect.h -= 115
                 pg.draw.rect(self.screen, self.colors["collision_rect"], pl_col_rect, 1)
 
+                try:
+                    pg.draw.rect(self.screen, (255, 0, 0), self.player.attacking_hitbox, 2)
+                except TypeError:
+                    pass
+
                 position = (self.player.rect.topleft - self.player.camera.offset.xy)
                 itr_box = pg.Rect(*position, self.player.rect.w // 2, self.player.rect.h // 2)
                 # Manual Position tweaks

@@ -39,7 +39,6 @@ class Inventory:
         self.item_sorter = ItemSorter  # put this to avoid unused import
         self.items = [self.item_sorter.weapons["Knight_Sword"]()]  # -> self.item_sorter.weapons["Knight_Sword"]()
         self.index_scroll = 0  # Useful to track the scrolling
-        
 
     def scroll_down(self):
         self.index_scroll += 1 * (self.index_scroll < len(self.items) - 3)
@@ -87,20 +86,20 @@ class Inventory:
 
         for item in self.items:
             if item.type == type_ and item != instance:
-                item.equiped = False
+                item.equipped = False
 
     def get_equipped(self, type_: str):
 
         for item in self.items:
-            if item.type == type_ and item.equiped:
+            if item.type == type_ and item.equipped:
                 return item
 
-    def handle_clicks(self, pos):
+    def handle_clicks(self, pos, player):
 
         if self.show_menu:
             pos -= pg.Vector2(*self.im_rect.topleft)  # get the pos of the click on the surface
             for item in self.items:
-                changes = item.handle_clicks(pos)  # Handle the clicks for all items
+                changes = item.handle_clicks(pos, player)  # Handle the clicks for all items
                 if changes is not None:
                     if changes[0]:
                         self.reset_equippement(changes[1], changes[2])

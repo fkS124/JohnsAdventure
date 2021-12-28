@@ -66,12 +66,14 @@ class Player:
 
         # --------------- ANIMATION
         self.sheet = l_path('data/sprites/PLAYER/john.png')
+        self.default_attack_sheet = l_path('data/sprites/PLAYER/sword_sprite_reference.png')
         self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.current_frame_ring = self.lvl_up_ring[0]
         self.delay_rlu = 0
         self.id_rlu = 0
-        self.a_index = 0
+        self.index_animation = 0
+        self.delay_animation = 0
         self.anim = get_john(self)
 
         # ---------------- PLAYER CONTENT
@@ -112,14 +114,14 @@ class Player:
         # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width /
         # max_hp * hp
         self.level = 1
-        self.health = 180
+        self.health = 200
         self.damage = 10
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
         self.xp = 0 # Will soon be load from json
 
         # Code for Dash Ability goes here
-        self.dash_width = 180  # the pixel width for bars
+        self.dash_width = 200  # the pixel width for bars
         self.dash_cd = 750
         self.last_dash_end = self.dash_start = 0
         self.dashing = False
@@ -244,6 +246,8 @@ class Player:
 
                     # Temporar until we get a smart python ver
                     if e.key == inv and self.camera_status != "auto":
+                        self.Left = self.Right = self.Up = self.Down = False
+                        self.walking = False
                         self.inventory.set_active()
                         self.upgrade_station.set_active()
 
@@ -267,7 +271,7 @@ class Player:
                     match e.button:
                         # left click
                         case 1:
-                            click_result1 = self.inventory.handle_clicks(e.pos)
+                            click_result1 = self.inventory.handle_clicks(e.pos, self)
                             click_result2 = self.upgrade_station.handle_clicks(e.pos)
                             changed_activities = False
                             if self.inventory.show_menu and self.upgrade_station.show_menu:
