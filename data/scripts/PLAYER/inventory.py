@@ -17,6 +17,10 @@ class Inventory:
 
         # inventory button
         self.button_inv = scale(self.spr_sh.parse_sprite("inventory"), 3)
+        
+        self.button_inv_h = scale(self.spr_sh.parse_sprite("inventory_hover"), 3)
+        
+        
         self.bi_rect = self.button_inv.get_rect(right=self.w - 10, y= 86)
         # the menu where all the items in the inventory will be displayed
         # only if the player is currently in this state
@@ -49,6 +53,9 @@ class Inventory:
 
         if self.show_menu:  # if it shows the menu, then it does not show the down bar
             self.inv_menu.blit(self.ui_inv, self.uii_rect)  # blit the inventory ui
+            
+            # Hover img 
+            self.screen.blit(self.button_inv_h, self.bi_rect)
 
             for index in range(item_l):  # loop through the items
                 # avoid errors where the scroll applied is too far away 

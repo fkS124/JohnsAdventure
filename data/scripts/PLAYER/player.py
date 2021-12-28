@@ -231,15 +231,12 @@ class Player:
                     if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
                         obj.interacting = False
                         break  # Stop the for loop to save calculations
-            match e.type:  # lgtm [py/syntax-error]
+            match e.type: 
                 case p.QUIT:
                     raise SystemExit
 
                 case p.KEYDOWN:
                     match e.key:
-
-                        # case p.K_1:
-
                         case p.K_F12:
                             p.display.toggle_fullscreen()
                         case p.K_ESCAPE:
@@ -256,9 +253,11 @@ class Player:
                     if e.key == itr:
                         if self.InteractPoint + 1 >= 3:  # if interaction point is 3, then reset the animation
                             self.InteractPoint = 0
-                            self.Interactable = False
-                            self.is_interacting = False
+                            self.Interactable = self.is_interacting = False
                             self.npc_catalog.reset()
+                            
+                            self.Left = self.Right = False
+                            
                         else:  # else do the usual things
                             self.Interactable = True
                             check_content(self, pos)

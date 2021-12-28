@@ -70,6 +70,8 @@ class GameManager:
 
         # 
         self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
+        
+        # (main menu title)
         self.blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
 
         # pygame powered
@@ -247,10 +249,10 @@ class GameManager:
 
         # load all the lights in the game
         self.game_state.lights_manager.init_level(self.game_state)
-        # unload the sheets (theoretically supposed to save RAM
+        # unload the sheets (theoretically supposed to save RAM)
         del_sheets()
         # stop the player from moving
-        self.player.Right, self.player.Right, self.player.Up, self.player.Down = (False, False, False, False)
+        self.player.Left = self.player.Right = self.player.Up = self.player.Down = False
 
     def update(self):
 
@@ -291,7 +293,7 @@ class GameManager:
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''
                 if not self.game_state.ended_script and not self.debug and not get_cutscene_played(self.game_state.id):
                     self.camera_script_handler()
-                    self.FPS = 60
+                    self.FPS = 360 # if it works
                 else:
                     set_camera_to(self.player.camera, self.player.camera_mode, "follow")
                     self.FPS = 35

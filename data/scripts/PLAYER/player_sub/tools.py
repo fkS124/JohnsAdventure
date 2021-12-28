@@ -173,7 +173,7 @@ def check_for_interaction(player, exit_rects):
         # get the current animation (if there is one)
         UI_anim = player.UI_interaction_anim[all_current_animations.index(str(id(exit_rect)))] \
             if str(id(exit_rect)) in all_current_animations else None
-        # check for the possible interaction
+        # check for the possible interaction and 
         if exit_rect_.colliderect(itr_box):
             # draw the exit rect
             pygame.draw.rect(player.screen, (255, 255, 255), exit_rect_, 2)

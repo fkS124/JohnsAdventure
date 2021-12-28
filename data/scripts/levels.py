@@ -772,13 +772,15 @@ class JohnsGarden(GameState):
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
             "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
                           "Enter Mano's hut ?"),
-            "cave": (pg.Rect(4956, 6130, 100, 500), "Enter the cave ?", "mandatory"),
-            "cave2": (pg.Rect(4956, 6130, 300, 500), "Enter the cave ?", "useless")
+            
+            # mandatory forced level switch, useless requires input
+            # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
+            "cave": (pg.Rect(4956, 6130, 200, 500), "Enter the cave ?", "mandatory")
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
             "manos_hut": self.exit_rects["manos_hut"][0].midbottom,
-            "cave": self.exit_rects["cave2"][0].midright + pg.Vector2(80, -140)
+            "cave": self.exit_rects["cave"][0].midright + pg.Vector2(80, -140)
         }
 
     def update(self, camera, dt):
@@ -856,7 +858,7 @@ class Cave(GameState):
         }
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(hills_width*9, hills_height*5-50, 200, 500), "Go back to open world ?")
+            "johns_garden": (pg.Rect(hills_width*9, hills_height*5-50, 200, 500), "Go back to open world ?", "mandatory")
         }
 
     def update(self, camera, dt):
