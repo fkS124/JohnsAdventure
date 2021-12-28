@@ -11,7 +11,7 @@ class PauseMenu:
         self.W, self.H = self.screen.get_size()
 
         # initialize font and load background
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 25)
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 25)
         self.background = scale(ui.parse_sprite("catalog_button.png"), 5)
 
         self.buttons = [  # generate all three buttons

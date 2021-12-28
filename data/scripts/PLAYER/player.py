@@ -27,7 +27,7 @@ from ..particle_system import DustManager
 from ..UI.UI_animation import InteractionName
 
 p.font.init()
-debug_font = p.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
+debug_font = p.font.Font(resource_path("data/database/menu-font.ttf"), 12)
 
 
 class Player:
@@ -59,13 +59,13 @@ class Player:
         self.Right = self.Down = self.Left = self.Right = self.Up = False  # Movement
 
         self.data = data
-        self.inventory = Inventory(self.screen, ui, font)
+        self.inventory = Inventory(self.screen, ui)
 
         # States
         self.walking = False
 
         # --------------- ANIMATION
-        self.sheet = l_path('data/sprites/PLAYER/_newjohn.png')
+        self.sheet = l_path('data/sprites/PLAYER/john.png')
         self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.current_frame_ring = self.lvl_up_ring[0]
@@ -138,16 +138,14 @@ class Player:
             self.inventory.get_equipped("Weapon").damage if self.inventory.get_equipped("Weapon") is not None else 0)
 
         self.upgrade_station = UpgradeStation(self.screen, ui,
-                                              p.font.Font(resource_path("data/database/pixelfont.ttf"), 13), self)
+                                              p.font.Font(resource_path("data/database/menu-font.ttf"), 13), self)
 
         # ---------------------------- UI
-        self.health_box = scale(ui.parse_sprite('health'), 5)
-        self.heart = scale(ui.parse_sprite('heart'), 4)
+        self.health_box = scale(ui.parse_sprite('health'), 3)
         self.hp_box_rect = self.health_box.get_rect(topleft=(self.screen.get_width() - self.health_box.get_width() - 90,
                                                              20))
 
         # --------------------------- COMBAT SYSTEM
-        self.crosshair = ui.parse_sprite("mouse_cursor"),  # USELESS ?
         self.attack_pointer = l_path('data/ui/attack_pointer.png', True)
         self.attacking = False
         self.current_combo = 0

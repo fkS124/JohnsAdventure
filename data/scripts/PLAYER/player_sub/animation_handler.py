@@ -104,9 +104,6 @@ def user_interface(player, m, player_pos, dt):
         # Player UI
         player.screen.blit(player.health_box, player.hp_box_rect)
 
-        # Heart Icon
-        player.screen.blit(player.heart, (player.hp_box_rect.x + 3, player.hp_box_rect.y + 15))
-
         # Level status button goes here
         player.upgrade_station.update(player)
 

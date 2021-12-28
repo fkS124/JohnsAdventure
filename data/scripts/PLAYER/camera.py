@@ -211,7 +211,7 @@ class Auto(CamScroll):
         self.delay_mvt = 0
         self.moving_cam = False
 
-        self.font = pygame.font.Font(resource_path("data/database/pixelfont.ttf"), 20)
+        self.font = pygame.font.Font(resource_path("data/database/menu-font.ttf"), 20)
         self.text = ""
 
         self.start = 0

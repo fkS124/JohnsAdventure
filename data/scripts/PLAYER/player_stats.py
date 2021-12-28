@@ -9,6 +9,7 @@ class UpgradeStation:
     def __init__(self, screen, sprite_sheet, font, player_instance):
 
         # unpack variables
+        self.font = font
         self.spr_sh = sprite_sheet
         self.screen, self.w, self.h = screen, screen.get_width(), screen.get_height()
         self.player_instance = player_instance
@@ -16,14 +17,20 @@ class UpgradeStation:
 
         # upgrade station button
         self.button_upgrade_station = scale(self.spr_sh.parse_sprite("level_status"),
-                                            5)  # The button that launches the upgrade station
+                                            3)  # The button that launches the upgrade station
+        
+        # LVL UI BOX
         self.bu_rect = self.button_upgrade_station.get_rect(right=self.w - 10, y=12)
-
-        self.level_font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 38)
+        self.level_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 28)
+        
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
-        self.rect_t_level = self.t_level.get_rect(top=self.bu_rect.top - 40, centerx=self.bu_rect.centerx)
+        
+        # 
+        self.rect_t_level = self.t_level.get_rect(center = (self.bu_rect.centerx, self.bu_rect.centery))
 
         self.up_st_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
+        
+        # UPGRADE STATION UI BOX
         self.us_rect = self.up_st_menu.get_rect(right=self.w - 25, y=160 + self.h // 3 - 25)  # center
 
         # ui piece for the upgrade station
@@ -37,7 +44,7 @@ class UpgradeStation:
                       Endurance(self.player_instance.endurance),
                       CritChance(self.player_instance.critical_chance)]
         self.index_scroll = 0  # Useful to track the scrolling
-        self.font = font
+        
 
         self.txt_pt_av = self.font.render(f"Upgrade points available : {self.new_points_available}", True, (0, 0, 0))
 
@@ -153,7 +160,7 @@ class StatHandler:
         self.optional_unit = optional_unit
         self.color = color
 
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 16)
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 16)
         self.text = self.font.render(
             f"{self.name} : {int(self.value) if val_type is int else round(self.value, 2)}{optional_unit if optional_unit is not None else ''}",
             True, self.color)

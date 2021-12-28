@@ -43,7 +43,7 @@ class GameManager:
     # FONTS
 
     pg.mixer.pre_init(44100, 32, 2, 4096)  # Frequency, 32 Bit sound, channels, buffer
-    pg.display.set_caption("iBoxStudio Engine Pre Alpha 0.23")
+    pg.display.set_caption("iBoxStudio Engine Demo")
     pg.mouse.set_visible(False)
     # CONSTS
 
@@ -69,7 +69,7 @@ class GameManager:
         self.loading = False
 
         # 
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
         self.blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
 
         # pygame powered
@@ -369,7 +369,7 @@ class Debugging:
             "exit_rect": (255, 255, 0)
         }
 
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 15)
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 15)
 
     def draw_text(self, txt, color, pos, bottomleft=False):
         text = self.font.render(txt, True, color)

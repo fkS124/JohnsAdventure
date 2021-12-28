@@ -9,7 +9,7 @@ class Items:
     class NullItem:  # Reference Model
 
         def __init__(self):
-            font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 24)
+            font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
             self.text = font.render("NullItem", True, (0, 0, 0))
             self.image = pg.Surface((self.text.get_size()))
             self.image.fill((255, 204, 0))
@@ -30,7 +30,7 @@ class Weapon:
         
         self.icon = pg.Surface((25, 25))
         self.type = "Weapon"
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 18)  
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 14)  
         self.text = self.font.render(self.__class__.__name__, True, (0, 0, 0))
         self.stat = self.font.render(" +1", True, (255, 0, 255))
         self.eq = self.font.render(">", True, (255, 0, 0))  # to replace with an image later on

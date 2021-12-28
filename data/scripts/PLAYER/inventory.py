@@ -2,19 +2,22 @@ import pygame as pg
 from .items import ItemSorter
 from ..utils import scale, get_sprite
 from copy import copy
+from ..utils import resource_path
 
 
 class Inventory:
 
-    def __init__(self, screen, sprite_sheet, font):
+    def __init__(self, screen, sprite_sheet):
 
         # unpack variables
         self.spr_sh = sprite_sheet
         self.screen, self.w, self.h = screen, screen.get_width(), screen.get_height()
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 18)
+        
 
         # inventory button
-        self.button_inv = scale(self.spr_sh.parse_sprite("inventory"), 5)
-        self.bi_rect = self.button_inv.get_rect(right=self.w - 10, y=80)
+        self.button_inv = scale(self.spr_sh.parse_sprite("inventory"), 3)
+        self.bi_rect = self.button_inv.get_rect(right=self.w - 10, y= 86)
         # the menu where all the items in the inventory will be displayed
         # only if the player is currently in this state
         self.inv_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
@@ -32,7 +35,7 @@ class Inventory:
         self.item_sorter = ItemSorter  # put this to avoid unused import
         self.items = [self.item_sorter.weapons["Knight_Sword"]()]  # -> self.item_sorter.weapons["Knight_Sword"]()
         self.index_scroll = 0  # Useful to track the scrolling
-        self.font = font
+        
 
     def scroll_down(self):
         self.index_scroll += 1 * (self.index_scroll < len(self.items) - 3)

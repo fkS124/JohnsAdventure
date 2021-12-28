@@ -285,22 +285,21 @@ class Chest(Prop):
         self.rewarded = False
 
         # ------------ ANIMATION ----------------
-        self.UI_button = [
-            scale(get_sprite(load(resource_path('data/ui/UI_spritesheet.png')), 147 + 41 * i, 31, 40, 14), 2) for i in
-            range(2)]
-        self.id_button = 0
-        self.delay_button = 0
-
-        self.font = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 12)
-        self.font2 = pg.font.Font(resource_path("data/database/pixelfont.ttf"), 14)
+        self.ui = UI_Spritesheet('data/ui/UI_spritesheet.png')
+        self.UI_button = [scale(self.ui.parse_sprite('chest_popup'), 2), scale(self.ui.parse_sprite('chest_popup_hover'),2)]
+        self.id_button = self.delay_button = 0
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 10)
+        self.font2 = pg.font.Font(resource_path("data/database/menu-font.ttf"), 12)
         self.animation_ended = False
         self.dy = 0
         self.dy_max = 30
         self.delay_dy = 0
 
         self.coin = l_path("data/sprites/items/coin1.png", alpha=True)
-        self.ui = UI_Spritesheet('data/ui/UI_spritesheet.png')
+        
         self.item_bg = scale(self.ui.parse_sprite('reward.png'), 3)
+        
+        # This is unused, could we get it back?
         self.new = self.font.render("NEW !", True, (255, 255, 0))
 
         self.coin_txt = self.font.render(f"{self.rewards['coins']}", True, (255, 255, 255))
