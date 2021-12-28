@@ -273,8 +273,8 @@ class Mau(MovingNPC):
             velocity=pg.Vector2(1.25, 1.25),
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
-            idle_right=[132 - 4, 49, 43, 33, 2, 3],
-            idle_left=[132 - 4, 49, 33, 33, 2, 3, "flip"],
+            idle_right=[131, 49, 43, 33, 2, 3],
+            idle_left=[131, 49, 33, 33, 2, 3, "flip"],
             move_anim=True,
             move_right=[3 + 39, 49, 43, 33, 2, 3],
             move_left=[3 + 39, 49, 43, 33, 2, 3, "flip"],
@@ -283,7 +283,7 @@ class Mau(MovingNPC):
 
         self.it_re_size = (75, 100)
         self.anim_duration = {
-            "idle": 750,
+            "idle": 300,
             "move": 100
         }
 

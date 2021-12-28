@@ -1,7 +1,7 @@
 import pygame as p
 
-def start_dash(player):
 
+def start_dash(player):
     if not player.dashing and player.dash_available:
         player.dashing = True
         player.dash_start = p.time.get_ticks()
@@ -16,8 +16,8 @@ def start_dash(player):
         else:
             player.dashing_direction = "up"
 
-def update_dash(player, dt, pos):
 
+def update_dash(player, dt, pos):
     if player.dashing:
 
         if p.time.get_ticks() - player.delay_dash_animation > 50:
@@ -58,9 +58,9 @@ def update_dash(player, dt, pos):
         #  Update the  UI
 
         if p.time.get_ticks() - player.delay_increasing_dash > player.dash_cd / ((11 / 3) * 2):
-            player.dash_width += 180 / ((11 / 3) * 2)
+            player.dash_width += 200 / ((11 / 3) * 2)
             player.delay_increasing_dash = p.time.get_ticks()
 
         if p.time.get_ticks() - player.last_dash_end > player.dash_cd:
             player.dash_available = True
-            player.dash_width = 180
+            player.dash_width = 200

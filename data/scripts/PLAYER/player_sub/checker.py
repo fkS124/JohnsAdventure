@@ -1,5 +1,6 @@
 import pygame  
-  
+
+
 def check_content(player, pos):
     position = (player.rect.topleft - player.camera.offset.xy)
     itr_box = pygame.Rect(*position, player.rect.w // 2, player.rect.h // 2)

@@ -47,6 +47,16 @@ def animation_handing(player, dt, m, pos):
         )
         angle = abs(math.degrees(angle)) if angle < 0 else 360 - math.degrees(angle)
 
+        if player.walking:
+            if p.time.get_ticks() - player.delay_animation > 100:
+                player.index_animation = (player.index_animation + 1) % len(player.anim["right"])
+                player.delay_animation = p.time.get_ticks()
+
+        else:
+            if p.time.get_ticks() - player.delay_animation > 350:
+                player.index_animation = (player.index_animation + 1) % len(player.anim["idle_r"])
+                player.delay_animation = p.time.get_ticks()
+
         if player.camera_status != "auto" and not player.inventory.show_menu and not player.upgrade_station.show_menu:
             if 135 >= angle > 45:
                 set_looking(player, "up", pos)
@@ -81,20 +91,24 @@ def set_looking(player, dir_: str, pos):
         player.looking_up, player.looking_down, player.looking_right, player.looking_left = False, False, True, False
 
     if player.walking:
-        player.screen.blit(player.anim[dir_][player.a_index // 7], pos)
+        temp_anim = player.anim[dir_]
     else:
-        player.screen.blit(player.anim[dir_][0], pos)
+        temp_anim = player.anim["".join(["idle_", dir_[0]])]
+    if player.index_animation > len(temp_anim)-1:
+        player.index_animation = 0
+
+    player.screen.blit(temp_anim[player.index_animation], pos)
 
 
 def user_interface(player, m, player_pos, dt):
     if player.camera_status != "auto":
         # Health bar
         p.draw.rect(player.screen, (255, 0, 0),
-                    p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 20, player.health, 25))
+                    p.Rect(player.hp_box_rect.x+10, player.hp_box_rect.y + 10, player.health, 40))
 
         # Dash Cool down bar
         p.draw.rect(player.screen, (0, 255, 0),
-                    p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 90, player.dash_width,
+                    p.Rect(player.hp_box_rect.x+10, player.hp_box_rect.y + 80, player.dash_width,
                            15))
 
         # Experience bar
@@ -125,9 +139,6 @@ def user_interface(player, m, player_pos, dt):
 
 def update_attack(player, pos):
     """ This function is for updating the players hit box based on the mouse position and also updating his animation"""
-
-    # print("Up:", player.looking_up, "Down:", player.looking_down, "Left:", player.looking_left, "Right:", player.looking_right)
-    # print("Current combo :", player.current_combo, "Time elapsed :", p.time.get_ticks()-player.last_attacking_click, "Cooldown :", p.time.get_ticks()-player.last_attacking_click>player.attack_cooldown, "Index :", player.index_attack_animation)
 
     if player.attacking and player.camera_status != "auto":
 
