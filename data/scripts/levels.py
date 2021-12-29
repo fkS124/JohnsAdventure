@@ -762,7 +762,7 @@ class JohnsGarden(GameState):
             # Route 6 Bottom Right
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
                                         (jh_pos[1] + 361 - 82 + 172-50-3-65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
-                             n_road=2, type_r="hori_road"),
+                             n_road=4, type_r="hori_road_half", end_type="Vver_end"),
 
             # """_________________Cave Borders_________________"""   
             # Top
@@ -796,25 +796,26 @@ class JohnsGarden(GameState):
             
             # mandatory forced level switch, useless requires input
             # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
-            "cave": (pg.Rect(5350, 6130, 200, 380), "Enter the cave ?", "mandatory")
+            "cave": (pg.Rect(5350, 6130, 200, 380), "Enter the cave ?", "mandatory"),
+            "training_field": (pg.Rect(8260, 6680, 100, 800), "Enter the training field ?", "mandatory")
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
             "manos_hut": self.exit_rects["manos_hut"][0].midbottom,
-            "cave": self.exit_rects["cave"][0].midright + pg.Vector2(120, -140)
+            "cave": self.exit_rects["cave"][0].midright + pg.Vector2(120, -140),
+            "training_field": self.exit_rects["training_field"][0].midleft - pg.Vector2(100, 100)
         }
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, self.W, self.H])
         update = super().update(camera, dt)
-        pg.draw.rect(self.screen, (0, 0, 0), [4400-camera.offset.x, 5800-camera.offset.y, 400, 800])
         return update
 
 
 class ManosHut(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="day") #inside_dark
+        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="inside_dark") #inside_dark
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))
@@ -906,19 +907,39 @@ class Cave(GameState):
         pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
         return super(Cave, self).update(camera, dt)
 
-class Training_Field(GameState):   
-    "ITS ON THE BOTTOM RIGHT OF THE MAP. PUT THE EXIT RECT AT THE SECOND HILL AT THE BOTTOM"
+
+class Training_Field(GameState):
+    """ITS ON THE BOTTOM RIGHT OF THE MAP. PUT THE EXIT RECT AT THE SECOND HILL AT THE BOTTOM"""
     
-    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, id_: str, light_state="day"):
-        super(Training_Field, self).__init__(DISPLAY, player_instance, prop_objects, "training field", light_state=light_state)
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(Training_Field, self).__init__(DISPLAY, player_instance, prop_objects, "training_field", light_state="day")
         
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
         self.objects = [
             
-            #*self.generate_hills("right", (0, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev")
-            
-            # Insert Feevos shop
-            # self.prop_objects[‘feevos_shop’](pos)
+            *self.generate_hills("right", (-700, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
+            *self.build_road((-700, hills_height+50), n_road=2, start_type="hori_road", end_type="Vver_end"),
+
+            self.prop_objects["feevos_shop"]((1100, 800)),
+            *self.generate_chunk("tree", 500, 200, 2, 10, 250, 180, randomize=30),
+            *self.generate_chunk("tree", 2915, 722, 8, 3, 250, 400, randomize=30),
+            *self.generate_chunk("tree", 0, 3823, 2, 8, 400, 250, randomize=50),
+            *self.generate_chunk("tree", -200, 1448, 7, 2, 150, 400, randomize=50),
+            npc.Candy(pg.Vector2(590, 1350), awake=True),
+            npc.Manos(pg.Vector2(800, 1300)),
+            Dummy(self.screen, (1970, 1634)),
+            Dummy(self.screen, (1970, 1934))
         ]
-        
+
+        self.exit_rects = {
+            "johns_garden": (pg.Rect(0, hills_height-200, 100, 1000), "Go back to open world ?", "mandatory")
+        }
+
+        self.spawn = {
+            "johns_garden": self.exit_rects["johns_garden"][0].topright + pg.Vector2(100, 280)
+        }
+
+    def update(self, camera, dt):
+        pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
+        return super(Training_Field, self).update(camera, dt)

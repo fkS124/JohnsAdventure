@@ -187,8 +187,8 @@ def update_attack(player, pos):
                     player.index_attack_animation + 1]  # change the current animation frame
                 player.index_attack_animation += 1  # increment the animation index
             else:
-                player.restart_animation = False  # don't allow the restart of the animation until a next combo is reached
-                player.index_attack_animation = 0  # reset the animation index, without changing the frame in order to stay in "pause"
+                player.restart_animation = False   # don't allow the restart of the animation until a next combo is reached
+                player.index_attack_animation = 0   # reset the animation index, without changing the frame in order to stay in "pause"
                 player.next_combo_available = True  # allow to attack again
 
         # p.draw.rect(player.screen, (255,255,255), player.Rect)
