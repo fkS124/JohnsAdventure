@@ -110,7 +110,7 @@ class NPC:
             self.state = "idle"
 
     def animate(self):
-
+        
         current_anim = self.anim_manager[self.state]
         if type(current_anim) is dict:
             current_anim = current_anim[self.direction]
@@ -293,11 +293,11 @@ class Candy(MovingNPC):
          Όταν
     """
 
-    def __init__(self, pos):
+    def __init__(self, pos, awake=False):
         super(Candy, self).__init__(
             movement="lateral",
-            range_rect=pg.Rect(pos, (200, 200)),  # TODO : get a real range rect (didn't know what to put)
-            velocity=pg.Vector2(1, 0),
+            range_rect=pg.Rect(pos, (400, 200)),  # TODO : get a real range rect (didn't know what to put)
+            velocity=pg.Vector2(2, 0),
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
@@ -313,15 +313,26 @@ class Candy(MovingNPC):
 
         self.anim_duration["idle"] = 1000
         self.anim_duration["move"] = 250
-        self.status = "sleeping"
+        self.status = "sleeping" if not awake else "awake"
+        if awake:
+            self.direction = "right"
+            self.state = "move"
         self.animate()
+
+    def update(self, screen, scroll):
+        if self.status == "awake" and self.direction == "down":
+            self.direction = "right"
+        return super(Candy, self).update(screen, scroll)
 
     def logic(self, scroll):
         if self.status == "awake":
+            if self.direction == "down":
+                self.direction = "right"
             self.state = "move"
             return super(Candy, self).logic(scroll)
         elif self.status == "sleeping":
             self.state = "idle"
+            self.direction = "down"
             self.animate()
 
 

@@ -5,7 +5,7 @@
     "add_args":  {"particle":  {"name":  "smoke", "pos":  [80, 122], "size":  [25, 2], "player": "player"}
   }},
 
-  "feevos_shop":{"x":557, "y": 64, "w":218, "h":213, "it":  1, "sc": 3, "crect":  [0, 82, 210, 130], "ccty": 277, "sheet": "houses",
+  "feevos_shop":{"x":557, "y": 64, "w":218, "h":213, "it":  1, "sc": 3, "crect":  [20, 82, 180, 130], "ccty":200, "sheet": "houses",
     "add_args":  {"particle":  {"name":  "smoke", "pos":  [168, 15], "size":  [25, 2], "player": "player"}
   }},
   

@@ -162,7 +162,7 @@ class Player:
         self.last_attacking_click = 0
 
         # still to be determined
-        self.attack_cooldown = 350
+        self.attack_cooldown = 500
 
         # still to be determined  This is the cooldown of the last attack
         self.attack_speed = self.attack_cooldown * 2 - 25 / 100

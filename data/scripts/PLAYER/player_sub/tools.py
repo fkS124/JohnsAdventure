@@ -8,12 +8,14 @@ from copy import copy
 
 from .animation_handler import update_attack
 
+
 def get_crit(mod_dmg, wpn):
     crit = random()
     crit_chance = wpn.critical_chance
     if crit < crit_chance:
         return mod_dmg * crit_chance
     return 0
+
 
 def get_player(img, row, col):
     """[summary]
@@ -25,10 +27,11 @@ def get_player(img, row, col):
     """
     return scale(get_sprite(img, 46 * row, 52 * col, 46, 52), 3)
 
+
 def load_attack_anim(player, sheet):
     sheet_settings = {
         'right_a_1': {'row': 0, 'col': 0, 'frames': 7, "sheet": "weapon"},
-        'right_a_2': {'row': 0, 'col': 7, 'frames': 7, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 7, 'frames': 6, "sheet": "weapon"},
         'stab_r': {'row': 0, 'col': 14, 'frames': 5, "sheet": "weapon"},
         'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
         'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
