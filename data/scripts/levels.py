@@ -814,7 +814,7 @@ class JohnsGarden(GameState):
 class ManosHut(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="inside_dark")
+        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="day") #inside_dark
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))
@@ -860,29 +860,65 @@ class Cave(GameState):
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
 
         self.objects = [
-            # exit invisible wall
-            pg.Rect(hills_width*9+200, hills_height*5-50, 200, 500),
-
-            # generate "walls" (hills)
-            *self.generate_hills("right", (0, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
-            *self.generate_hills("down", (hills_width*9, hills_height-300), 6, no_begin=True, mid_type="hill_side_mid",
-                                 end_type="hill_side_outer"),
-            *self.generate_hills("down", (0, hills_height-280), 10, start_type="hill_side_outer_rev", mid_type="hill_side_mid_rev", end_type="none"),
-            *self.generate_hills("right", (0, hills_height*8), 10, mid_type="hill_mid",
+            
+            
+            # I dont get whats 100 * 2 ... is it optional?
+            #self.generate_chunk("grass", 168 * 3 + 30, 240*3 + 30, 20, 20, 100 * 2, 100 * 2, randomize=40),
+            *self.build_road(start_pos=(2040, 2865),
+                             n_road=2, type_r="hori_road", end_type="hori_road"),
+            # """_________________Cave Borders_________________"""   
+            # Top
+            *self.generate_hills("right", (0, 160 * 3 * 2), 6, mid_type="hill_mid",
                                  end_type="hill_side_outer_rev"),
-            *self.generate_hills("down", (hills_width*9, hills_height*6-300), start_type="hill_side_outer",
-                                 n_hills=4, mid_type="hill_side_mid", end_type="none")
+            # Bottom   
+            *self.generate_hills("right", (0, 160 * 3 * 9 + 102), 6, mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),  
+            
+            # Left Border
+            *self.generate_hills("down", (0, 160*3-102), 8, no_begin=True,
+                                 mid_type="hill_side_mid", end_type="hill_side_outer"),
+
+            # Right up border
+            *self.generate_hills("down", (0 + 3 * 224 * 5, 160*3-102), 5,
+                                 no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
+            
+            # Right down border
+            *self.generate_hills("down", (0 + 3 * 224 * 5, 160*3-102+4*hills_height),
+                                 mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev", n_hills=5,
+                                 start_type="hill_side_outer_rev"),         
+                
+            self.prop_objects["cave_entrance"]((hills_width + 100, hills_height*4 - 255)),
+            
+            *self.generate_chunk("tree", hills_width * 3 - 50, hills_height*2 - 50, 4, 3, 100 * 5, 100 * 3)
+            
         ]
 
         self.spawn = {
-            "johns_garden": (hills_width*9-100, hills_height*5+100)
+            "johns_garden": (hills_width*5 - 100, hills_height*4 + 100)
         }
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(hills_width*9, hills_height*5-50, 200, 500), "Go back to open world ?", "mandatory")
+            "johns_garden": (pg.Rect(hills_width*5 + 50, hills_height*4, 200, 400), "Go back to open world ?", "mandatory")
         }
 
     def update(self, camera, dt):
         # TODO: choose a color
         pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
         return super(Cave, self).update(camera, dt)
+
+class Training_Field(GameState):   
+    "ITS ON THE BOTTOM RIGHT OF THE MAP. PUT THE EXIT RECT AT THE SECOND HILL AT THE BOTTOM"
+    
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, id_: str, light_state="day"):
+        super(Training_Field, self).__init__(DISPLAY, player_instance, prop_objects, "training field", light_state=light_state)
+        
+        hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
+        hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
+        self.objects = [
+            
+            #*self.generate_hills("right", (0, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev")
+            
+            # Insert Feevos shop
+            # self.prop_objects[‘feevos_shop’](pos)
+        ]
+        

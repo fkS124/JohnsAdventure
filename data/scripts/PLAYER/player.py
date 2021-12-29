@@ -203,6 +203,7 @@ class Player:
         self.camera.scroll()
 
     def update(self, dt, exit_rects):
+        print(self.rect.topleft)
         # Function that handles everything :brain:
         self.handler(dt, exit_rects)
 
