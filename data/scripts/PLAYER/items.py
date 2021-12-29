@@ -118,7 +118,7 @@ class Training_Sword(Weapon):
 class Knight_Sword(Weapon):
 
     def __init__(self):
-        super().__init__(dmg=15, crit_chance=0.15, sheet="data/sprites/PLAYER/sword_sprite_reference.png")
+        super().__init__(dmg=15, crit_chance=0.15, sheet="data/sprites/PLAYER/weapons/sword_sprite_reference.png")
         self.KB = True
         self.knock_back = {
             "duration": 150,

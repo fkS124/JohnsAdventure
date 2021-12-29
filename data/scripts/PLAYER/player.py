@@ -66,7 +66,11 @@ class Player:
 
         # --------------- ANIMATION
         self.sheet = l_path('data/sprites/PLAYER/john.png')
-        self.default_attack_sheet = l_path('data/sprites/PLAYER/sword_sprite_reference.png')
+        
+
+        # Why are you loading the animation? the weapons supposed to load to this value.
+        self.default_attack_sheet = l_path('data/sprites/PLAYER/weapons/sword_sprite_reference.png')
+        
         self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.current_frame_ring = self.lvl_up_ring[0]

@@ -6,8 +6,8 @@
   }},
 
 
-  "m_hut_bed":{"x":307, "y":528, "w":66, "h":122, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
-  "m_hut_fireplace":{"x":91, "y": 534, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144,
+  "m_hut_bed":{"x": 209, "y":0, "w":66, "h":122, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
+  "m_hut_fireplace":{"x":0, "y": 2, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144,
     "add_args": {
       "polygon_light": [{"pos": [42, 179], "height": 55, "radius": 60, "dep_angle": -45, "end_angle": 90,
         "color": [207, 112, 23], "dep_alpha": 180
@@ -15,10 +15,8 @@
   }, "sheet":  "temp_open_world"},
 
 
-  "m_hut_table":{"x":170, "y": 533, "w":126, "h":75, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
-  "m_hut_sofa":{"x":170, "y": 612, "w": 52, "h":133, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
-  "table_2":{"x":225, "y": 612, "w":59, "h":94, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
-
+  "m_hut_table":{"x":79, "y": 1, "w":126, "h":75, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
+  "m_hut_sofa":{"x": 79, "y": 80, "w": 52, "h":133, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
 
   "tree": {"x":27, "y":112, "w":150, "h":158, "it":  1, "sc": 2.5, "crect":  [58, 113, 32, 44], "ccty": 125, "sheet":  "open_world"},
   "grass": {"x":259, "y":249, "w":28, "h":26, "it": 1, "sc": 2, "col": false, "sort": false, "sheet":  "open_world"},
@@ -62,8 +60,8 @@
   "hill_side_outer":{"x":0, "y": 0, "w": 224, "h": 161, "it": 1, "sc": 3, "crect":  [0, 17, 224, 137], "sheet":  "hills"},
   "hill_side_outer_rev": {"x":0, "y": 0, "w": 224, "h": 161, "it": 1, "sc": 3, "reverse": true ,"crect":  [0, 17, 224, 137], "sheet":  "hills"},
   "hill_mid": {"x":225, "y": 0, "w": 224, "h": 162, "it": 1, "sc": 3, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
-  "hill_side_inner":{"x":1, "y": 0, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
-  "hill_side_inner_rev":{"x":1, "y": 0, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
+  "hill_side_inner":{"x":0, "y": 2, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
+  "hill_side_inner_rev":{"x":0, "y": 2, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
   "hill_side_mid": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "crect":  [0, 17, 223, 208], "sheet":  "hills"},
   "hill_side_mid_rev": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "reverse": true , "crect":  [0, 17, 223, 208], "sheet":  "hills"}
 }

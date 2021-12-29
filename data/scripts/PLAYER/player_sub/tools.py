@@ -8,6 +8,12 @@ from copy import copy
 
 from .animation_handler import update_attack
 
+def get_crit(mod_dmg, wpn):
+    crit = random()
+    crit_chance = wpn.critical_chance
+    if crit < crit_chance:
+        return mod_dmg * crit_chance
+    return 0
 
 def get_player(img, row, col):
     """[summary]
@@ -16,20 +22,8 @@ def get_player(img, row, col):
         img (pygame.Surface): [description]
         row (int): [description]
         col (int): [description]
-
-    Returns:
-        I will adjust this soon to take for all player frames.
     """
     return scale(get_sprite(img, 46 * row, 52 * col, 46, 52), 3)
-
-
-def get_crit(mod_dmg, wpn):
-    crit = random()
-    crit_chance = wpn.critical_chance
-    if crit < crit_chance:
-        return mod_dmg * crit_chance
-    return 0
-
 
 def load_attack_anim(player, sheet):
     sheet_settings = {
@@ -62,9 +56,9 @@ def get_john(player):
         "dash_r": {'row': 4, 'col': 0, 'frames': 5}, "dash_d": {'row': 6, 'col': 0, 'frames': 5},
         "dash_u": {'row': 5, 'col': 0, 'frames': 5},
         # ATTACK
-        'right_a_1': {'row': 0, 'col': 0, 'frames': 8, "sheet": "weapon"},
-        'right_a_2': {'row': 0, 'col': 8, 'frames': 8, "sheet": "weapon"},
-        'stab_r': {'row': 0, 'col': 16, 'frames': 6, "sheet": "weapon"},
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 6, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 6, 'frames': 7, "sheet": "weapon"},
+        'stab_r': {'row': 0, 'col': 13, 'frames': 6, "sheet": "weapon"},
         'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
         'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
         'stab_u': {'row': 1, 'col': 10, 'frames': 7, "sheet": "weapon"},
