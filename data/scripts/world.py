@@ -17,6 +17,7 @@ from .PLAYER.player_sub.animation_handler import user_interface
 
 
 from .levels import (
+    Gymnasium,
     get_cutscene_played,
     play_cutscene,
     GameState,
@@ -103,6 +104,8 @@ class GameManager:
         self.state = first_state
         self.first_state = False
         self.prop_objects = PropGetter(self.player).PROP_OBJECTS
+        
+        # THIS IS WHERE YOU LOAD THE WORLDS
         self.state_manager = {
             "player_room": PlayerRoom,
             "kitchen": Kitchen,
@@ -110,6 +113,7 @@ class GameManager:
             "manos_hut": ManosHut,
             "cave": Cave,
             "training_field": Training_Field,
+            "gymnasium": Gymnasium
         }
         self.loaded_states: dict[str: GameState] = {}
         self.game_state: GameState = None

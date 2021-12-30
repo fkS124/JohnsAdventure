@@ -9,8 +9,10 @@
     "add_args":  {"particle":  {"name":  "smoke", "pos":  [168, 15], "size":  [25, 2], "player": "player"}
   }},
   
-  "cave_entrance": {"x":776, "y":0, "w":424, "h":323, "it":  1, "sc": 3, "crect": [0, 20, 424, 305], "ccty":200,
+  "cave_entrance": {"x":776, "y":0, "w":424, "h":323, "it":  1, "sc": 3, "sort": true, "crect": [0, 20, 424, 305], "ccty":200,
     "sheet": "houses"},
+
+  "school_entrance": {"x":0, "y":0, "w": 678, "h":317, "it":  1, "sc": 4, "sheet": "school_gate"},
 
   "m_hut_bed":{"x": 209, "y":0, "w":66, "h":122, "it":  1, "sc": 3, "sheet":  "temp_open_world"},
   "m_hut_fireplace":{"x":0, "y": 2, "w":74, "h":236, "it":  1, "sc": 3, "crect":  [0, 152, 43, 81], "ccty": 144,
@@ -27,6 +29,8 @@
   "tree": {"x":27, "y":112, "w":150, "h":158, "it":  1, "sc": 2.5, "crect":  [58, 113, 32, 44], "ccty": 125, "sheet":  "open_world"},
   "grass": {"x":259, "y":249, "w":28, "h":26, "it": 1, "sc": 2, "col": false, "sort": false, "sheet":  "open_world"},
   "bush": {"x":242, "y": 236, "w": 14, "h": 16, "it": 1, "sc": 2, "sort": false, "sheet":  "open_world"},
+  "cave_spike": {"x":205, "y": 233, "w": 10, "h": 27, "it": 1, "sc": 3, "crect":  [0, 15, 10, 12], "sort": true, "sheet":  "open_world"},
+  "cave_spike_small": {"x":210, "y": 261, "w": 6, "h": 12, "it": 1, "sc": 2, "sort": false, "sheet":  "open_world"},
 
   "street_lamp": {"x": 185, "y": 144, "w": 68, "h": 76, "it": 1, "sc": 3, "crect": [25, 50, 15, 25], "ccty": 50,
     "add_args": {"light_sources": [{"pos":  [11, 16], "radius": 100, "opacity": 150, "color": [255, 255, 51]},

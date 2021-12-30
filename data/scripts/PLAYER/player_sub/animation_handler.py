@@ -112,8 +112,7 @@ def user_interface(player, m, player_pos, dt):
                            15))
 
         # Experience bar
-        p.draw.rect(player.screen, (0, 255, 255), p.Rect(player.hp_box_rect.x, player.hp_box_rect.y + 60,
-                                                         player.experience_width, 15))
+        p.draw.rect(player.screen, (0, 255, 255), p.Rect(player.hp_box_rect.x + 10, player.hp_box_rect.y + 110, player.experience_width, 20))
 
         # Player UI
         player.screen.blit(player.health_box, player.hp_box_rect)
