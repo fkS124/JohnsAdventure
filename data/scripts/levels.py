@@ -10,7 +10,7 @@ from random import gauss
 # from .PLAYER.items import Chest
 from .PLAYER.player import *
 from .PLAYER.inventory import *
-from .AI.enemies import Dummy
+from .AI.enemies import Dummy, ShadowDummy
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import Chest
@@ -19,6 +19,7 @@ from .AI.death_animator import DeathManager
 from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
 from .POSTPROCESSING.gamestate import GameState
+from data.scripts.PLAYER import player
 
 
 def get_cutscene_played(id_: str):
@@ -45,7 +46,8 @@ class PlayerRoom(GameState):
             Rect(10, 90, 430, 360),
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
-            Rect(36, 400, 77, 94)
+            Rect(36, 400, 77, 94),
+            ShadowDummy(DISPLAY, (550,250), self.player)
         ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -498,8 +500,8 @@ class Training_Field(GameState):
             npc.Candy(pg.Vector2(1250, 1470), awake=True), # Όταν
             npc.Manos(pg.Vector2(1150, 1480)),
             Chest((1630, 1410), {"items": Training_Sword(), "coins": 50}),
-            Dummy(self.screen, (1850, 1534)),
-            Dummy(self.screen, (1850, 1734))
+            Dummy(self.screen, (1850, 1534), self.player),
+            Dummy(self.screen, (1850, 1734), self.player)
         ]
 
         self.exit_rects = {

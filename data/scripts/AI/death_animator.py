@@ -50,8 +50,6 @@ class DeathAnim:
                         )
                     )
 
-        print(time.time()-debut)
-
         for particle in self.particles:
             particle.delay = [pg.time.get_ticks(), pg.time.get_ticks()]
 
@@ -68,7 +66,6 @@ class DeathAnim:
 
         if len(self.particles) == 0:
             death_anim_manager.animations.remove(self)
-
 
 class DestructedParticle:
 

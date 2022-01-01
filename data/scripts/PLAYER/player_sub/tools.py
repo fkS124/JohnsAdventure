@@ -150,11 +150,11 @@ key_translator = {
     "kitchen": "Kitchen",
     "manos_hut": "Mano's hut",
     "cave": "Cave",
-    "cave2": "Cave"
+    "cave2": "Cave Entrance"
 }
 
 
-def movement(player, m, pos):
+def movement(player):
     if not player.inventory.show_menu:
         if not player.attacking:  # if he is not attacking, allow him to move
             ''' Movement '''

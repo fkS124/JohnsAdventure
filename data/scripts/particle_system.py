@@ -4,7 +4,40 @@ from random import randint, choice, gauss
 from .particles_templates import Particle, ParticleManager
 from .utils import scale
 
+from math import pow
 
+
+class Shadow_Particle(Particle):
+    
+    def __init__(self, image, pos, last_time, camera):
+        super().__init__(image, pos, last_time, camera)
+        self.image.fill(pg.Color("#6c25be"))
+        self.dy = 1
+        self.dx = 2
+        
+    def behavior(self):
+        """[It's supposed to fly upwards and and move randomly left and right, showing aura]
+        """
+        self.rect.y -= self.dy 
+        # Change the below to randint(-self.dx, self.dy) later
+        self.rect.x += randint(-self.dx, self.dx)
+        
+class Shadow_Manager(ParticleManager):
+    def __init__(self, intensity, player, screen, enemy):
+        super(Shadow_Manager, self).__init__(player)
+        self.intensity, self.screen = intensity, screen 
+        # Pick Particle
+        self.particle_object = Shadow_Particle
+        self.duration = randint(1000, 1750)
+        # Size Particle
+        self.size = pg.Surface((intensity // 2, intensity // 2))
+        self.enemy = enemy
+        
+    def logic(self) -> bool:
+        if self.trigger_check():
+            self.add_particles(self.size, self.enemy.particle_scroller, self.duration)
+        return True
+        
 class DustManager(ParticleManager):
 
     def __init__(self, intensity: int, player_instance, display):
@@ -63,7 +96,6 @@ class DustManager(ParticleManager):
             return True
         return False
 
-
 class DustParticle(Particle):
 
     def __init__(self, size: tuple[int, int], pos: pg.Vector2, color: tuple[int, int, int], last_time, camera):
@@ -81,8 +113,7 @@ class DustParticle(Particle):
             Gives a wiggly effect into the particles 
         """
         self.rect.y += -self.dy if pg.time.get_ticks() - self.begin_time < self.last_time // 2 else self.dy
-
-
+        
 class SmokeManager(ParticleManager):
     def __init__(self, pos, size, player_instance):
         super(SmokeManager, self).__init__(player_instance)

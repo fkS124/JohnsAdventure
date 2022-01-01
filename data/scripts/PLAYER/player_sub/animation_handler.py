@@ -5,6 +5,9 @@ from .dash import update_dash
 
 
 def animate_level_up_ring(player):
+    """
+        Level up ring will be removed or disabled soon.
+    
     if player.ring_lu:
         if p.time.get_ticks() - player.delay_rlu > 150:
             player.delay_rlu = p.time.get_ticks()
@@ -19,6 +22,8 @@ def animate_level_up_ring(player):
             player.screen.blit(player.curr_frame_ring, player.curr_frame_ring.get_rect(
                 center=player.rect.topleft - player.camera.offset.xy + p.Vector2(15, 80)
             ))
+    """
+    pass
 
 
 def animation_handing(player, dt, m, pos):
@@ -46,7 +51,6 @@ def animation_handing(player, dt, m, pos):
             m[0] - (player.rect.left + 10 - player.camera.offset.x),
         )
         angle = abs(math.degrees(angle)) if angle < 0 else 360 - math.degrees(angle)
-
         if player.walking:
             if p.time.get_ticks() - player.delay_animation > 100:
                 player.index_animation = (player.index_animation + 1) % len(player.anim["right"])
@@ -196,7 +200,7 @@ def update_attack(player, pos):
 
         player.screen.blit(player.attacking_frame, temp)
 
-        print(player.current_combo)
+        #print(player.current_combo) To debug attacking 
         # reset the whole thing if the combo reach his end and the animation of the last hit ended too
         if player.current_combo == player.last_attack and not player.restart_animation and \
                 not player.index_attack_animation:

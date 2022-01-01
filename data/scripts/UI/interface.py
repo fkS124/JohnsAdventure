@@ -88,9 +88,8 @@ class Interface:
         self.screen.blit(self.ui_bg, (155 , self.screen.get_height() // 2 + 80))
 
         text = self._get_data(txt)
-        self.timer += dt
-        
-        if self.timer > 0.030 * 2: # 0.030 is the dt
+        self.timer += dt * 2
+        if self.timer > 0.060: #0.30 default delta time 
             if self.current_gui_index < len(text):
                 self.current_gui_index += 1
                 # if text[self.current_gui_index] != ' ':  
@@ -117,5 +116,5 @@ class Interface:
             x_gap += self.text[0].get_width() + 1
 
             if '\n' == t:
-                y_gap += self.text[0].get_height() + 2
+                y_gap += self.text[0].get_height() + 5
                 x_gap = 0  # Reset X position

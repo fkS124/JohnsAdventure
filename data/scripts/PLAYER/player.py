@@ -162,7 +162,7 @@ class Player:
         self.last_attacking_click = 0
 
         # still to be determined
-        self.attack_cooldown = 500
+        self.attack_cooldown = 200
 
         # still to be determined  This is the cooldown of the last attack
         self.attack_speed = self.attack_cooldown * 2 - 25 / 100
@@ -196,14 +196,13 @@ class Player:
         animation_handing(self, dt, m, player_p)
         
         if self.camera_status != "auto":
-            movement(self, m, player_p)
+            movement(self)
 
         # Update the camera: ALWAYS LAST LINE
         update_camera_status(self) # works
         self.camera.scroll()
 
     def update(self, dt, exit_rects):
-        print(self.rect.topleft)
         # Function that handles everything :brain:
         self.handler(dt, exit_rects)
 
@@ -256,7 +255,7 @@ class Player:
                         self.inventory.set_active()
                         self.upgrade_station.set_active()
 
-                    if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu:
+                    if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu and not self.attacking:
                         start_dash(self)
 
                     if e.key == itr:
@@ -280,14 +279,14 @@ class Player:
                             click_result2 = self.upgrade_station.handle_clicks(e.pos)
                             changed_activities = False
                             if self.inventory.show_menu and self.upgrade_station.show_menu:
-                                if not self.inventory.im_rect.collidepoint(e.pos) and not self.upgrade_station.us_rect.collidepoint(e.pos):
+                                if not self.inventory.im_rect.collidepoint(e.pos) and not self.upgrade_station.us_rect.collidepoint(e.pos): 
                                     self.inventory.set_active()
                                     self.upgrade_station.set_active()
                                     changed_activities = True
 
                             # Attack only when player is not in inv
                             if not self.inventory.show_menu and not self.upgrade_station.show_menu \
-                                    and not changed_activities:
+                                    and not changed_activities and not self.dashing:
                                 attack(self, pos)
                             self.click = True
                             # scroll up

@@ -137,7 +137,14 @@ class NPC:
                                                 *self.it_re_size)
         self.interaction_rect.topleft -= scroll
 
+
     def render_highlight(self, screen, scroll):
+        """ Outlining the npcs, to show interactness
+        Args:
+            screen (pygame.Surface): main window of the game
+            scroll (int tuple): the camera scroller offset
+        """
+        
         outline = pg.mask.from_surface(self.image).to_surface()
         outline.set_colorkey((0, 0, 0))
         outline.set_alpha(155)
@@ -261,7 +268,6 @@ class MovingNPC(NPC):
     def update(self, screen, scroll):
         self.update_interaction_rect(scroll)
         return super().update(screen, scroll)
-
 
 class Mau(MovingNPC):
 
