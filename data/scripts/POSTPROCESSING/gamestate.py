@@ -13,6 +13,7 @@ from ..utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from ..AI.death_animator import DeathManager
 from .lights_manager import LightManager
 
+
 class GameState:
     """Parent class of every level.
     It handles every objects and handle their update method's arguments.
@@ -202,7 +203,7 @@ class GameState:
                     # so it's always under everything
                     if hasattr(obj_, "sort"):
                         if not obj_.sort:
-                            obj_.centery = 0
+                            obj_.centery = -1000000
 
                 # append the objects in the list
                 all_objects.append(obj_)

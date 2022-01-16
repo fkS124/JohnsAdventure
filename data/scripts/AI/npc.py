@@ -38,6 +38,8 @@ class NPC:
             "down": True
         }
 
+        self.quest_interactions = {}
+
         # STATE
         self.state = "move" if moving else "idle"
         self.moving = moving
@@ -110,7 +112,7 @@ class NPC:
             self.state = "idle"
 
     def animate(self):
-        
+
         current_anim = self.anim_manager[self.state]
         if type(current_anim) is dict:
             current_anim = current_anim[self.direction]
@@ -269,6 +271,7 @@ class MovingNPC(NPC):
         self.update_interaction_rect(scroll)
         return super().update(screen, scroll)
 
+
 class Mau(MovingNPC):
 
     def __init__(self, dep_pos, range_, tell_story=""):
@@ -325,6 +328,16 @@ class Candy(MovingNPC):
             self.state = "move"
         self.animate()
 
+    def state_manager(self):
+        if self.status == "sleeping":
+            return super(Candy, self).state_manager()
+        else:
+            self.state = "move"
+            if self.interacting:
+                self.anim_duration["move"] = 10000000
+            else:
+                self.anim_duration["move"] = 250
+
     def update(self, screen, scroll):
         if self.status == "awake" and self.direction == "down":
             self.direction = "right"
@@ -372,6 +385,26 @@ class Manos(NPC):
             idle=True,
             idle_down=[2, 120, 20, 45, 3, 3],
             tell_story='Sup john'
+        )
+        self.direction = "down"
+        self.state = "idle"
+        self.anim_duration = {
+            "idle": 750,
+            "move": 100
+        }
+        self.it_re_size = (90, 60)
+
+
+class Bababooye(NPC):
+
+    def __init__(self, pos, tell_story=""):
+        super(Bababooye, self).__init__(
+            moving=False,
+            pos=pos,
+            sprite_sheet_path='data/sprites/npc_spritesheet.png',
+            idle=True,
+            idle_down=[0, 169, 26, 43, 3, 3],
+            tell_story=tell_story
         )
         self.direction = "down"
         self.state = "idle"

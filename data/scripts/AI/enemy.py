@@ -10,11 +10,12 @@ from os import DirEntry
 from types import coroutine
 import pygame as pg
 from random import choice
-from data.scripts.PLAYER import player
+from copy import copy
 from ..utils import load, get_sprite, scale, resource_path
 from .damage_popups import DamagePopUp
+from ..PLAYER.player import Player
 from ..particle_system import SmokeManager, DustManager, Shadow_Manager
-from math import ceil, pi, cos, sin, tan, atan, degrees, sqrt, atan2 
+from math import ceil, pi, cos, sin, tan, atan, degrees, sqrt, atan2
 
 vec = pg.math.Vector2
 
@@ -22,14 +23,22 @@ vec = pg.math.Vector2
 class Enemy:
     """Designed to be the parent class of every enemy.
     
-    It should help creating new ennemies, faster.
+    It should help creating new enemies, faster.
     
     There are a lot of docstrings to ease the comprehension of it, 
     as it can be a bit complicated sometimes."""
 
-    def __init__(self, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 100, xp_drop=int, custom_rect=None, enemy_type = "normal", intensiveness = 0):
+    def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player, hp: int = 100,
+                 xp_drop=int, custom_rect=None, enemy_type="normal", intensiveness=0, vel: int = 1):
 
         self.IDENTITY = "ENEMY"
+        self.level = level_instance
+        self.scroll = self.level.scroll
+        self.BASE_VEL = vel
+        self.vel = {"left": pg.Vector2(-1, 0).normalize() * self.BASE_VEL,
+                    "right": pg.Vector2(1, 0).normalize() * self.BASE_VEL,
+                    "down": pg.Vector2(0, 1).normalize() * self.BASE_VEL,
+                    "up": pg.Vector2(0, -1).normalize() * self.BASE_VEL}
 
         self.enemy_type = enemy_type
 
@@ -56,19 +65,19 @@ class Enemy:
         self.xp_drop = xp_drop
         self.endurance = 0
         self.show_life_bar = True
-        
-        self.dmg = 0 # I will config this later
-        
+
+        self.dmg = 0  # I will config this later
+
         # How powerful the enemy is
         self.intensiveness = intensiveness
-        
-        self.player = player 
+
+        self.player = player
         # SHADOW PARTICLES
         if enemy_type == "shadow":
-           # Initialize Shadow Particles only if they are shadow monsters
-           self.aura_particles = Shadow_Manager(self.intensiveness, self.player, self.screen, self)    
-           
-        self.particle_scroller = None         
+            # Initialize Shadow Particles only if they are shadow monsters
+            self.aura_particles = Shadow_Manager(self.intensiveness, self.player, self.screen, self)
+
+        self.particle_scroller = None
 
         # DAMAGE POPUPS
         self.damages_texts = []
@@ -100,7 +109,8 @@ class Enemy:
 
         # set some default values that will be replaced later
         self.sheet = pg.Surface((10, 10))
-        self.idle = self.hit_anim = self.death_anim = self.walk_right = self.walk_left = self.walk_down = self.walk_up = self.attack_right = self.attack_left = self.attack_down = self.attack_up = []
+        self.idle = self.hit_anim = self.death_anim = self.walk_right = self.walk_left = self.walk_down = self.walk_up \
+            = self.attack_right = self.attack_left = self.attack_down = self.attack_up = []
 
         # MOVEMENT
         self.moving = False
@@ -119,14 +129,14 @@ class Enemy:
             "up": True,
             "down": True
         }
-        
+
         # KNOCK BACK
         # Only moving enemy objects will be able to get knocked
-        self.knockable = True if self.enemy_type != "static" else False 
+        self.knockable = True if self.enemy_type != "static" else False
         self.knocked_back = False  # true if currently affected by a knock back
         self.knock_back_duration = 0  # duration in ms of the knock back movement
         self.start_knock_back = 0  # time of starting the knock back
-        self.knock_back_vel = pg.Vector2(0, 0)   # movement vel
+        self.knock_back_vel = pg.Vector2(0, 0)  # movement vel
         self.knock_back_friction = pg.Vector2(0, 0)  # slowing down
         self.knock_back_vel_y = 0  # jumpy effect vel
 
@@ -205,6 +215,21 @@ class Enemy:
             self.attack_up = self.load_sheet(walk_u_coo)
             self.attack_left = self.load_sheet(walk_l_coo)
 
+        # updates the animations in the dicts
+        self.walk_anim_manager = {
+            "right": self.walk_right,
+            "left": self.walk_left,
+            "down": self.walk_down,
+            "up": self.walk_up
+        }
+
+        self.attack_anim_manager = {  # dict to store all the animations
+            "right": self.attack_right,
+            "left": self.attack_left,
+            "down": self.attack_down,
+            "up": self.attack_up
+        }
+
     def load_sheet(self, coo):
 
         """Load an animation sequence (of sprites) on a sprites,
@@ -270,7 +295,7 @@ class Enemy:
             self.knock_back_duration = knock_back["duration"]
             self.knock_back_friction = knock_back["friction"]
             self.start_knock_back = pg.time.get_ticks()
-    
+
     def shadow_highlight(self, screen, pos, frame):
         """ A cruel evil with monstrous power.
             Gives objects and rested monsters life.
@@ -278,22 +303,22 @@ class Enemy:
             screen (pygame.Surface): main window of the game
             scroll (int tuple): the camera scroller offset
         """
-        
+
         # Note : once the outline is looking lit, add some particles behind the outline
-        
-        #object_name.name_particle.update(object_name.screen)  
-        
+
+        # object_name.name_particle.update(object_name.screen)
+
         # Show the Particles
         self.aura_particles.update(screen)
-        
+
         outline = pg.mask.from_surface(frame).to_surface()
-        outline.set_colorkey((0,0,0)) # Pixel Perfect cutting 
-        outline.set_alpha(125) # Removes a bit of opacity
-        
+        outline.set_colorkey((0, 0, 0))  # Pixel Perfect cutting
+        outline.set_alpha(125)  # Removes a bit of opacity
+
         # Draw Shadow Entity on top of the cut surface.
         pg.draw.polygon(outline, pg.Color("#6c25be"), pg.mask.from_surface(frame).outline())
         thickness = 4
-        
+
         screen.blits([
             (outline, pos + pg.Vector2(thickness, 0)),
             (outline, pos + pg.Vector2(-thickness, 0)),
@@ -309,8 +334,9 @@ class Enemy:
             pg.draw.rect(self.screen, (0, 0, 0), [self.pos[0], self.pos[1] - 12, self.current_sprite.get_width(), 10])
 
             # Health Bar
-            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12, int((
-                self.current_sprite.get_width() / self.MAX_HP) * self.show_hp) - 2, 8])
+            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12,
+                                                    int((self.current_sprite.get_width() / self.MAX_HP) * self.show_hp)
+                                                    - 2, 8])
 
             # pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
@@ -330,6 +356,10 @@ class Enemy:
         and fix bugs."""
 
         if self.dead:
+            try:
+                self.end_instance()
+            except Exception as e:
+                print(e)
             self.show_life_bar = False
             self.moving = False
             self.attacking = False
@@ -343,56 +373,63 @@ class Enemy:
             self.idling = False
         else:
             self.idling = True
-        
+
     def switch_directions(self, last_direction="none", blocked_direction="none"):
         directions = ["left", "right", "up", "down"]
         if last_direction != "none":
-            directions.remove(last_direction) 
+            directions.remove(last_direction)
             if blocked_direction == "none" and blocked_direction in directions:
                 directions.remove(blocked_direction)
                 self.direction = choice(directions)
-    
+
     def move(self):
-        self.moving = True
-        #___ CHECK ENEMY TYPE ____
-        if self.enemy_type != "static":       
+        # ___ CHECK ENEMY TYPE ____
+        if self.enemy_type != "static":
+
             enemy_speed = 1
-            if self.find_player(self.pos):         
-                p_pos = vec(self.player.rect.x - self.x, self.player.rect.y - self.y)
-                norm_pos = p_pos.normalize()        
-                if norm_pos.x > 0: 
-                    self.x += enemy_speed
-                else:
-                    self.x -= enemy_speed
-                    
-                if norm_pos.y > 0:
-                    self.y += enemy_speed
-                else:
-                    self.y -= enemy_speed 
+
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 500:
+                self.moving = True
+
+                try:
+                    vel = ((pg.Vector2(self.player.rect.topleft)-pg.Vector2(self.rect.topleft+self.scroll)).normalize() *
+                           self.BASE_VEL)
+                    if vel[0] < 0:
+                        self.direction = "left"
+                    else:
+                        self.direction = "right"
+
+                    self.x += vel[0]
+                    self.y += vel[1]
+                except ValueError:
+                    pass
+
+            elif pg.Vector2(self.pos).distance_to(pg.Vector2(self.player.rect.topleft - self.scroll)) < 100:
+                pass
+
+                # attack !
+
             else:
                 #  Don't ask why we are doing this
                 # 'its just works' until we come at with a enemy roaming feature
-                
-                if self.move_ability["up"]:
-                    self.y -= enemy_speed 
+
+                if self.move_ability[self.direction]:
+                    match self.direction:
+                        case "down":
+                            self.y += enemy_speed
+                        case "up":
+                            self.y -= enemy_speed
+                        case "right":
+                            self.x += enemy_speed
+                        case "left":
+                            self.x -= enemy_speed
+
+                    self.moving = True
                 else:
-                    self.switch_directions("up")
-                    
-                if self.move_ability["down"]:
-                    self.y += enemy_speed
-                else:
-                    self.switch_directions("down")
-                
-                if self.move_ability["right"]:
-                    self.x += enemy_speed
-                else:
-                    self.switch_directions("right")
-                    
-                if self.move_ability["left"]:
-                    self.x -= enemy_speed
-                else:
-                    self.switch_directions("left")            
-            
+                    self.switch_directions(self.direction)
+                    self.moving = False
+        else:
+            self.moving = False
 
     def behavior(self):
         self.move()
@@ -404,15 +441,10 @@ class Enemy:
 
         self.behavior()
         self.update_states()
-        self.animate()     
-        
-    def find_player(self, pos):
-        point_a = vec(pos)
-        point_b = vec(self.player.rect.center)
-        units = abs(vec.magnitude(point_b - point_a))
-        return  units < 500     
+        self.animate()
 
     def update(self, scroll, dt):
+        self.scroll = scroll
 
         """We gather all the methods needed to make the enemy work here.
         We pass the scroll."""
@@ -426,9 +458,9 @@ class Enemy:
 
         # update the damage pop ups
         self.update_dmg_popups(scroll)
-        
+
         # update the pos of the enemy
-        self.pos = self.x - scroll[0], self.y - scroll[1]   
+        self.pos = self.x - scroll[0], self.y - scroll[1]
         # apply the knock back
         if self.knocked_back and self.knockable:
 
@@ -438,19 +470,19 @@ class Enemy:
             if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration / 2:
                 self.y += self.knock_back_vel_y * dt * 25
             else:
-                self.y -= self.knock_back_vel_y * dt * 25 # will later be changed to player's crit damage / endurance
+                self.y -= self.knock_back_vel_y * dt * 25  # will later be changed to player's crit damage / endurance
 
             self.x += self.knock_back_vel[0] * dt * 25
             self.y += self.knock_back_vel[1] * dt * 25
             self.knock_back_vel -= self.knock_back_friction
 
-
+        # print(self.direction, self.moving, self.idling, self.move_ability)
         # call logic method
         self.logic()
-        
+
         # ___SHADOW TYPE MONSTERS GET A OUTLINE/PARTICLES__
-        if self.enemy_type == "shadow": 
+        if self.enemy_type == "shadow":
             self.particle_scroller = self.x + 60, self.y + 40
             self.shadow_highlight(self.screen, self.pos, self.current_sprite)
-            
+
         self.screen.blit(self.current_sprite, self.pos)

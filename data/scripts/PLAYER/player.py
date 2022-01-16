@@ -25,6 +25,7 @@ from .player_stats import UpgradeStation
 from .camera import Camera, Follow, Border, Auto
 from ..particle_system import DustManager
 from ..UI.UI_animation import InteractionName
+from ..QUESTS.quest_ui import QuestUI
 
 p.font.init()
 debug_font = p.font.Font(resource_path("data/database/menu-font.ttf"), 12)
@@ -33,7 +34,8 @@ debug_font = p.font.Font(resource_path("data/database/menu-font.ttf"), 12)
 class Player:
     DEFAULT_VEL = 6
 
-    def __init__(self, screen, font, ux, ui, data):
+    def __init__(self, game_instance, screen, font, ux, ui, data):
+        self.game_instance = game_instance
         self.screen, self.InteractPoint = screen, 0
         self.sound_manager = SoundManager(sound_only=True)
         self.base_vel = 6
@@ -60,6 +62,7 @@ class Player:
 
         self.data = data
         self.inventory = Inventory(self.screen, ui)
+        self.quest_UI: QuestUI = None  # will be reassigned later in GameManager.__init__
 
         # States
         self.walking = False
@@ -178,6 +181,8 @@ class Player:
 
         # animation for interaction purposes
         self.UI_interaction_anim: list[InteractionName] = []
+
+        self.interacting_with = None
     
     def handler(self, dt, exit_rects):
         player_p = (
@@ -239,7 +244,7 @@ class Player:
                         break  # Stop the for loop to save calculations
             match e.type: 
                 case p.QUIT:
-                    raise SystemExit
+                    self.game_instance.quit_()
 
                 case p.KEYDOWN:
                     match e.key:
@@ -254,6 +259,7 @@ class Player:
                         self.walking = False
                         self.inventory.set_active()
                         self.upgrade_station.set_active()
+                        self.quest_UI.set_active()
 
                     if e.key == dash and self.camera_status != "auto" and not self.inventory.show_menu and not self.attacking:
                         start_dash(self)
@@ -277,11 +283,14 @@ class Player:
                         case 1:
                             click_result1 = self.inventory.handle_clicks(e.pos, self)
                             click_result2 = self.upgrade_station.handle_clicks(e.pos)
+                            click_result3 = self.quest_UI.handle_clicks(e.pos)
                             changed_activities = False
                             if self.inventory.show_menu and self.upgrade_station.show_menu:
-                                if not self.inventory.im_rect.collidepoint(e.pos) and not self.upgrade_station.us_rect.collidepoint(e.pos): 
+                                if not self.inventory.im_rect.collidepoint(e.pos) and not \
+                                        self.upgrade_station.us_rect.collidepoint(e.pos) and not click_result3:
                                     self.inventory.set_active()
                                     self.upgrade_station.set_active()
+                                    self.quest_UI.set_active()
                                     changed_activities = True
 
                             # Attack only when player is not in inv
