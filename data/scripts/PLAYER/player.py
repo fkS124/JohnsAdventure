@@ -110,6 +110,9 @@ class Player:
         # For the animation/hitbox
         self.looking_down = self.looking_up = self.looking_left = self.looking_right = False
 
+        # saving player's direction in animation handler
+        self.last_movement = "right"
+
         # For the animation
         self.index_attack_animation = self.delay_attack_animation = 0
         

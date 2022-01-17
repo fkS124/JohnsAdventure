@@ -61,18 +61,22 @@ def animation_handing(player, dt, m, pos):
                 player.index_animation = (player.index_animation + 1) % len(player.anim["idle_r"])
                 player.delay_animation = p.time.get_ticks()
 
-        if player.camera_status != "auto" and not player.inventory.show_menu and not player.upgrade_station.show_menu:
-            if 135 >= angle > 45:
-                set_looking(player, "up", pos)
-            elif 225 >= angle > 135:
-                set_looking(player, "left", pos)
-            elif 315 >= angle > 225:
-                set_looking(player, "down", pos)
-            else:
-                set_looking(player, "right", pos)
-        else:
-            "we will put a str from camera instead of 'right' later on."
-            set_looking(player, "right", pos)
+        # Makes sure the players changes animation direction only when he is not in the inventory 
+        if player.camera_status != "auto" and \
+            (
+                player.inventory.show_menu # and player.upgrade_station.show_menu
+            ) is False: 
+                
+                if 135 >= angle > 45:
+                    player.last_movement = "up"
+                elif 225 >= angle > 135:
+                    player.last_movement = "left"
+                elif 315 >= angle > 225:
+                    player.last_movement = "down"
+                else:
+                    player.last_movement = "right"
+        # END OF IF STATEMENT, GIVE THE PLAYER DIRECTION
+        set_looking(player, player.last_movement, pos)
 
     update_dash(player, dt, pos)
 

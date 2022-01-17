@@ -3,6 +3,10 @@ from .quest_manager import QuestManager
 from ..utils import resource_path
 
 
+# Please change the bg ui to these rgbs
+bg_color = (239,159,26)
+bg_color_hovered = (199, 134, 26)
+
 class QuestUI:
 
     def __init__(self, screen: pg.Surface, quest_manager: QuestManager):
@@ -37,11 +41,13 @@ class QuestUI:
         self.headers: list[pg.Surface] = [
             pg.Surface((300, 50)) for _ in self.quest_manager.quests
         ]
-        # will be updated later (for the right positions)
+        
+	# will be updated later (for the right positions)
         self.header_rects: list[pg.Rect] = [header.get_rect() for header in self.headers]
         for header in self.headers:
             header.fill((255, 255, 255))  # -> TODO: change the color with your new fancy UI's color
-        # write the titles on the headers
+        
+	# write the titles on the headers
         for index, quest in enumerate(self.quest_manager.quests.values()):
             header_text = self.header_font.render(quest.name, True, (0, 0, 0))
             self.headers[index] = header_text
@@ -70,34 +76,44 @@ class QuestUI:
         if self.show_menu:
             dy = 0
             for index, active in enumerate(self.header_active):
-                header_color = (255, 255, 255) if not pg.Rect(self.start_pos[0], self.start_pos[1]+dy,
+
+		        # MISSION HEADER TITLE
+                header_color = bg_color if not pg.Rect(self.start_pos[0], self.start_pos[1]+dy,
                                                               self.headers[index].get_width()+10,
                                                               self.headers[index].get_height()+10).collidepoint(
                                                               pg.mouse.get_pos()) \
-                                               else (200, 200, 200)
-                pg.draw.rect(self.screen, header_color, [self.start_pos[0], self.start_pos[1]+dy,
-                                                         self.headers[index].get_width()+10,
-                                                         self.headers[index].get_height()+10], border_radius=8)
+                                               else bg_color_hovered
+
+
+
+                # UI HEADER
+                pg.draw.rect(self.screen, header_color,[self.start_pos[0], self.start_pos[1]+dy,self.headers[index].get_width()+10,self.headers[index].get_height()+10], border_radius=8)
+                # OUTLINE
+                pg.draw.rect(self.screen, (0,0,0),[self.start_pos[0], self.start_pos[1]+dy,self.headers[index].get_width()+10,self.headers[index].get_height()+10], border_radius=8, width = 2)
+                
                 self.screen.blit(self.headers[index], [self.start_pos[0]+5, self.start_pos[1]+dy+5])
                 self.header_rects[index].topleft = [self.start_pos[0], self.start_pos[1]+dy]
                 dy += self.headers[index].get_height() + self.gap + 10
 
                 if active:
                     for index2, step in enumerate(self.quests_inside[index]):
-                        pg.draw.rect(self.screen, (255, 255, 255), [self.start_pos[0], self.start_pos[1]+dy,
+                        
+                        # Check box
+                        pg.draw.rect(self.screen, bg_color, [self.start_pos[0], self.start_pos[1]+dy,
                                                                     *self.cross.get_size()], width=1)
 
                         done = self.quests_inside_done[index][index2]
                         rect = step.get_rect(topleft=[self.start_pos[0]+self.gap_x, self.start_pos[1]+dy])
                         rect.topleft -= pg.Vector2(5, 5)
                         rect.size += pg.Vector2(10, 10)
-                        pg.draw.rect(self.screen, (255, 255, 255), rect, border_radius=8)
+
+                        # Smaller headers containing the mission
+                        pg.draw.rect(self.screen, header_color, rect, border_radius=8)
+                        pg.draw.rect(self.screen, (0,0,0), rect, border_radius=8, width=1)
+
+                        # Mission Completion
                         if done:
-                            layer = pg.Surface(rect.size, pg.SRCALPHA)
-                            layer.fill((100, 100, 100))
-                            layer.set_alpha(128)
                             self.screen.blit(self.cross, (self.start_pos[0], self.start_pos[1]+dy))
-                            self.screen.blit(layer, rect.topleft)
                             self.screen.blit(step, [self.start_pos[0]+self.gap_x, self.start_pos[1]+dy])
                             dy += step.get_height() + self.gap
                         else:

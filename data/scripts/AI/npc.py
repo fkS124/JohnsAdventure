@@ -292,7 +292,7 @@ class Mau(MovingNPC):
 
         self.it_re_size = (75, 100)
         self.anim_duration = {
-            "idle": 300,
+            "idle": 115, # HE FLOPS
             "move": 100
         }
 
