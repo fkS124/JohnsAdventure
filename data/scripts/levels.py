@@ -19,7 +19,6 @@ from .AI.death_animator import DeathManager
 from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
 from .POSTPROCESSING.gamestate import GameState
-from data.scripts.PLAYER import player
 
 
 def get_cutscene_played(id_: str):
@@ -34,6 +33,7 @@ def play_cutscene(id_: str):
     with open(resource_path('data/database/cutscenes.json'), "w") as data2:
         json.dump(data, data2, indent=2)
 
+
 class PlayerRoom(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "player_room", light_state="inside_clear")
@@ -46,8 +46,7 @@ class PlayerRoom(GameState):
             Rect(10, 90, 430, 360),
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
-            Rect(36, 400, 77, 94),
-            ShadowDummy(DISPLAY, (550,250), self.player)
+            Rect(36, 400, 77, 94)
         ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -85,14 +84,15 @@ class PlayerRoom(GameState):
 
         self.additional_lights = [
             # Windows 
-            PolygonLight(pg.Vector2(79*3, 9*3), 68*3, 350, 50, 85, (255, 255, 255), dep_alpha=50, horizontal=True,
+            PolygonLight(pg.Vector2(79 * 3, 9 * 3), 68 * 3, 350, 50, 85, (255, 255, 255), dep_alpha=50, horizontal=True,
                          additional_alpha=175),
 
             PolygonLight(pg.Vector2(347 * 3, 9 * 3), 68 * 3, 350, 50, 85, (255, 255, 255), dep_alpha=50,
                          horizontal=True, additional_alpha=175),
 
             # John's Computer
-            PolygonLight(pg.Vector2(254*3+1, 26*3), 49*3, 150, 25, 125, (89, 144, 135), dep_alpha=185, horizontal=True)
+            PolygonLight(pg.Vector2(254 * 3 + 1, 26 * 3), 49 * 3, 150, 25, 125, (89, 144, 135), dep_alpha=185,
+                         horizontal=True)
         ]
 
 
@@ -100,7 +100,7 @@ class Kitchen(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "kitchen", light_state="inside_clear")
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
-        self.objects = [#super().load_objects('data/database/levels/kitchen.txt')
+        self.objects = [  # super().load_objects('data/database/levels/kitchen.txt')
             Rect(0, 0, 1280, 133),
             Rect(1270, 134, 10, 586),
             Rect(0, 0, 1280, 133),
@@ -130,9 +130,8 @@ class JohnsGarden(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super().__init__(DISPLAY, player_instance, prop_objects, "johns_garden", light_state="day")
-        self._PLAYER_VEL = 10  * 3
-        
-        
+        self._PLAYER_VEL = 10 * 3
+
         # Get the positions and the sprites' informations from the json files
         with open(resource_path('data/database/open_world_pos.json')) as pos, \
                 open(resource_path("data/database/open_world.json")) as infos:
@@ -162,12 +161,13 @@ class JohnsGarden(GameState):
             # .prop_objects["box"]((200, 1200)),
             # Fences of john's house (values are calculated for scale = 3 considering this won't change)
 
-            self.prop_objects["hori_fence_rev"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100)*jh_sc)),
-            self.prop_objects["hori_fence"](((jh_pos[0]-83) * jh_sc + jh_siz[0], (jh_pos[1]+100) * jh_sc)),
-            self.prop_objects["side_fence"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100)*jh_sc)),
-            self.prop_objects["side_fence"](((jh_pos[0]-83+233-9) * jh_sc + jh_siz[0], (jh_pos[1]+100) * jh_sc)),
-            self.prop_objects["hori_fence_rev"](((jh_pos[0]-150)*jh_sc, (jh_pos[1]+100+254)*jh_sc)),
-            self.prop_objects["hori_fence"](((jh_pos[0]-83)*jh_sc + jh_siz[0], (jh_pos[1]+100+254)*jh_sc)),
+            self.prop_objects["hori_fence_rev"](((jh_pos[0] - 150) * jh_sc, (jh_pos[1] + 100) * jh_sc)),
+            self.prop_objects["hori_fence"](((jh_pos[0] - 83) * jh_sc + jh_siz[0], (jh_pos[1] + 100) * jh_sc)),
+            self.prop_objects["side_fence"](((jh_pos[0] - 150) * jh_sc, (jh_pos[1] + 100) * jh_sc)),
+            self.prop_objects["side_fence"](
+                ((jh_pos[0] - 83 + 233 - 9) * jh_sc + jh_siz[0], (jh_pos[1] + 100) * jh_sc)),
+            self.prop_objects["hori_fence_rev"](((jh_pos[0] - 150) * jh_sc, (jh_pos[1] + 100 + 254) * jh_sc)),
+            self.prop_objects["hori_fence"](((jh_pos[0] - 83) * jh_sc + jh_siz[0], (jh_pos[1] + 100 + 254) * jh_sc)),
 
             # All the objects contained in open_world_pos.json
             *[self.prop_objects[object_](
@@ -192,18 +192,17 @@ class JohnsGarden(GameState):
             # Bottom Cave route
             *self.build_road(start_pos=((jh_pos[0] + 152) * jh_sc, (jh_pos[1] + 2196) * jh_sc),
                              n_road=6, type_r="hori_road", end_type="hori_road_half"),
-            
+
             *self.build_road(start_pos=((jh_pos[0] + 152) * jh_sc, (jh_pos[1] + 399) * jh_sc),
                              n_road=4, type_r="hori_road", end_type="hori_road_half"),
 
             # john dirt road
             *self.build_road(start_pos=((jh_pos[0] + 119) * jh_sc, (jh_pos[1] + 279) * jh_sc),
                              n_road=2, start_type="ver_dirt", end_type="ver_sides"),
-            
-            
+
             *self.build_road(start_pos=((jh_pos[0] + 119) * jh_sc, (jh_pos[1] + 432) * jh_sc),
                              n_road=6, start_type="ver_road", end_type="Vhori_turn"),
-            
+
             *self.build_road(start_pos=((jh_pos[0] - 702) * jh_sc, (jh_pos[1] + 399) * jh_sc),
                              n_road=4, type_r="hori_road", end_type="hori_road_half"),
 
@@ -211,16 +210,15 @@ class JohnsGarden(GameState):
             Rect(500, 3600, 100, 10000),
             *self.generate_chunk("tree", 300, 3900, 15, 3, 100 * 3, 100 * 4, randomize=25),
             *self.generate_chunk("grass", 780, 4000, 45, 3, 180, 150, randomize=125),
-            #Out of bounds bottom of the map
+            # Out of bounds bottom of the map
             Rect(500, 9700, 9500, 100),
             Rect(7600, 7400, 100, 2250),
             Rect(7600, 7400, 1100, 100),
-            
+
             *self.generate_chunk("grass", 1600, 8900, 2, 23, 210, 120, randomize=75),
             *self.generate_chunk("tree", 1650, 8750, 1, 8, 100 * 6, 0, randomize=5),
             *self.generate_chunk("grass", 300, 9500, 5, 32, 210, 120, randomize=75),
             *self.generate_chunk("tree", 1650, 9150, 2, 8, 100 * 6, 75, randomize=45),
-            
 
             # Manos dirt road
             *self.build_road(start_pos=((jh_pos[0] - 246) * jh_sc + 4 * hr_r_width + hhr_r_width + hr_s_width,
@@ -242,20 +240,22 @@ class JohnsGarden(GameState):
                              type_r="hori_road"),
 
             # Hills above the john's and mano's hut
-            *self.generate_hills("right", (jh_pos[0]*jh_sc - 600, jh_pos[1]*jh_sc - 250), 8, mid_type="hill_mid", end_type="none"),
-            *self.generate_hills("down", (jh_pos[0]*jh_sc - 600 + 3 * 224 * 7, jh_pos[1]*jh_sc - hills_height * 7 + 77), 7, no_begin=True, mid_type="hill_side_mid_rev", end_type = "hill_side_inner_rev"),
-            
-            #_____TOP_RIGHT_MAP_______
+            *self.generate_hills("right", (jh_pos[0] * jh_sc - 600, jh_pos[1] * jh_sc - 250), 8, mid_type="hill_mid",
+                                 end_type="none"),
+            *self.generate_hills("down",
+                                 (jh_pos[0] * jh_sc - 600 + 3 * 224 * 7, jh_pos[1] * jh_sc - hills_height * 7 + 77), 7,
+                                 no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
+
+            # _____TOP_RIGHT_MAP_______
             # Out of bounds 
-            Rect(5700,140-150, 5500, 300),
-            
+            Rect(5700, 140 - 150, 5500, 300),
+
             *self.generate_chunk("tree", 5800, -140, 3, 13, 100 * 4, 140, randomize=25),
             *self.generate_chunk("tree", 5800, 600, 5, 3, 100 * 3, 100 * 4, randomize=25),
-            
-            
+
             # Collision at the top right of the john's home fenches
-            Rect(jh_pos[0]*jh_sc + 224 * 5 + 75, jh_pos[1]*jh_sc + 200, 64, 128),
-            
+            Rect(jh_pos[0] * jh_sc + 224 * 5 + 75, jh_pos[1] * jh_sc + 200, 64, 128),
+
             # Trees right from john's room
             *self.generate_chunk("tree", jh_pos[0] * jh_sc + 1250, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
                                  randomize=10),
@@ -266,25 +266,28 @@ class JohnsGarden(GameState):
             # Trees left from manos hut
             *self.generate_chunk("tree", mano_pos[0] * mano_sc - 730, jh_pos[1] * jh_sc, 3, 2, 100 * 4, 100 * 3,
                                  randomize=10),
-            #grass details under those trees
-            *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1340, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2, randomize=20), 
-            
+            # grass details under those trees
+            *self.generate_chunk("grass", jh_pos[0] * jh_sc + 1340, jh_pos[1] * jh_sc + 460, 4, 11, 100 * 2, 100 * 2,
+                                 randomize=20),
+
             # Under manos hut     
             *self.generate_chunk("tree", 5700, 6500, 9, 3, 350, 250, randomize=10),
             *self.generate_chunk("tree", 5700, 3800, 9, 3, 350, 250, randomize=10),
             *self.generate_chunk("grass", 5700, 4000, 8, 6, 180, 250, randomize=35),
-            *self.generate_chunk("grass", 5700, 6450, 8, 6, 180, 250, randomize=35),  
-            
+            *self.generate_chunk("grass", 5700, 6450, 8, 6, 180, 250, randomize=35),
+
             *self.generate_chunk("grass", 5700, 400, 16, 6, 180, 250, randomize=35),
             *self.generate_chunk("grass", 7000, 350, 2, 26, 180, 120, randomize=35),
             *self.generate_chunk("grass", 7000, 700, 64, 6, 90, 140, randomize=35),
-            
+
             # "_________________ Right place of the map_________________"
             # Big Hill B
             *self.generate_hills("right", (7200, 720), 6, mid_type="hill_mid", end_type="hill_side_outer_rev"),
-            *self.generate_hills("down", (7200, 720), 10, start_type = "hill_side_outer", mid_type="hill_side_mid", end_type="hill_side_outer"),
-            *self.generate_hills("right", (7200, 720 + 140 * 3 * 13 + 102), 5, mid_type="hill_mid", end_type="hill_side_inner_rev"),
-            
+            *self.generate_hills("down", (7200, 720), 10, start_type="hill_side_outer", mid_type="hill_side_mid",
+                                 end_type="hill_side_outer"),
+            *self.generate_hills("right", (7200, 720 + 140 * 3 * 13 + 102), 5, mid_type="hill_mid",
+                                 end_type="hill_side_inner_rev"),
+
             # Route 7 -> Top Right
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height),
@@ -294,12 +297,12 @@ class JohnsGarden(GameState):
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 361 - 82 + 172 - 49 - 3) * jh_sc - 3 * vr_r_height - 33 * 3),
                              n_road=8, type_r="hori_road", start_type="VHhori_turn"),
-            
+
             # Route 5 Bottom Right
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         (jh_pos[1] + 498 - 3) * jh_sc + hr_s_height * 18), n_road=2,
                              type_r="ver_road", end_type="Hver_turn"),
-            
+
             # Road that connect bottom cave route with 
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 2,
                                         4994), n_road=5,
@@ -307,45 +310,49 @@ class JohnsGarden(GameState):
 
             # Route 6 Bottom Right
             *self.build_road(start_pos=((jh_pos[0] - 247 - 1) * jh_sc + 6 * hr_r_width + hhr_r_width + hr_s_width * 3,
-                                        (jh_pos[1] + 361 - 82 + 172-50-3-65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
+                                        (jh_pos[
+                                             1] + 361 - 82 + 172 - 50 - 3 - 65) * jh_sc + 2 * hr_s_height + 3 * vr_r_height),
                              n_road=6, type_r="hori_road_half", end_type="Vver_end"),
 
             # """_________________Cave Borders_________________"""   
             # Top
-            *self.generate_hills("right", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc+1400), 6, mid_type="hill_mid",
+            *self.generate_hills("right", (jh_pos[0] * jh_sc + 600, jh_pos[1] * jh_sc + 1400), 6, mid_type="hill_mid",
                                  end_type="hill_side_outer_rev"),
             # Bottom   
-            *self.generate_hills("right", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc + 1400 + 160 * 3 * 9 + 102), 6, mid_type="hill_mid",
-                                 end_type="hill_side_outer_rev"),  
-            
+            *self.generate_hills("right", (jh_pos[0] * jh_sc + 600, jh_pos[1] * jh_sc + 1400 + 160 * 3 * 9 + 102), 6,
+                                 mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),
+
             # Left Border
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600, jh_pos[1]*jh_sc+1400+160*3-102), 8, no_begin=True,
+            *self.generate_hills("down", (jh_pos[0] * jh_sc + 600, jh_pos[1] * jh_sc + 1400 + 160 * 3 - 102), 8,
+                                 no_begin=True,
                                  mid_type="hill_side_mid", end_type="hill_side_outer"),
 
             # Right up border
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600 + 3 * 224 * 5, jh_pos[1]*jh_sc+1400+160*3-102), 4,
+            *self.generate_hills("down",
+                                 (jh_pos[0] * jh_sc + 600 + 3 * 224 * 5, jh_pos[1] * jh_sc + 1400 + 160 * 3 - 102), 4,
                                  no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
-            
+
             # Right down border
-            *self.generate_hills("down", (jh_pos[0]*jh_sc + 600 + 3 * 224 * 5,
-                                          jh_pos[1]*jh_sc+1500+160*3-102+4*hills_height),
+            *self.generate_hills("down", (jh_pos[0] * jh_sc + 600 + 3 * 224 * 5,
+                                          jh_pos[1] * jh_sc + 1500 + 160 * 3 - 102 + 4 * hills_height),
                                  mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev", n_hills=4,
                                  start_type="hill_side_outer_rev"),
         ]
-        
+
         print(F"HOLY F* {len(self.objects)} SURFACES!11")
-        
+
         self.exit_rects = {
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
                         "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
             "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
                           "Enter Mano's hut ?"),
-            
+
             # mandatory forced level switch, useless requires input
             # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
             "cave": (pg.Rect(5350, 6130, 200, 380), "", "mandatory"),
-            "training_field": (pg.Rect(8700, 6680, 600, 800), "", "mandatory"),   
+            "training_field": (pg.Rect(8700, 6680, 600, 800), "", "mandatory"),
             "gymnasium": (pg.Rect(10500, 200, 300, 600), "", "mandatory")
         }
         self.spawn = {
@@ -365,7 +372,7 @@ class JohnsGarden(GameState):
 class ManosHut(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="inside_dark") #inside_dark
+        super().__init__(DISPLAY, player_instance, prop_objects, "manos_hut", light_state="inside_dark")  # inside_dark
 
         # Mano's hut inside ground
         self.world = pg.transform.scale(l_path('data/sprites/world/manos_hut.png'), (1280, 720))
@@ -408,19 +415,19 @@ class Cave(GameState):
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
 
-        self.objects = [          
+        self.objects = [
             # The chunk cut in 4 pieces for easyness 
-            *self.generate_chunk("grass", 240 * 3, 160*9, 14, 11, 120, 100, randomize=30),
-            *self.generate_chunk("grass", 240 * 3, 160*19, 14, 11, 120, 100, randomize=30),
-            *self.generate_chunk("grass", 2060, 160*9, 14, 11, 120, 100, randomize=30),
-            *self.generate_chunk("grass", 2060, 160*19, 14, 11, 120, 100, randomize=30),
-            
+            *self.generate_chunk("grass", 240 * 3, 160 * 9, 14, 11, 120, 100, randomize=30),
+            *self.generate_chunk("grass", 240 * 3, 160 * 19, 14, 11, 120, 100, randomize=30),
+            *self.generate_chunk("grass", 2060, 160 * 9, 14, 11, 120, 100, randomize=30),
+            *self.generate_chunk("grass", 2060, 160 * 19, 14, 11, 120, 100, randomize=30),
+
             *self.generate_chunk("cave_spike", 2060, 160 * 17 + 30, 1, 3, 150, 0, randomize=10),
             *self.generate_chunk("cave_spike_small", 2150, 160 * 17 + 80, 1, 3, 150, 0, randomize=10),
-            
+
             *self.generate_chunk("cave_spike", 2080, 160 * 17 + 220, 1, 3, 150, 0, randomize=10),
-            *self.generate_chunk("cave_spike_small", 2150,  160 * 17 + 220 + 30, 1, 3, 150, 0, randomize=10),
-                    
+            *self.generate_chunk("cave_spike_small", 2150, 160 * 17 + 220 + 30, 1, 3, 150, 0, randomize=10),
+
             *self.build_road(start_pos=(2040, 2865),
                              n_road=2, type_r="hori_road", end_type="hori_road"),
             # """_________________Cave Borders_________________"""   
@@ -429,35 +436,36 @@ class Cave(GameState):
                                  end_type="hill_side_outer_rev"),
             # Bottom   
             *self.generate_hills("right", (0, 160 * 3 * 9 + 102), 6, mid_type="hill_mid",
-                                 end_type="hill_side_outer_rev"),  
-            
+                                 end_type="hill_side_outer_rev"),
+
             # Left Border
-            *self.generate_hills("down", (0, 160*3-102), 8, no_begin=True,
+            *self.generate_hills("down", (0, 160 * 3 - 102), 8, no_begin=True,
                                  mid_type="hill_side_mid", end_type="hill_side_outer"),
 
             # Right up border
-            *self.generate_hills("down", (0 + 3 * 224 * 5, 160*3-102), 5,
+            *self.generate_hills("down", (0 + 3 * 224 * 5, 160 * 3 - 102), 5,
                                  no_begin=True, mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev"),
-            
+
             # Right down border
-            *self.generate_hills("down", (0 + 3 * 224 * 5, 160*3-102+4*hills_height),
+            *self.generate_hills("down", (0 + 3 * 224 * 5, 160 * 3 - 102 + 4 * hills_height),
                                  mid_type="hill_side_mid_rev", end_type="hill_side_inner_rev", n_hills=5,
-                                 start_type="hill_side_outer_rev"),         
-                
-            self.prop_objects["cave_entrance"]((hills_width + 100, hills_height*4 - 255)),
-            
-            *self.generate_chunk("tree", hills_width * 3 - 50, hills_height*2 - 50, 4, 3, 100 * 5, 100 * 3),
-            *self.generate_chunk("tree", hills_width, hills_height*2 - 50, 3, 3, 100 * 4, 100 * 3),           
+                                 start_type="hill_side_outer_rev"),
+
+            self.prop_objects["cave_entrance"]((hills_width + 100, hills_height * 4 - 255)),
+
+            *self.generate_chunk("tree", hills_width * 3 - 50, hills_height * 2 - 50, 4, 3, 100 * 5, 100 * 3),
+            *self.generate_chunk("tree", hills_width, hills_height * 2 - 50, 3, 3, 100 * 4, 100 * 3),
             *self.generate_chunk("tree", hills_width + 10, 3350, 3, 3, 100 * 4, 100 * 3),
-            *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3)           
+            *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3)
         ]
 
         self.spawn = {
-            "johns_garden": (hills_width*5 - 100, hills_height*4 + 100)
+            "johns_garden": (hills_width * 5 - 100, hills_height * 4 + 100)
         }
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(hills_width*5 + 50, hills_height*4, 200, 400), "Go back to open world ?", "mandatory")
+            "johns_garden": (
+            pg.Rect(hills_width * 5 + 50, hills_height * 4, 200, 400), "Go back to open world ?", "mandatory")
         }
 
     def update(self, camera, dt):
@@ -465,47 +473,49 @@ class Cave(GameState):
         pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
         return super(Cave, self).update(camera, dt)
 
+
 class Training_Field(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super(Training_Field, self).__init__(DISPLAY, player_instance, prop_objects, "training_field", light_state="day")
-        
+        super(Training_Field, self).__init__(DISPLAY, player_instance, prop_objects, "training_field",
+                                             light_state="day")
+
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
         self.objects = [
-               
+
             *self.generate_chunk("grass", -600, 600, 20, 25, 120, 150, randomize=45),
             # OUT OF BOUNDS
-            Rect(-400, 200, 300, 2600), # Left
-            Rect(2800, 200, 300, 2600), # Right
+            Rect(-400, 200, 300, 2600),  # Left
+            Rect(2800, 200, 300, 2600),  # Right
             # No need Top, we have the hills
             Rect(-400, 2800, 2600, 300),
-            
+
             *self.generate_hills("right", (-700, 0), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
-            *self.build_road((-700, hills_height+50), n_road=2, start_type="hori_road", end_type="Vver_end"),
+            *self.build_road((-700, hills_height + 50), n_road=2, start_type="hori_road", end_type="Vver_end"),
 
             self.prop_objects["feevos_shop"]((1100, 800)),
-            
-            #____ TREES ____
+
+            # ____ TREES ____
             # Up
             *self.generate_chunk("tree", 300, 200, 2, 10, 250, 180, randomize=30),
-            
+
             # Right 
             *self.generate_chunk("tree", 2200, 722, 4, 3, 250, 400, randomize=30),
-            
+
             # Down
             *self.generate_chunk("tree", 0, 2200, 2, 8, 400, 250, randomize=50),
-            
+
             # Left
             *self.generate_chunk("tree", -200, 1000, 4, 2, 150, 400, randomize=50),
-            npc.Candy(pg.Vector2(1250, 1470), awake=True), # Όταν
+            npc.Candy(pg.Vector2(1250, 1470), awake=True),  # Όταν
             npc.Manos(pg.Vector2(1150, 1480)),
             Chest((1630, 1410), {"items": Training_Sword(), "coins": 50}),
-            Dummy(self.screen, (1850, 1534), self.player),
-            Dummy(self.screen, (1850, 1734), self.player)
+            Dummy(self, self.screen, (1850, 1534), self.player),
+            Dummy(self, self.screen, (1850, 1734), self.player)
         ]
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(-100, hills_height-200, 100, 900), "Go back to open world ?", "mandatory")
+            "johns_garden": (pg.Rect(-100, hills_height - 200, 100, 900), "Go back to open world ?", "mandatory")
         }
 
         self.spawn = {
@@ -516,59 +526,63 @@ class Training_Field(GameState):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
         return super(Training_Field, self).update(camera, dt)
 
+
 class Gymnasium(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super(Gymnasium, self).__init__(DISPLAY, player_instance, prop_objects, "gymnasium", light_state="day")
-        
+
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
-        
+
         center_spawn = 200
-        
-        self.objects = [    
-            *self.generate_chunk("grass", -100, -1000, 13, 8, 150, 60, randomize=125),
-            *self.generate_chunk("grass", 4200, -860, 10, 10, 80, 80, randomize=125),
-            *self.generate_hills("right", (-400, center_spawn), 10, mid_type="hill_mid", end_type="hill_side_outer_rev"),
-            
-            # Weird bug, temp patch
-            # The road turns 90 degrees on the end if I add more than 2 roads that use Vver_end, so I made 2 on top of each othet
-            *self.build_road(
-                start_pos=(-600, 40),
-                n_road=2,  
-                start_type="hori_road", 
-                end_type="Vver_end"
-            ),
-            
-            *self.build_road(
-                start_pos=(350, 40),
-                n_road=2,  
-                start_type="hori_road", 
-                end_type="Vver_end"
-            ),
-            
-            *self.build_road(
-                start_pos=(1320, 40),
-                n_road=2,  
-                start_type="hori_road", 
-                end_type="Vver_end"
-            ),         
-            
-            # pls add school for me , (dont put it inside the other sheets)
-            # Left side trees            
-            *self.generate_chunk("tree", hills_width//2 + 20, -hills_height * 3 + 270, 5, 2, 400, 320, randomize=45),
-            
+
+        self.objects = [
+            *self.generate_chunk("tree", hills_width // 2 + 20, -hills_height * 3 + 270, 5, 2, 400, 320, randomize=45),
+
             # Right side trees
             *self.generate_chunk("tree", hills_width * 6, -hills_height * 3 + 270, 5, 3, 450, 320, randomize=45),
-            
-            
-            #___OUT_OF_BOUNDS
-            Rect(5160, -900, 50, 2100), # Right
-            Rect(40,-900, 50, 2100), # Left
-            Rect(40, -900, hills_width * 8, 50), # Up
-            
-            self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30))     
+            *self.generate_chunk("grass", -100, -1000, 13, 8, 150, 60, randomize=125),
+            *self.generate_chunk("grass", 4200, -860, 10, 10, 80, 80, randomize=125),
+            *self.generate_hills("right", (-400, center_spawn), 10, mid_type="hill_mid",
+                                 end_type="hill_side_outer_rev"),
+
+            # Weird bug, temp patch
+            # The road turns 90 degrees on the end if I add more than 2 roads that use Vver_end,
+            # so I made 2 on top of each othet
+            *self.build_road(
+                start_pos=(-600, 40),
+                n_road=2,
+                start_type="hori_road",
+                end_type="Vver_end"
+            ),
+
+            *self.build_road(
+                start_pos=(350, 40),
+                n_road=2,
+                start_type="hori_road",
+                end_type="Vver_end"
+            ),
+
+            *self.build_road(
+                start_pos=(1320, 40),
+                n_road=2,
+                start_type="hori_road",
+                end_type="Vver_end"
+            ),
+
+            # pls add school for me , (dont put it inside the other sheets)
+            # Left side trees            
+
+
+            # ___OUT_OF_BOUNDS
+            Rect(5160, -900, 50, 2100),  # Right
+            Rect(40, -900, 50, 2100),  # Left
+            Rect(40, -900, hills_width * 8, 50),  # Up
+
+            self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
+            npc.Bababooye(pg.Vector2(2702, -75))
         ]
-        
+
         self.exit_rects = {
             "johns_garden": (pg.Rect(-100, -center_spawn - 121, 300, 600), "Go back to open world ?", "mandatory")
         }
@@ -576,7 +590,8 @@ class Gymnasium(GameState):
         self.spawn = {
             "johns_garden": pg.Vector2(300, 0)
         }
-        
+
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
+        print(self.player.rect.topleft)
         return super(Gymnasium, self).update(camera, dt)

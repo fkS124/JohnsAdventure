@@ -7,6 +7,8 @@ from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .UI.pause_menu import PauseMenu, quit_pause
 from .utils import resource_path, l_path, UI_Spritesheet
+from .QUESTS.quest_manager import QuestManager
+from .QUESTS.quest_ui import QuestUI
 from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
 import gc
@@ -87,12 +89,13 @@ class GameManager:
         # ---------- GAME MANAGERS ----------------
         self.sound_manager = SoundManager()
         self.loading_screen = LoadingScreen(self.DISPLAY)
-        self.menu_manager = Menu(self.DISPLAY, self.blacksword, self.ui)
+        self.menu_manager = Menu(self, self.DISPLAY, self.blacksword, self.ui)
         self.interface = Interface(self.DISPLAY, scale(self.ui.parse_sprite('interface_button.png'), 8))
         self.pause_menu = PauseMenu(self.DISPLAY, self.ui)
 
         # ------------- PLAYER ----------------
         self.player = Player(
+            self,
             self.DISPLAY,  # Screen surface
             self.font,  # Font
             self.interface,
@@ -129,6 +132,11 @@ class GameManager:
         self.s_dt_to_wait_on_end = 0
         self.end = 0
         self.ended = False
+
+        # ------------- QUESTS -------------------
+        self.quest_manager = QuestManager(self, self.player)
+        self.quest_UI = QuestUI(self.DISPLAY, self.quest_manager)
+        self.player.quest_UI = self.quest_UI
 
     def pause(self):
         if self.player.paused:
@@ -168,6 +176,7 @@ class GameManager:
             self.player.camera.method.draw()
             if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
                 self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
+            self.quest_manager.update_quests()
 
         if self.debug:
             self.debugger.update()
@@ -178,8 +187,7 @@ class GameManager:
         while pg.time.get_ticks() < 3000:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
-                    pg.quit()
-                    raise SystemExit
+                    self.quit_()
 
             self.DISPLAY.fill((255, 255, 255))
 
@@ -197,6 +205,17 @@ class GameManager:
 
             self.framerate.tick(self.FPS)
             pg.display.update()
+
+    def quit_(self):
+        for key, level in self.loaded_states.items():
+            for obj in level.objects:
+                if hasattr(obj, "end_instance"):
+                    obj.end_instance()
+        for obj in self.game_state.objects:
+            if hasattr(obj, "end_instance"):
+                obj.end_instance()
+        pg.quit()
+        raise SystemExit
 
     def start_new_level(self, level_id, last_state="none", first_pos=None):
 
@@ -233,8 +252,7 @@ class GameManager:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     del loading_thread  # quit the thread
-                    pg.quit()
-                    raise SystemExit
+                    self.quit_()
                 elif event.type == pg.KEYDOWN:  # ask for a key to leave the loading
                     if event.key == self.loading_screen.get_key() and not is_load_alive:
                         run_loading = False

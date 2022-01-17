@@ -245,6 +245,8 @@ def check_for_hitting(player):
     for obj in player.rooms_objects:
         if hasattr(obj, "attackable"):
             if obj.attackable:
+                if obj.rect is None or player.attacking_hitbox is None:  # prevent from errors due to unassigned hitbox
+                    continue
                 if player.attacking_hitbox.colliderect(obj.rect):
                     equipped_weapon = player.inventory.get_equipped("Weapon")
 
@@ -338,6 +340,8 @@ def check_content(player, pos):
                             # Turn on interact zone
                             player.is_interacting = True
 
+                            player.interacting_with = obj
+
                             # Get npc's text
                             player.npc_text = obj.tell_story
 
@@ -346,4 +350,5 @@ def check_content(player, pos):
             elif obj.IDENTITY == "PROP":
                 if obj.name == "chest":  # MUST BE BEFORE checking collision to avoid attribute errors
                     if itr_box.colliderect(obj.interaction_rect):
+                        player.interacting_with = obj
                         obj.on_interaction(player)  # Run Chest opening

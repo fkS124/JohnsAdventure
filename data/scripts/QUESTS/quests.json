@@ -1,0 +1,24 @@
+{
+  "A new beginning": {
+    "xp": 100,
+    "finished": false,
+    "content": {
+      "steps": {
+        "Talk to Cynthia in the kitchen": "TARGET:Cynthia TYPE:Interact LEVEL:kitchen",
+        "Talk to manos in the training field": "TARGET:Manos TYPE:Interact LEVEL:training_field",
+        "Kill the dummies": "TARGET:Dummy TYPE:Kill LEVEL:training_field",
+        "Talk back to manos": "TYPE:Interact TARGET:Manos LEVEL:training_field",
+        "Go find Cynthia in school": "TARGET:Bababooye TYPE:Interact LEVEL:gymnasium",
+        "Go back to the house": "TYPE:Reach LEVEL:kitchen"
+      },
+      "completed": {
+        "Talk to Cynthia in the kitchen": true,
+        "Talk to manos in the training field": false,
+        "Kill the dummies": false,
+        "Talk back to manos": false,
+        "Go find Cynthia in school": false,
+        "Go back to the house": false
+      }
+    }
+  }
+}

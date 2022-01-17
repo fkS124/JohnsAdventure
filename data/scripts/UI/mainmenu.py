@@ -5,9 +5,10 @@ from ..utils import scale, load, resource_path
 
 class Menu:
 
-    def __init__(self, screen, title_font, ui):
+    def __init__(self, game_instance, screen, title_font, ui):
         # Data from Game Class
         self.screen, self.title_font = screen, title_font
+        self.game_instance = game_instance
 
         # Macros 
         self.half_w, self.half_h = self.screen.get_width() // 2, self.screen.get_height() // 2
@@ -184,7 +185,7 @@ class Menu:
             self.event = e  # I am passing this to the keybinds
             match e.type:
                 case p.QUIT:
-                    raise SystemExit
+                    self.game_instance.quit_()
                 case p.MOUSEBUTTONDOWN:
                     if self.btns_rects[0].collidepoint(m):
                         self.start_game = True

@@ -126,6 +126,10 @@ def user_interface(player, m, player_pos, dt):
 
         # Inventory Icon
         player.inventory.update(player)
+
+        # quest UI
+        player.quest_UI.render()
+
         # sending its own object in order that the inventory can access to the player's damages
 
     # recalculate the damages, considering the equipped weapon
