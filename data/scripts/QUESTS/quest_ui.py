@@ -2,10 +2,10 @@ import pygame as pg
 from .quest_manager import QuestManager
 from ..utils import resource_path
 
-
 # Please change the bg ui to these rgbs
-bg_color = (239,159,26)
+bg_color = (239, 159, 26)
 bg_color_hovered = (199, 134, 26)
+
 
 class QuestUI:
 
@@ -31,7 +31,7 @@ class QuestUI:
 
         # background for headers (main titles) -> TODO: change it with your fancy UI
         self.bg_headers = pg.Surface((250, 100))
-        self.bg_headers.fill((255, 255, 255))   # remove it when you change it
+        self.bg_headers.fill((255, 255, 255))  # remove it when you change it
 
         # background for quests (must be resizable)
         self.bg_quests = pg.Surface((100, 100))
@@ -41,13 +41,13 @@ class QuestUI:
         self.headers: list[pg.Surface] = [
             pg.Surface((300, 50)) for _ in self.quest_manager.quests
         ]
-        
-	# will be updated later (for the right positions)
+
+        # will be updated later (for the right positions)
         self.header_rects: list[pg.Rect] = [header.get_rect() for header in self.headers]
         for header in self.headers:
             header.fill((255, 255, 255))  # -> TODO: change the color with your new fancy UI's color
-        
-	# write the titles on the headers
+
+        # write the titles on the headers
         for index, quest in enumerate(self.quest_manager.quests.values()):
             header_text = self.header_font.render(quest.name, True, (0, 0, 0))
             self.headers[index] = header_text
@@ -57,7 +57,12 @@ class QuestUI:
                                                       for quest in self.quest_manager.quests.values()]
         self.quests_inside_done = [list(quest.quest_state.values()) for quest in self.quest_manager.quests.values()]
 
-        self.header_active = [True for _ in self.headers]
+        self.header_active = [False for _ in self.headers]
+
+        self.header_scroll = [0 for _ in self.header_active]
+        self.scroll_incrementing = ["." for _ in self.header_active]
+        self.delays = [0 for _ in self.header_active]
+        self.duration = 30
 
     def set_active(self):
         self.show_menu = not self.show_menu
@@ -66,57 +71,88 @@ class QuestUI:
         click = False
         for index, rect in enumerate(self.header_rects):
             if rect.collidepoint(pos):  # activate / switch off the header
-                self.header_active[index] = not self.header_active[index]
+                if not self.header_active[index]:
+                    self.header_active[index] = True
+                    self.scroll_incrementing[index] = "+"
+                else:
+                    self.scroll_incrementing[index] = "-"
+                self.delays[index] = pg.time.get_ticks()
                 click = True
         return click
+
+    def get_n_steps(self, index) -> int:
+        n_true = sum(list(list(self.quest_manager.quests.values())[index].quest_state.values()))
+        length = len(self.quests_inside[index])
+        print(n_true + 1, length)
+        return n_true + 1 if n_true + 1 <= length else length
 
     def render(self):
 
         self.quests_inside_done = [list(quest.quest_state.values()) for quest in self.quest_manager.quests.values()]
         if self.show_menu:
             dy = 0
+            print(self.header_scroll)
             for index, active in enumerate(self.header_active):
 
-		        # MISSION HEADER TITLE
-                header_color = bg_color if not pg.Rect(self.start_pos[0], self.start_pos[1]+dy,
-                                                              self.headers[index].get_width()+10,
-                                                              self.headers[index].get_height()+10).collidepoint(
-                                                              pg.mouse.get_pos()) \
-                                               else bg_color_hovered
-
-
+                # MISSION HEADER TITLE
+                header_color = bg_color if not pg.Rect(self.start_pos[0], self.start_pos[1] + dy,
+                                                       self.headers[index].get_width() + 10,
+                                                       self.headers[index].get_height() + 10).collidepoint(
+                    pg.mouse.get_pos()) \
+                    else bg_color_hovered
 
                 # UI HEADER
-                pg.draw.rect(self.screen, header_color,[self.start_pos[0], self.start_pos[1]+dy,self.headers[index].get_width()+10,self.headers[index].get_height()+10], border_radius=8)
+                pg.draw.rect(self.screen, header_color,
+                             [self.start_pos[0], self.start_pos[1] + dy, self.headers[index].get_width() + 10,
+                              self.headers[index].get_height() + 10], border_radius=8)
                 # OUTLINE
-                pg.draw.rect(self.screen, (0,0,0),[self.start_pos[0], self.start_pos[1]+dy,self.headers[index].get_width()+10,self.headers[index].get_height()+10], border_radius=8, width = 2)
-                
-                self.screen.blit(self.headers[index], [self.start_pos[0]+5, self.start_pos[1]+dy+5])
-                self.header_rects[index].topleft = [self.start_pos[0], self.start_pos[1]+dy]
+                pg.draw.rect(self.screen, (0, 0, 0),
+                             [self.start_pos[0], self.start_pos[1] + dy, self.headers[index].get_width() + 10,
+                              self.headers[index].get_height() + 10], border_radius=8, width=2)
+
+                self.screen.blit(self.headers[index], [self.start_pos[0] + 5, self.start_pos[1] + dy + 5])
+                self.header_rects[index].topleft = [self.start_pos[0], self.start_pos[1] + dy]
                 dy += self.headers[index].get_height() + self.gap + 10
 
                 if active:
+                    if pg.time.get_ticks() - self.delays[index] > self.duration:
+                        self.delays[index] = pg.time.get_ticks()
+                        if self.scroll_incrementing[index] == "+":
+                            if self.header_scroll[index] + 1 <= self.get_n_steps(index):
+                                self.header_scroll[index] += 1
+                            else:
+                                self.scroll_incrementing[index] = "."
+                        elif self.scroll_incrementing[index] == "-":
+                            if self.header_scroll[index] > 0:
+                                self.header_scroll[index] -= 1
+                            else:
+                                self.scroll_incrementing[index] = "."
+                                self.header_active[index] = False
+
                     for index2, step in enumerate(self.quests_inside[index]):
-                        
+                        if index2 >= self.header_scroll[index]:
+                            print("Broke", index, index2)
+                            break
+
                         # Check box
-                        pg.draw.rect(self.screen, bg_color, [self.start_pos[0], self.start_pos[1]+dy,
-                                                                    *self.cross.get_size()], width=1)
+                        pg.draw.rect(self.screen, bg_color, [self.start_pos[0], self.start_pos[1] + dy,
+                                                             *self.cross.get_size()], width=1)
 
                         done = self.quests_inside_done[index][index2]
-                        rect = step.get_rect(topleft=[self.start_pos[0]+self.gap_x, self.start_pos[1]+dy])
+                        rect = step.get_rect(topleft=[self.start_pos[0] + self.gap_x, self.start_pos[1] + dy])
                         rect.topleft -= pg.Vector2(5, 5)
                         rect.size += pg.Vector2(10, 10)
 
                         # Smaller headers containing the mission
                         pg.draw.rect(self.screen, header_color, rect, border_radius=8)
-                        pg.draw.rect(self.screen, (0,0,0), rect, border_radius=8, width=1)
+                        pg.draw.rect(self.screen, (0, 0, 0), rect, border_radius=8, width=1)
 
                         # Mission Completion
                         if done:
-                            self.screen.blit(self.cross, (self.start_pos[0], self.start_pos[1]+dy))
-                            self.screen.blit(step, [self.start_pos[0]+self.gap_x, self.start_pos[1]+dy])
+                            self.screen.blit(self.cross, (self.start_pos[0], self.start_pos[1] + dy))
+                            self.screen.blit(step, [self.start_pos[0] + self.gap_x, self.start_pos[1] + dy])
                             dy += step.get_height() + self.gap
                         else:
-                            self.screen.blit(step, [self.start_pos[0]+self.gap_x, self.start_pos[1]+dy])
+                            self.screen.blit(step, [self.start_pos[0] + self.gap_x, self.start_pos[1] + dy])
                             dy += step.get_height() + self.gap
-                            break  # don't show the next unavailable quests
+                            break  # don't show the next unavailable quest
