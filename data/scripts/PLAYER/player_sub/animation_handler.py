@@ -208,7 +208,6 @@ def update_attack(player, pos):
 
         player.screen.blit(player.attacking_frame, temp)
 
-        #print(player.current_combo) To debug attacking 
         # reset the whole thing if the combo reach his end and the animation of the last hit ended too
         if player.current_combo == player.last_attack and not player.restart_animation and \
                 not player.index_attack_animation:

@@ -4,12 +4,17 @@
  Functions to reduce typing :rofl:
 
 '''
-import pygame, sys, os, pathlib, json
+import json
+import os
+import pathlib
+import pygame
+import sys
 
 try:
     from functools import lru_cache
 except ImportError:
     from backports.functools_lru_cache import lru_cache
+
 
 class UI_Spritesheet:
     def __init__(self, filename):

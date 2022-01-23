@@ -1,17 +1,16 @@
 from .PLAYER.player import Player
 from .PLAYER.inventory import *
-from .AI.enemies import Dummy
 from .sound_manager import SoundManager
 from .UI.mainmenu import Menu
 from .UI.interface import Interface
 from .UI.loading_screen import LoadingScreen
 from .UI.pause_menu import PauseMenu, quit_pause
-from .utils import resource_path, l_path, UI_Spritesheet
+from .utils import resource_path, l_path, UI_Spritesheet, smooth_scale
 from .QUESTS.quest_manager import QuestManager
 from .QUESTS.quest_ui import QuestUI
 from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
-import gc
+from .POSTPROCESSING.cutscene_engine import CutsceneManager
 
 from .PLAYER.player_sub.tools import set_camera_to
 
@@ -126,12 +125,7 @@ class GameManager:
         self.debugger = Debugging(self.DISPLAY, self, no_rect)
 
         # -------- CAMERA SRC HANDLER -------------
-        self.s_duration = 0
-        self.s_next_cam = None
-        self.scripting = False
-        self.s_dt_to_wait_on_end = 0
-        self.end = 0
-        self.ended = False
+        self.cutscene_engine = CutsceneManager(self, self.DISPLAY)
 
         # ------------- QUESTS -------------------
         self.quest_manager = QuestManager(self, self.player)
@@ -173,7 +167,13 @@ class GameManager:
                 self.dt  # <- is needed for the NPC interaction
             ) 
             self.pause()
-            self.player.camera.method.draw()
+            if hasattr(self.player.camera.method, "fov"):
+                if self.player.camera.method.fov != 1:
+                    surface = self.DISPLAY.subsurface(self.player.camera.method.capture_rect)
+                    surface = smooth_scale(surface, self.player.camera.method.fov)
+                    self.DISPLAY.blit(surface, surface.get_rect(center=(self.DISPLAY.get_width()//2,
+                                                                        self.DISPLAY.get_height()//2)))
+            self.cutscene_engine.render()
             if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
                 self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
             self.quest_manager.update_quests()
@@ -315,68 +315,20 @@ class GameManager:
                     self.start_new_level(update, last_state=self.state)
 
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''
-                if not self.game_state.ended_script and not self.debug and not get_cutscene_played(self.game_state.id):
-                    self.camera_script_handler()
-                    self.FPS = 360 # if it works
+                if not self.debug and self.cutscene_engine.state != "inactive":
+                    self.cutscene_engine.update()
+                    self.FPS = 360  # if it works
+                elif not self.debug:
+                    set_camera_to(self.player.camera, self.player.camera_mode, "follow")
+
+                    if not self.game_state.ended_script and len(self.game_state.camera_script) > 0:
+                        self.cutscene_engine.init_script(self.game_state.camera_script)
+
+                    self.FPS = 35
                 else:
                     set_camera_to(self.player.camera, self.player.camera_mode, "follow")
-                    self.FPS = 35
 
             self.routine()
-
-    def start_new_src_part(self):
-
-        c_level = self.game_state
-        cam_script = c_level.camera_script
-        src_index = c_level.cam_index
-
-        set_camera_to(self.player.camera, self.player.camera_mode, "auto")
-        self.scripting = True
-        self.ended = False
-
-        cur_script = cam_script[src_index]
-        if "pos" in cur_script and "duration" in cur_script:
-            self.player.camera.method.go_to(cur_script["pos"], duration=cur_script["duration"])
-        self.s_next_cam = cur_script["next_cam_status"] if "next_cam_status" in cur_script else None
-        self.player.camera.method.set_text(cur_script["text"] if "text" in cur_script else "")
-        self.s_dt_to_wait_on_end = cur_script["waiting_end"] if "waiting_end" in cur_script else 0
-        if "zoom" in cur_script:
-            if "zoom_duration" not in cur_script:
-                self.player.camera.method.fov = cur_script["zoom"]
-            else:
-                self.player.camera.method.start_zoom_out(cur_script["zoom"], cur_script["zoom_duration"])
-
-        # print("Started:", src_index, "w:", self.s_dt_to_wait_on_end, "dt:", cur_script["duration"], cur_script["pos"])
-
-    def camera_script_handler(self):
-        c_level = self.game_state
-        cam_script = c_level.camera_script
-        src_index = c_level.cam_index
-        camera = self.player.camera
-
-        if not self.scripting:
-            if src_index + 1 < len(cam_script):
-                self.game_state.cam_index += 1
-                self.start_new_src_part()
-            else:
-                self.game_state.ended_script = True
-                play_cutscene(self.game_state.id)
-                return
-
-        if not camera.method.moving_cam and not camera.method.zooming_out and not self.ended:
-            self.end = pg.time.get_ticks()
-            self.ended = True
-
-        if self.ended:
-            if self.s_dt_to_wait_on_end != 0:
-                if pg.time.get_ticks() - self.end > self.s_dt_to_wait_on_end:
-                    self.scripting = False
-                    if self.s_next_cam is not None:
-                        set_camera_to(self.player.camera, self.player.camera_mode, self.s_next_cam)
-            else:
-                self.scripting = False
-                if self.s_next_cam is not None:
-                    set_camera_to(self.player.camera, self.player.camera_mode, self.s_next_cam)
 
 
 class Debugging:

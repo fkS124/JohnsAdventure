@@ -1,6 +1,6 @@
 import pygame as pg
 from .quest_manager import QuestManager
-from ..utils import resource_path
+from ..utils import resource_path, smooth_scale
 
 # Please change the bg ui to these rgbs
 bg_color = (239, 159, 26)
@@ -28,8 +28,9 @@ class QuestUI:
 
         self.header_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 20)
         self.step_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 15)
+        self.step_font2 = pg.font.Font(resource_path("data/database/menu-font.ttf"), 13)
 
-        # background for headers (main titles) -> TODO: change it with your fancy UI
+        # background for headers (main titles)
         self.bg_headers = pg.Surface((250, 100))
         self.bg_headers.fill((255, 255, 255))  # remove it when you change it
 
@@ -57,10 +58,10 @@ class QuestUI:
                                                       for quest in self.quest_manager.quests.values()]
         self.quests_inside_done = [list(quest.quest_state.values()) for quest in self.quest_manager.quests.values()]
 
-        self.header_active = [False for _ in self.headers]
+        self.header_active = [True for _ in self.headers]
 
         self.header_scroll = [0 for _ in self.header_active]
-        self.scroll_incrementing = ["." for _ in self.header_active]
+        self.scroll_incrementing = ["+" for _ in self.header_active]
         self.delays = [0 for _ in self.header_active]
         self.duration = 30
 
@@ -83,16 +84,18 @@ class QuestUI:
     def get_n_steps(self, index) -> int:
         n_true = sum(list(list(self.quest_manager.quests.values())[index].quest_state.values()))
         length = len(self.quests_inside[index])
-        print(n_true + 1, length)
         return n_true + 1 if n_true + 1 <= length else length
 
     def render(self):
 
         self.quests_inside_done = [list(quest.quest_state.values()) for quest in self.quest_manager.quests.values()]
+
         if self.show_menu:
             dy = 0
-            print(self.header_scroll)
             for index, active in enumerate(self.header_active):
+
+                if self.scroll_incrementing[index] == "." and active:
+                    self.header_scroll[index] = self.get_n_steps(index)
 
                 # MISSION HEADER TITLE
                 header_color = bg_color if not pg.Rect(self.start_pos[0], self.start_pos[1] + dy,
@@ -131,7 +134,6 @@ class QuestUI:
 
                     for index2, step in enumerate(self.quests_inside[index]):
                         if index2 >= self.header_scroll[index]:
-                            print("Broke", index, index2)
                             break
 
                         # Check box
@@ -156,3 +158,38 @@ class QuestUI:
                             self.screen.blit(step, [self.start_pos[0] + self.gap_x, self.start_pos[1] + dy])
                             dy += step.get_height() + self.gap
                             break  # don't show the next unavailable quest
+        else:
+            dy = 110
+            dx = 10
+            for index, text in enumerate(self.quest_manager.current_finished_steps):
+                render = self.step_font2.render(f"Step completed:  {text}", True, (0, 0, 0))
+                rect = render.get_rect(topleft=(dx, dy))
+                dy += rect.height + 15
+                delay = self.quest_manager.finished_steps_delays[index]
+                dt = pg.time.get_ticks() - delay
+                if dt < 250:
+                    rect.x = -rect.width + rect.width * dt / 250
+                elif 250 < dt < 3750:
+                    rect.x = dx
+                else:
+                    rect.x = -rect.width * (dt - 3750) / 250
+                new_rect = pg.Rect(rect.topleft-pg.Vector2(5, 5), rect.size+pg.Vector2(10, 10))
+                pg.draw.rect(self.screen, bg_color, new_rect, border_radius=6)
+                pg.draw.rect(self.screen, (0, 0, 0), new_rect, border_radius=6, width=2)
+                self.screen.blit(render, rect)
+            for index, text in enumerate(self.quest_manager.current_new_steps):
+                render = self.step_font2.render(f"New step:  {text}", True, (0, 0, 0))
+                rect = render.get_rect(topleft=(dx, dy))
+                dy += rect.height + 15
+                delay = self.quest_manager.new_steps_delays[index]
+                dt = pg.time.get_ticks() - delay
+                if dt < 250:
+                    rect.x = -rect.width + rect.width * dt / 250
+                elif 250 < dt < 3750:
+                    rect.x = dx
+                else:
+                    rect.x = -rect.width * (dt - 3750) / 250
+                new_rect = pg.Rect(rect.topleft-pg.Vector2(5, 5), rect.size+pg.Vector2(10, 10))
+                pg.draw.rect(self.screen, bg_color, new_rect, border_radius=6)
+                pg.draw.rect(self.screen, (0, 0, 0), new_rect, border_radius=6, width=2)
+                self.screen.blit(render, rect)

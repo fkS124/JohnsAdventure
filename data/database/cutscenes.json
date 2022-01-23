@@ -1,9 +1,9 @@
 {
-  "player_room": true,
-  "johns_garden": true,
-  "kitchen": true,
+  "player_room": false,
+  "johns_garden": false,
+  "kitchen": false,
   "manos_hut": false,
   "cave_level": false,
   "training_field": false,
-  "gymnasium": true
+  "gymnasium": false
 }

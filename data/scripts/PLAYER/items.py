@@ -54,7 +54,7 @@ class Weapon:
             "friction": 0
         }
 
-        self.sheet = l_path(sheet)
+        self.sheet = l_path(sheet, alpha=False)
 
     def start_special_effect(self, obj: object):
         # Here the devs can pass a function to start a special effect
@@ -103,7 +103,7 @@ class Weapon:
 class Training_Sword(Weapon):
 
     def __init__(self):
-        super().__init__(dmg=5, crit_chance=0.1, sheet="data/sprites/PLAYER/weapons/sword_sprite_reference.png")
+        super().__init__(dmg=5, crit_chance=0.1, sheet="data/sprites/PLAYER/weapons/training_sword.png")
         self.icon = l_path("data/sprites/items/wooden_sword_item.png", alpha=True)
 
         # This knockback is temporar, we will update the system when its time
@@ -118,7 +118,7 @@ class Training_Sword(Weapon):
 class Knight_Sword(Weapon):
 
     def __init__(self):
-        super().__init__(dmg=15, crit_chance=0.15, sheet="data/sprites/PLAYER/weapons/sword_sprite_reference.png")
+        super().__init__(dmg=15, crit_chance=0.15, sheet="data/sprites/PLAYER/weapons/knight_sword.png")
         self.KB = True
         self.knock_back = {
             "duration": 150,

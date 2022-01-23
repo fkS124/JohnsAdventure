@@ -14,6 +14,11 @@ from ..AI.death_animator import DeathManager
 from .lights_manager import LightManager
 
 
+def get_cutscene_played(id_: str):
+    with open(resource_path('data/database/cutscenes.json'), "r") as data:
+        return json.load(data)[id_]
+
+
 class GameState:
     """Parent class of every level.
     It handles every objects and handle their update method's arguments.
@@ -75,7 +80,7 @@ class GameState:
 
         # camera script :
         self.cam_index = -1
-        self.ended_script = False
+        self.ended_script = get_cutscene_played(self.id)
         self.camera_script = []
         """
         ** = optional
@@ -351,7 +356,6 @@ class GameState:
                 else:
                     current_pos[1] += new_road.current_frame.get_height()
                 roads.append(new_road)
-        print("Successfully generated", len(roads), "roads.")
         return roads
 
     def generate_chunk(self, type_: str, x: int, y: int, row: int, col: int, step_x: int, step_y: int,

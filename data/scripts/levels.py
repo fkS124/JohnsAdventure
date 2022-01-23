@@ -19,6 +19,7 @@ from .AI.death_animator import DeathManager
 from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
 from .POSTPROCESSING.gamestate import GameState
+from .sound_manager import SoundManager
 
 
 def get_cutscene_played(id_: str):
@@ -56,19 +57,24 @@ class PlayerRoom(GameState):
             "kitchen": (self.exit_rects["kitchen"][0].bottomleft + pg.Vector2(0, 50))
         }
 
-        self.camera_script = [
+        """self.camera_script = [
+        
+            # EXAMPLE OF CAMERA SCRIPT THAT INCLUDES EVERY FUNCTIONALITY EXCEPT IMAGE AND CENTERED TEXT
+        
             {
                 "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
                 "duration": 0,
                 "text": f"Hello Player. Welcome to John's Adventure.",
-                "waiting_end": 4000,
-                "zoom": 1.4
+                "waiting_end": 2000,
+                "zoom": 1.4,
+                "text_dt": 1000
             },
             {
                 "pos": (1100, 225),
                 "duration": 1000,
-                "waiting_end": 1000,
-                "text": "Your quest is waiting for you downstairs."
+                "waiting_end": 2000,
+                "text": "Your quest is waiting for you downstairs.",
+                "text_dt": 1000
             },
             {
                 "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
@@ -76,6 +82,54 @@ class PlayerRoom(GameState):
                 "waiting_end": 250,
             },
             {
+                "duration": 1200,
+                "next_cam_status": "follow",
+                "zoom": 1,
+                "zoom_duration": 1200
+            }
+        ]"""
+
+        self.camera_script = [
+            {
+                "no_init": True,  # basically removes the cinema bar init that won't be seen because of black bg
+                "duration": 4000,
+                "centered_text": "PORTO RAFTH 202X ALTERNATIVE UNIVERSE",
+                "centered_text_dt": 2000,
+                "image": pg.Surface((1280, 720))
+            },
+            {
+                "duration": 4000,
+                "image": scale(l_path("data/sprites/cutscenes/cutscene1.png"), 3)
+            },
+            {
+                "duration": 4000,
+                "image": pg.Surface((1280, 720)),
+                "centered_text": "THAT'S WHERE YOU PUT YOUR TEXT YOU SUSSIEST",
+                "centered_text_dt": 2000,
+                "waiting_end": 1000
+            },
+            {
+                "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
+                "duration": 0,
+                "text": f"Hello Player. Welcome to John's Adventure.",
+                "waiting_end": 4000,
+                "zoom": 1.4,
+                "text_dt": 2000
+            },
+            {
+                "pos": (1100, 225),
+                "duration": 1000,
+                "waiting_end": 2000,
+                "text": "Your quest is waiting for you downstairs.",
+                "text_dt": 1000
+            },
+            {
+                "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
+                "duration": 750,
+                "waiting_end": 250,
+            },
+            {
+                "duration": 1200,
                 "next_cam_status": "follow",
                 "zoom": 1,
                 "zoom_duration": 1200
@@ -522,9 +576,89 @@ class Training_Field(GameState):
             "johns_garden": self.exit_rects["johns_garden"][0].topright + pg.Vector2(100, 280)
         }
 
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.ended_script = True
+        self.spawned = False
+        self.started_script = False
+        self.radius_circles = 0
+        self.delay_radius = 0
+        self.max_radius = 250
+        self.shockwave_radius = 100
+        self.exploded = False
+        self.centers = [(0, 0), (0, 0)]
+        self.dummies = []
+        self.camera_script = [
+            {
+                "duration": 0,
+                "pos": (1138, 1526),
+                "zoom": 1.2
+            },
+            {
+                "duration": 3000,
+                "text": "Manos - Congratulations ! These dummies are dead as fuck !",
+                "text_dt": 1500
+            },
+            {
+                "duration": 1500,
+                "pos": (1660, 1682)
+            },
+            {
+                "duration": 2500  # at this point, the dummies appear
+            },
+            {
+                "duration": 2000,
+                "pos": (1138, 1526),
+                "text": "Manos - Oh shit what the hell is that !",
+                "text_dt": 1500,
+                "zoom": 1,
+                "zoom_duration": 1800
+            }
+
+        ]
+
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
-        return super(Training_Field, self).update(camera, dt)
+
+        if not get_cutscene_played(self.id) and not self.started_script:
+            if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
+                self.started_script = True
+                self.ended_script = False
+                self.player.is_interacting = False
+                self.player.InteractPoint = 0
+
+        if self.started_script and not self.spawned:
+            if self.player.game_instance.cutscene_engine.index_script == 3:
+                self.spawned = True
+                self.dummies = [ShadowDummy(self, self.screen, (1700, 1540), self.player, hp=150, xp_drop=125),
+                                ShadowDummy(self, self.screen, (1700, 1720), self.player, hp=150, xp_drop=125)]
+                self.centers = [dummy.rect.center for dummy in self.dummies]
+                self.radius_circles += 2
+                self.sound_manager.play_sound("magic_shooting")
+                self.exploded = True
+
+        update = super(Training_Field, self).update(camera, dt)
+
+        if self.exploded:
+            self.shockwave_radius += 100  # vel of shockwave
+
+            # (1000, 1000) = explosion start
+            pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2((1000, 1000)) - self.scroll, self.shockwave_radius,
+                           width=10)
+
+        if self.spawned and self.radius_circles < self.max_radius and self.dummies == []:
+            if pg.time.get_ticks() - self.delay_radius > 40:
+                self.radius_circles += 15
+                self.delay_radius = pg.time.get_ticks()
+            for pos in self.centers:
+                pg.draw.circle(self.screen, (128, 0, 128), pg.Vector2(pos) - self.scroll, self.radius_circles, 4)
+                pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2(pos) - self.scroll, self.radius_circles+4, 2)
+
+        # 884 = the distance between explosion start and first dummy
+        if self.shockwave_radius > 884 and self.dummies != []:
+            self.objects.extend(self.dummies)
+            self.dummies = []
+
+        return update
 
 
 class Gymnasium(GameState):
