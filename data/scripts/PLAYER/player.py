@@ -168,10 +168,10 @@ class Player:
         self.last_attacking_click = 0
 
         # still to be determined
-        self.attack_cooldown = 200
+        self.attack_cooldown = 350
 
         # still to be determined  This is the cooldown of the last attack
-        self.attack_speed = self.attack_cooldown * 2 - 25 / 100
+        self.attack_speed = 850
 
         self.max_combo_multiplier = 1.025
         self.last_combo_hit_time = 0
@@ -188,6 +188,9 @@ class Player:
         self.interacting_with = None
     
     def handler(self, dt, exit_rects):
+        if not self.InteractPoint:
+            self.interacting_with = None
+
         player_p = (
             # 52 48 are players height and width
             self.rect.x - 52 - self.camera.offset.x,
@@ -196,7 +199,8 @@ class Player:
         m = p.mouse.get_pos()
         
         
-        leveling(self) # Doesnt work 
+        leveling(self) # Doesnt work
+
         self.controls(player_p)
         
         check_for_interaction(self, exit_rects)
@@ -223,6 +227,12 @@ class Player:
             self.click = False
             a = self.data['controls']
 
+            if e.type == p.QUIT:
+                self.game_instance.quit_()
+
+            if self.game_instance.cutscene_engine.state != "inactive":  # if cutscene is playing, disallow all the keys
+                break
+
             if not self.inventory.show_menu:
                 self.Up = keys[a["up"]]
                 self.Down = keys[a["down"]]
@@ -245,9 +255,7 @@ class Player:
                     if hasattr(obj, "IDENTITY") and obj.IDENTITY == "NPC" and not self.is_interacting:
                         obj.interacting = False
                         break  # Stop the for loop to save calculations
-            match e.type: 
-                case p.QUIT:
-                    self.game_instance.quit_()
+            match e.type:
 
                 case p.KEYDOWN:
                     match e.key:

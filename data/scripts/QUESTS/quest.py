@@ -22,14 +22,11 @@ class Quest:
 
         # load everything
         self.get_quest()
-        print(self.quest_steps, self.quest_state)
 
         # track the current step we're in
         self.index_step = sum(self.quest_state.values())
         self.steps_list = list(self.quest_steps.values())
         self.steps_names = list(self.quest_steps.keys())
-
-        print(self.index_step)
 
         # steps
         self.type_step = ""
@@ -73,14 +70,11 @@ class Quest:
 
         self.player.experience += self.xp_reward
 
-        print("Completed quest", self.name)
-
     def complete_step(self):
         """
         Called everytime you finish a step
         """
         self.quest_state[list(self.quest_state.keys())[self.index_step]] = True
-        print("Finished step", self.quest_state)
 
         with open("data/scripts/QUESTS/quests.json", "r") as quest:
             datas = json.load(quest)

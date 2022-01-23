@@ -37,7 +37,8 @@ class Inventory:
 
         # Player's items:
         self.item_sorter = ItemSorter  # put this to avoid unused import
-        self.items = [self.item_sorter.weapons["Knight_Sword"]()]  # -> self.item_sorter.weapons["Knight_Sword"]()
+        self.items = [self.item_sorter.weapons["Knight_Sword"](),
+                      self.item_sorter.weapons["Training_Sword"]()]  # -> self.item_sorter.weapons["Knight_Sword"]()
         self.index_scroll = 0  # Useful to track the scrolling
 
     def scroll_down(self):

@@ -1,7 +1,6 @@
 import pygame
 from random import random
 
-from pygame.time import delay
 from ...utils import scale, get_sprite, flip_vertical
 from ...UI.UI_animation import InteractionName
 from copy import copy
@@ -25,19 +24,20 @@ def get_player(img, row, col):
         row (int): [description]
         col (int): [description]
     """
+    img.set_colorkey(0x000000)  # this is hacking, idk why it works but it does (you could take a further look pls)
     return scale(get_sprite(img, 46 * row, 52 * col, 46, 52), 3)
 
 
 def load_attack_anim(player, sheet):
     sheet_settings = {
-        'right_a_1': {'row': 0, 'col': 0, 'frames': 7, "sheet": "weapon"},
-        'right_a_2': {'row': 0, 'col': 7, 'frames': 6, "sheet": "weapon"},
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 5, 'frames': 6, "sheet": "weapon"},
         'stab_r': {'row': 0, 'col': 14, 'frames': 5, "sheet": "weapon"},
         'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
         'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},
         'stab_u': {'row': 1, 'col': 10, 'frames': 7, "sheet": "weapon"},
         'down_a_1': {'row': 2, 'col': 0, 'frames': 5, "sheet": "weapon"},
-        'down_a_2': {'row': 2, 'col': 5, 'frames': 5, "sheet": "weapon"},
+        'down_a_2': {'row': 2, 'col': 5, 'frames': 4, "sheet": "weapon"},
         'stab_d': {'row': 2, 'col': 10, 'frames': 6, "sheet": "weapon"},
     }
 
@@ -59,8 +59,8 @@ def get_john(player):
         "dash_r": {'row': 4, 'col': 0, 'frames': 5}, "dash_d": {'row': 6, 'col': 0, 'frames': 5},
         "dash_u": {'row': 5, 'col': 0, 'frames': 5},
         # ATTACK
-        'right_a_1': {'row': 0, 'col': 0, 'frames': 6, "sheet": "weapon"},
-        'right_a_2': {'row': 0, 'col': 6, 'frames': 7, "sheet": "weapon"},
+        'right_a_1': {'row': 0, 'col': 0, 'frames': 5, "sheet": "weapon"},
+        'right_a_2': {'row': 0, 'col': 5, 'frames': 6, "sheet": "weapon"},
         'stab_r': {'row': 0, 'col': 13, 'frames': 6, "sheet": "weapon"},
         'up_a_1': {'row': 1, 'col': 0, 'frames': 5, "sheet": "weapon"},
         'up_a_2': {'row': 1, 'col': 5, 'frames': 5, "sheet": "weapon"},

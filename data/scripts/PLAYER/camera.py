@@ -55,6 +55,9 @@ class Camera:
 
         )  # end of CONST
 
+        self.moving_cam = False
+        self.zooming_out = False
+
     def set_method(self, method):
         """
         The gear to switch between Camera types
@@ -193,37 +196,22 @@ class Auto(CamScroll):
 
     def __init__(self, camera, player):
         CamScroll.__init__(self, camera, player, status="Auto")
+
+        # ------------------ SCREEN & SCREEN_METRICS
         self.screen = camera.display
-
         self.W, self.H = self.screen.get_size()
-        sur = pygame.Surface((camera.screen[0], 92))
-        sur.fill((0, 0, 0))
-        self.cinema_bar = sur
 
-        # Bar Y position before the camera
-        self.bar_y = -self.cinema_bar.get_height()
-
-        self.bar_speed = 64
-
+        # ------------------ MOVEMENT
         self.dx, self.dy = (0, 0)
         self.target = (0, 0)
         self.looking_at = (0, 0)
         self.delay_mvt = 0
         self.moving_cam = False
 
-        self.font = pygame.font.Font(resource_path("data/database/menu-font.ttf"), 20)
-        self.text = ""
-
-        self.start = 0
-        self.duration = 0
-
+        # ------------------ ZOOM
         self.fov = 1
-        self.capture_rect = pygame.Rect(
-            0,
-            self.bar_y+self.cinema_bar.get_height(),
-            self.screen.get_width(),
-            self.screen.get_height() - 2 * abs(self.bar_y + self.cinema_bar.get_height())
-        )
+        # will be reassigned later on (defines the zoom capture)
+        self.capture_rect = pygame.Rect(0, 0, self.screen.get_width(), self.screen.get_height())
 
         self.zooming_out = False
         self.target_zoom_out = 1
@@ -235,13 +223,7 @@ class Auto(CamScroll):
     def look_at(self, pos):
         self.camera.offset.xy = [pos[0] - self.screen.get_width() // 2, pos[1] - self.screen.get_height() // 2]
 
-    def set_text(self, txt: str):
-        self.text = txt
-
     def go_to(self, pos, duration=1000):
-
-        self.start = pygame.time.get_ticks()
-        self.duration = duration
 
         if not duration:
             self.looking_at = pos
@@ -252,9 +234,9 @@ class Auto(CamScroll):
             pos[0] - self.looking_at[0]
         )
 
-        distx, disty = abs(pos[0] - self.looking_at[0]), abs(pos[1] - self.looking_at[1])
-        self.dx = math.cos(angle) * abs(distx / (duration / 20 * math.cos(angle)))
-        self.dy = math.sin(angle) * abs(disty / (duration / 20 * math.sin(angle)))
+        dist_x, dist_y = abs(pos[0] - self.looking_at[0]), abs(pos[1] - self.looking_at[1])
+        self.dx = math.cos(angle) * abs(dist_x / (duration / 30 * math.cos(angle)))
+        self.dy = math.sin(angle) * abs(dist_y / (duration / 30 * math.sin(angle)))
         self.delay_mvt = pygame.time.get_ticks()
         self.target = pos
 
@@ -263,13 +245,6 @@ class Auto(CamScroll):
     def draw(self):
         super(Auto, self).draw()
 
-        # Bottom Cinema Bar
-        b_pos = self.screen.get_height() - (self.cinema_bar.get_height() - abs(self.bar_y))
-        self.screen.blit(self.cinema_bar, (0, b_pos))
-        self.screen.blit(self.cinema_bar, (0, self.bar_y))
-        render = self.font.render(self.text, True, (255, 255, 255))
-        if self.bar_y > 0:
-            self.screen.blit(render, render.get_rect(center=(self.W // 2, self.H - self.cinema_bar.get_height() // 2)))
         """ Debug:
         pygame.draw.line(self.screen, (255, 255, 255), (0, 0), (self.W, self.H))
         pygame.draw.line(self.screen, (255, 255, 255), (self.W, 0), (0, self.H))
@@ -281,7 +256,7 @@ class Auto(CamScroll):
         self.target_zoom_out = value
         self.zooming_out = True
         self.start_time_zoom_out = pygame.time.get_ticks()
-        self.d_fov = 20 * (self.target_zoom_out - self.fov) / duration
+        self.d_fov = 30 * (self.target_zoom_out - self.fov) / duration
         self.delay_zmo = self.start_time_zoom_out
 
     def scroll(self):
@@ -292,24 +267,18 @@ class Auto(CamScroll):
         """
         dt = pygame.time.Clock().tick(35) / 1000
 
-        if self.bar_y < 0:
-            self.bar_y += self.bar_speed * dt
-
-            # Top Cinema Bar
-        self.screen.blit(self.cinema_bar, (0, self.bar_y))
-
         self.look_at(self.looking_at)
 
         if self.moving_cam:
 
             dx, dy = self.target[0] - self.looking_at[0], self.target[1] - self.looking_at[1]
-            if pygame.time.get_ticks() - self.delay_mvt > 20:
+            if pygame.time.get_ticks() - self.delay_mvt > 30:
                 self.delay_mvt = pygame.time.get_ticks()
                 if abs(dx) < abs(self.dx) or abs(dy) < abs(self.dy):
-                    self.looking_at += vec(dx, dy)
+                    self.looking_at += vec(dx, dy) * dt * 35
 
                 else:
-                    self.looking_at += vec(self.dx, self.dy)
+                    self.looking_at += vec(self.dx, self.dy) * dt * 35
 
             if -3 < dx < 3 and -3 < dy < 3:
                 self.moving_cam = False
@@ -323,6 +292,6 @@ class Auto(CamScroll):
                 self.zooming_out = False
                 self.fov = self.target_zoom_out
 
-            if pygame.time.get_ticks() - self.delay_zmo > 20:
+            if pygame.time.get_ticks() - self.delay_zmo > 30:
                 self.delay_zmo = pygame.time.get_ticks()
                 self.fov += self.d_fov
