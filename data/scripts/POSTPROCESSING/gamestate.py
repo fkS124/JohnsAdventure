@@ -10,6 +10,7 @@ from random import gauss
 from ..PLAYER.player import *
 from ..PLAYER.inventory import *
 from ..utils import resource_path, load, l_path, flip_vertical, flip_horizontal
+from ..AI.enemy import Enemy
 from ..AI.death_animator import DeathManager
 from .lights_manager import LightManager
 
@@ -125,6 +126,13 @@ class GameState:
             obj_rect.w -= 70
             obj_rect.h -= 115
 
+        if isinstance(moving_object, Enemy):
+            obj_rect.topleft += self.scroll
+            if hasattr(moving_object, "d_collision"):
+                obj_rect.topleft += pg.Vector2(*moving_object.d_collision[:2])
+                obj_rect.size = moving_object.d_collision[2:]
+            vel = (copy(moving_object.BASE_VEL)/4, copy(moving_object.BASE_VEL)/4)
+
         if type(col_obj) is not pg.Rect:
             col_rect = copy(col_obj.rect)
             if hasattr(col_obj, "IDENTITY"):
@@ -148,6 +156,13 @@ class GameState:
 
         # colliding points
         points = self.points_side[side](obj_rect, vel)
+        if isinstance(moving_object, Enemy):
+            points.extend([
+                obj_rect.topleft + pg.Vector2(-vel[0], -vel[1]),
+                obj_rect.topright + pg.Vector2(vel[0], -vel[1]),
+                obj_rect.bottomleft + pg.Vector2(-vel[0], vel[1]),
+                obj_rect.bottomright + pg.Vector2(vel[0], vel[1]),
+            ])
 
         changed = False  # -> gets if a change has been done
         for point in points:
