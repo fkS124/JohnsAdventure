@@ -10,7 +10,7 @@ from random import gauss
 # from .PLAYER.items import Chest
 from .PLAYER.player import *
 from .PLAYER.inventory import *
-from .AI.enemies import Dummy, ShadowDummy
+from .AI.enemies import Dummy, ShadowDummy, Guardian, Goblin
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import Chest
@@ -450,7 +450,9 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
-            ShadowDummy(self, self.screen, (550, 300), self.player, hp=150, xp_drop=125)
+            #ShadowDummy(self, self.screen, (550, 300), self.player, hp=150, xp_drop=125),
+            Guardian(self, self.screen, (700, 400), self.player, hp=150, xp_drop=125),
+            Goblin(self, self.screen, (820, 300), self.player, hp=150, xp_drop=125)
         ]
 
         self.spawn = {

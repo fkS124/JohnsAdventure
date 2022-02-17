@@ -19,6 +19,7 @@ class Dummy(Enemy):
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
+        self.damage = 10
 
 
 class ShadowDummy(Enemy):
@@ -50,3 +51,60 @@ class ShadowDummy(Enemy):
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
+        self.damage = 10
+
+class Guardian(Enemy):
+    def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 100,
+                 xp_drop=160):
+        super().__init__(level_instance, screen, pos, player, hp=100, xp_drop=210,
+                         custom_rect=[25, 50, 29 * 2, 45 * 2 + 25],
+                         enemy_type="normal", vel=2)
+
+        self.health_bar_width = 45 * 2
+
+        self.load_animation(
+            resource_path("data/sprites/guardian_sheet.png"),
+            idle="static",
+            hit_anim="animated",
+            walk_anim="animated",
+            attack_anim="animated",
+            idle_coo=[0, 0, 45, 34, 1, 5],
+            walk_d_coo=[0, 0, 45, 34, 5, 5],
+            walk_l_coo=[0, 0, 45, 34, 5, 5],
+            walk_r_coo=[0, 0, 45, 34, 5, 5],
+            walk_u_coo=[0, 0, 45, 34, 5, 5],
+            attack_d_coo=[0, 34, 45, 34, 5, 5],
+            attack_l_coo=[0, 34, 45, 34, 5, 5],
+            attack_r_coo=[0, 34, 45, 34, 5, 5],
+            attack_u_coo=[0, 34, 45, 34, 5, 5],
+        )
+        self.custom_center = 250
+        self.xp_drop = self.xp_available = xp_drop
+        self.damage = 10
+
+
+class Goblin(Enemy):
+    def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 100,
+                 xp_drop=160):
+        super().__init__(level_instance, screen, pos, player, hp=100, xp_drop=210,
+                         custom_rect=[15, 35, 17 * 2, 25 * 2 + 10],
+                         enemy_type="normal", vel=2)
+
+        self.load_animation(
+            resource_path("data/sprites/goblin_template.png"),
+            idle="static",
+            hit_anim="animated",
+            walk_anim="animated",
+            attack_anim="animated",
+            idle_coo=[0, 0, 17, 25, 1, 4],
+            walk_d_coo=[0, 0, 17, 25, 5, 4],
+            walk_l_coo=[0, 0, 17, 25, 5, 4],
+            walk_r_coo=[0, 0, 17, 25, 5, 4],
+            walk_u_coo=[0, 0, 17, 25, 5, 4],
+            attack_d_coo=[0, 25, 17, 25, 5, 4],
+            attack_l_coo=[0, 25, 17, 25, 5, 4],
+            attack_r_coo=[0, 25, 17, 25, 5, 4],
+            attack_u_coo=[0, 25, 17, 25, 5, 4],
+        )
+        self.custom_center = 250
+        self.xp_drop = self.xp_available = xp_drop

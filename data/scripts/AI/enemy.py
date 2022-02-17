@@ -143,6 +143,7 @@ class Enemy:
         self.knock_back_vel = pg.Vector2(0, 0)  # movement vel
         self.knock_back_friction = pg.Vector2(0, 0)  # slowing down
         self.knock_back_vel_y = 0  # jumpy effect vel
+        self.health_bar_width = None
 
         # ATTACK
         self.attacking = False  # currently attacking -> True
@@ -152,6 +153,7 @@ class Enemy:
             "down": self.attack_down,
             "up": self.attack_up
         }
+        self.damage = 0
 
     def load_animation(self,
                        sheet_path: str,
@@ -335,22 +337,30 @@ class Enemy:
 
         """Draw a life bar if the enemy is not at its max hp"""
         if self.MAX_HP != self.hp:
+            width = self.current_sprite.get_width() if self.health_bar_width is None else self.health_bar_width
+
+            curr_x = self.pos[0] if self.health_bar_width is None else self.pos[0] + 15  # we need / 3 here
+
             # Outline
             pg.draw.rect(
                 self.screen,
                 (0, 0, 0),
                 [
-                    self.pos[0],
+                    curr_x,
                     self.pos[1] - 12,
-                    self.current_sprite.get_width(), 10
+                    width, 10
                 ],
                 border_radius=25
             )
 
             # Health Bar
-            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 11,
-                                                    int((self.current_sprite.get_width() / self.MAX_HP) * self.show_hp)
-                                                    - 2, 8], border_radius=25)
+            pg.draw.rect(self.screen, (255, 0, 0),
+                         [
+                             curr_x,
+                             self.pos[1] - 11,
+                             int((width / self.MAX_HP) * self.show_hp) - 2, 8
+                         ],
+                         border_radius=25)
 
             # pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
@@ -402,16 +412,43 @@ class Enemy:
                 directions.remove(blocked_direction)
                 self.direction = choice(directions)
 
-    def move(self):
+    def check_for_hit(self, dt):
+        """
+
+            Dealing damage to the player.
+
+        """
+
+        hit_box = self.current_sprite.get_width()//2, self.current_sprite.get_height()
+        hit_dict = {
+            "up": pg.Rect(self.rect.midtop, hit_box),
+
+            "down": pg.Rect(self.rect.midbottom, hit_box),
+
+            "left": pg.Rect(self.rect.midleft, hit_box),
+
+            "right": pg.Rect(self.rect.midright, hit_box)
+        }
+
+        pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction], 15)
+
+        if hit_dict[self.direction].colliderect(self.player.rect):
+            if self.player.health >= 0:
+                print("hit john", self.player.health)
+                self.player.health -= self.damage
+
+    def move(self, dt):
         # ___ CHECK ENEMY TYPE ____
         if self.enemy_type != "static":
 
             enemy_speed = 1
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 300 and not self.attacking:
+            if pg.Vector2(self.rect.topleft + self.scroll).distance_to(
+                    pg.Vector2(self.player.rect.topleft)) < 300 and not self.attacking:
                 self.moving = True
 
                 try:
-                    vel = ((pg.Vector2(self.player.rect.topleft)-pg.Vector2(self.rect.topleft+self.scroll)).normalize() *
+                    vel = ((pg.Vector2(self.player.rect.topleft) - pg.Vector2(
+                        self.rect.topleft + self.scroll)).normalize() *
                            self.BASE_VEL)
                     if vel[0] < 0:
                         self.direction = "left"
@@ -434,21 +471,19 @@ class Enemy:
             pl_rect.w -= 70
             pl_rect.h -= 115
 
-            if (pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 60 or col_rect.colliderect(pl_rect))and not self.attacking:
-                """
-                     I want the enemy to stop moving for N milliseconds,  play the attack animation ONCE
-                     and after that it goes back to walking
-                     
-                     Then we will deal with attacking the player
-                """
+            if (pg.Vector2(self.rect.topleft + self.scroll).distance_to(
+                    pg.Vector2(self.player.rect.topleft)) < 60 or col_rect.colliderect(pl_rect)) and not self.attacking:
                 self.moving, self.attacking, self.idling = False, True, False
+                # Attack John!
+                self.check_for_hit(dt)
                 self.just_attacked = pg.time.get_ticks()
                 self.id_anim = 0
                 enemy_speed = 0
-                # attack !
+
 
             # Start roaming
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) >= 300 and not self.attacking:
+            if pg.Vector2(self.rect.topleft + self.scroll).distance_to(
+                    pg.Vector2(self.player.rect.topleft)) >= 300 and not self.attacking:
                 #  Don't ask why we are doing this
                 # 'its just works' until we come at with a enemy roaming feature
 
@@ -470,15 +505,15 @@ class Enemy:
         else:
             self.moving = False
 
-    def behavior(self):
-        self.move()
+    def behavior(self, dt):
+        self.move(dt)
 
-    def logic(self):
+    def logic(self, dt):
 
         """Here we pass all the behavior of the enemy, movement,
         attacks, spells..."""
 
-        self.behavior()
+        self.behavior(dt)
         self.update_states()
         self.animate()
 
@@ -517,7 +552,7 @@ class Enemy:
 
         # print(self.direction, self.moving, self.idling, self.move_ability)
         # call logic method
-        self.logic()
+        self.logic(dt)
 
         # ___SHADOW TYPE MONSTERS GET A OUTLINE/PARTICLES__
         if self.enemy_type == "shadow":
