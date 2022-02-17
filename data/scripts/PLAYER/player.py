@@ -15,7 +15,6 @@ from .player_sub.animation_handler import animation_handing, update_attack
 
 from .player_sub.dash import start_dash, update_dash
 
-
 import pygame.mask
 
 from ..sound_manager import SoundManager
@@ -69,11 +68,8 @@ class Player:
 
         # --------------- ANIMATION
         self.sheet = l_path('data/sprites/PLAYER/john.png')
-        
-
-        # Why are you loading the animation? the weapons supposed to load to this value.
         self.default_attack_sheet = l_path('data/sprites/PLAYER/weapons/sword_sprite_reference.png')
-        
+
         self.lvl_up_ring = [scale(get_sprite(self.sheet, 701 + i * 27, 29, 27, 21), 4) for i in range(5)]
         self.ring_lu = False
         self.current_frame_ring = self.lvl_up_ring[0]
@@ -115,7 +111,7 @@ class Player:
 
         # For the animation
         self.index_attack_animation = self.delay_attack_animation = 0
-        
+
         self.restart_animation = True
         self.attacking_frame = self.anim['left_a_2'][self.index_attack_animation]
 
@@ -125,10 +121,10 @@ class Player:
         # max_hp * hp
         self.level = 1
         self.health = 200
-        self.damage = 10
+        self.damage = 3
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
-        self.xp = 0 # Will soon be load from json
+        self.xp = 0  # Will soon be loaded from json
 
         # Code for Dash Ability goes here
         self.dash_width = 200  # the pixel width for bars
@@ -141,7 +137,7 @@ class Player:
         self.current_dashing_frame = None
 
         # Levelling # XP
-        self.experience = 0 # Will get data from json soon
+        self.experience = 0  # Will get data from json soon
         self.experience_width = 0  # This is for the UI
         self.level_index = 1
 
@@ -167,11 +163,8 @@ class Player:
         # ticks value in the future
         self.last_attacking_click = 0
 
-        # still to be determined
-        self.attack_cooldown = 350
-
-        # still to be determined  This is the cooldown of the last attack
-        self.attack_speed = 850
+        self.attack_cooldown = 475
+        self.attack_speed = 110
 
         self.max_combo_multiplier = 1.025
         self.last_combo_hit_time = 0
@@ -179,14 +172,14 @@ class Player:
         self.attacking = False
         self.attacking_hitbox = None
         # reversed when up or down -> (100, 250)
-        self.attacking_hitbox_size = (self.rect.height, self.rect.width)
+        self.attacking_hitbox_size = (self.rect.height // 2, self.rect.width // 2)
         self.rooms_objects = []
 
         # animation for interaction purposes
         self.UI_interaction_anim: list[InteractionName] = []
 
         self.interacting_with = None
-    
+
     def handler(self, dt, exit_rects):
         if not self.InteractPoint:
             self.interacting_with = None
@@ -197,21 +190,20 @@ class Player:
             self.rect.y - self.camera.offset.y - 48
         )
         m = p.mouse.get_pos()
-        
-        
-        leveling(self) # Doesnt work
+
+        leveling(self)  # Doesnt work
 
         self.controls(player_p)
-        
+
         check_for_interaction(self, exit_rects)
-        update_ui_animations(self, dt) # works 
+        update_ui_animations(self, dt)  # works
         animation_handing(self, dt, m, player_p)
-        
+
         if self.camera_status != "auto":
             movement(self)
 
         # Update the camera: ALWAYS LAST LINE
-        update_camera_status(self) # works
+        update_camera_status(self)  # works
         self.camera.scroll()
 
     def update(self, dt, exit_rects):
@@ -280,9 +272,9 @@ class Player:
                             self.InteractPoint = 0
                             self.Interactable = self.is_interacting = False
                             self.npc_catalog.reset()
-                            
+
                             self.Left = self.Right = False
-                            
+
                         else:  # else do the usual things
                             self.Interactable = True
                             check_content(self, pos)

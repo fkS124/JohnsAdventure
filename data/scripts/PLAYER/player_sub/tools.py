@@ -155,30 +155,25 @@ key_translator = {
 
 
 def movement(player):
-    if not player.inventory.show_menu:
-        if not player.attacking:  # if he is not attacking, allow him to move
-            ''' Movement '''
-            if player.Up and player.move_ability["up"]:
-                player.rect.y -= player.velocity[1]
-                dash_vel = -25
-                player.direction = "up"
-            elif player.Down and player.move_ability["down"]:
-                player.rect.y += player.velocity[1]
-                dash_vel = 25
-                player.direction = "down"
-            if player.Left and player.move_ability["right"]:
-                player.rect.x -= player.velocity[0]
-                dash_vel = -25 if not player.Down else 25  # Diagonal
-                player.direction = "right"
-            elif player.Right and player.move_ability["left"]:
-                player.rect.x += player.velocity[0]
-                dash_vel = 25 if not player.Up else -25  # Diagonal
-                player.direction = "left"
-        else:  # He is attacking
-            dash_vel = 0
+    """ Allowing the player to move when he is not attacking or checking inventory """
+    if player.inventory.show_menu or player.attacking:
+        return
+
+    if player.Up and player.move_ability["up"]:
+        player.rect.y -= player.velocity[1]
+        player.direction = "up"
+    elif player.Down and player.move_ability["down"]:
+        player.rect.y += player.velocity[1]
+        player.direction = "down"
+    if player.Left and player.move_ability["right"]:
+        player.rect.x -= player.velocity[0]
+        player.direction = "right"
+    elif player.Right and player.move_ability["left"]:
+        player.rect.x += player.velocity[0]
+        player.direction = "left"
 
     # This stops the player animation from running, his movement as well
-    if not player.Up and not player.Down and not player.Right and not player.Left:
+    if not (True in (player.Up, player.Down, player.Right, player.Left)):
         player.walking = False
 
 
@@ -301,7 +296,7 @@ def attack(player, pos):
 
     else:
         # if its time to show the next combo, make sure player isn't moving else cancel
-        if player.next_combo_available and True not in [player.Up, player.Down, player.Left, player.Right]:
+        if player.next_combo_available:
             if click_time - player.last_attacking_click > player.attack_speed:
                 player.attacking = False
                 player.current_combo = 0

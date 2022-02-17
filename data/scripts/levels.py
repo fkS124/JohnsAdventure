@@ -394,7 +394,7 @@ class JohnsGarden(GameState):
                                  start_type="hill_side_outer_rev"),
         ]
 
-        print(F"HOLY F* {len(self.objects)} SURFACES!11")
+        # print(F"HOLY F* {len(self.objects)} SURFACES!11")
 
         self.exit_rects = {
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
@@ -448,7 +448,8 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
-            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y))
+            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
+            ShadowDummy(self, self.screen, (550, 300), self.player, hp=150, xp_drop=125)
         ]
 
         self.spawn = {

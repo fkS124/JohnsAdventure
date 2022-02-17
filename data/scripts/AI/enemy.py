@@ -35,10 +35,12 @@ class Enemy:
         self.level = level_instance
         self.scroll = self.level.scroll
         self.BASE_VEL = vel
-        self.vel = {"left": pg.Vector2(-1, 0).normalize() * self.BASE_VEL,
-                    "right": pg.Vector2(1, 0).normalize() * self.BASE_VEL,
-                    "down": pg.Vector2(0, 1).normalize() * self.BASE_VEL,
-                    "up": pg.Vector2(0, -1).normalize() * self.BASE_VEL}
+        self.vel = {
+            "left": pg.Vector2(-1, 0).normalize() * self.BASE_VEL,
+            "right": pg.Vector2(1, 0).normalize() * self.BASE_VEL,
+            "down": pg.Vector2(0, 1).normalize() * self.BASE_VEL,
+            "up": pg.Vector2(0, -1).normalize() * self.BASE_VEL
+        }
 
         self.enemy_type = enemy_type
 
@@ -331,12 +333,21 @@ class Enemy:
         """Draw a life bar if the enemy is not at its max hp"""
         if self.MAX_HP != self.hp:
             # Outline
-            pg.draw.rect(self.screen, (0, 0, 0), [self.pos[0], self.pos[1] - 12, self.current_sprite.get_width(), 10])
+            pg.draw.rect(
+                self.screen,
+                (0, 0, 0),
+                [
+                    self.pos[0],
+                    self.pos[1] - 12,
+                    self.current_sprite.get_width(), 10
+                ],
+                border_radius=25
+            )
 
             # Health Bar
-            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 12,
+            pg.draw.rect(self.screen, (255, 0, 0), [self.pos[0], self.pos[1] - 11,
                                                     int((self.current_sprite.get_width() / self.MAX_HP) * self.show_hp)
-                                                    - 2, 8])
+                                                    - 2, 8], border_radius=25)
 
             # pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
@@ -387,8 +398,8 @@ class Enemy:
         if self.enemy_type != "static":
 
             enemy_speed = 1
-
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 500:
+            print(pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)))
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 300:
                 self.moving = True
 
                 try:
@@ -404,12 +415,20 @@ class Enemy:
                 except ValueError:
                     pass
 
-            elif pg.Vector2(self.pos).distance_to(pg.Vector2(self.player.rect.topleft - self.scroll)) < 100:
-                pass
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 60:
 
+                """
+                     I want the enemy to stop moving for N milliseconds,  play the attack animation ONCE
+                     and after that it goes back to walking
+                     
+                     Then we will deal with attacking the player
+                """
+                self.moving, self.attacking = False, True
+                enemy_speed = 0
                 # attack !
 
-            else:
+            # Start roaming
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) >= 300:
                 #  Don't ask why we are doing this
                 # 'its just works' until we come at with a enemy roaming feature
 

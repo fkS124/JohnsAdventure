@@ -40,7 +40,11 @@ class ShadowDummy(Enemy):
             walk_d_coo=[0, 25, 29, 24, 4, 4],
             walk_l_coo=[0, 0, 29, 24, 4, 4],
             walk_r_coo=[0, 25, 29, 24, 4, 4],
-            walk_u_coo=[0, 0, 29, 24, 4, 4]
+            walk_u_coo=[0, 0, 29, 24, 4, 4],
+            attack_d_coo=[0, 50, 29, 24, 4, 4],
+            attack_l_coo=[0, 50, 29, 24, 4, 4],
+            attack_r_coo=[0, 75, 29, 24, 4, 4],
+            attack_u_coo=[0, 75, 29, 24, 4, 4],
         )
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop

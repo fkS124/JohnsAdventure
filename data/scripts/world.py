@@ -51,7 +51,7 @@ class GameManager:
     # CONSTS
 
     DISPLAY = pg.display.set_mode((1280, 720),
-                                  flags=pg.SCALED)  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+                                )  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
@@ -180,6 +180,7 @@ class GameManager:
 
         if self.debug:
             self.debugger.update()
+
 
         pg.display.update()
 

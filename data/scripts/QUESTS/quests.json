@@ -12,10 +12,10 @@
         "Go back to the house": "TYPE:Reach LEVEL:kitchen"
       },
       "completed": {
-        "Talk to Cynthia in the kitchen": false,
-        "Talk to manos in the training field": false,
-        "Kill the dummies": false,
-        "Talk back to manos": false,
+        "Talk to Cynthia in the kitchen": true,
+        "Talk to manos in the training field": true,
+        "Kill the dummies": true,
+        "Talk back to manos": true,
         "Go find Cynthia in school": false,
         "Go back to the house": false
       }
