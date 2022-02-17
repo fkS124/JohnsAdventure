@@ -69,6 +69,8 @@ class Enemy:
         self.show_life_bar = True
 
         self.dmg = 0  # I will config this later
+        self.just_attacked = 0
+        self.attacking_delay = 1500  # the N ms you were talking about
 
         # How powerful the enemy is
         self.intensiveness = intensiveness
@@ -212,10 +214,10 @@ class Enemy:
         if attack_anim in ["static", "animated"] and None not in [attack_d_coo, attack_l_coo, attack_r_coo,
                                                                   attack_u_coo]:
             self.animating["attack"][0] = True
-            self.attack_down = self.load_sheet(walk_d_coo)
-            self.attack_right = self.load_sheet(walk_r_coo)
-            self.attack_up = self.load_sheet(walk_u_coo)
-            self.attack_left = self.load_sheet(walk_l_coo)
+            self.attack_down = self.load_sheet(attack_d_coo)
+            self.attack_right = self.load_sheet(attack_r_coo)
+            self.attack_up = self.load_sheet(attack_u_coo)
+            self.attack_left = self.load_sheet(attack_l_coo)
 
         # updates the animations in the dicts
         self.walk_anim_manager = {
@@ -249,6 +251,7 @@ class Enemy:
         reusable and modifiable."""
 
         for key in self.animating:
+
             if self.animating[key][0]:  # check if an animation is loaded
                 val = self.animating[key]
                 if getattr(self, val[1]):
@@ -377,8 +380,14 @@ class Enemy:
             return
 
         if self.attacking:
-            self.moving = False
-            self.idling = False
+            if pg.time.get_ticks() - self.just_attacked > self.attacking_delay:
+                self.attacking = False
+                self.moving = True
+                self.idling = False
+            else:
+                self.moving = False
+                self.idling = False
+            return
 
         if self.moving:
             self.idling = False
@@ -398,8 +407,7 @@ class Enemy:
         if self.enemy_type != "static":
 
             enemy_speed = 1
-            print(pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)))
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 300:
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 300 and not self.attacking:
                 self.moving = True
 
                 try:
@@ -410,25 +418,37 @@ class Enemy:
                     else:
                         self.direction = "right"
 
-                    self.x += vel[0]
-                    self.y += vel[1]
+                    self.x += vel[0] if self.move_ability[self.direction] else 0
+                    self.y += vel[1] if self.move_ability["up" if vel[1] < 0 else "down"] else 0
                 except ValueError:
                     pass
 
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 60:
+            # get our rect
+            col_rect = copy(self.rect)
+            col_rect.topleft += self.scroll
+            col_rect.topleft += pg.Vector2(*self.d_collision[:2])
+            col_rect.size = self.d_collision[2:]
+            # get player's rect
+            pl_rect = copy(self.player.rect)
+            pl_rect.topleft -= pg.Vector2(15, -70)
+            pl_rect.w -= 70
+            pl_rect.h -= 115
 
+            if (pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) < 60 or col_rect.colliderect(pl_rect))and not self.attacking:
                 """
                      I want the enemy to stop moving for N milliseconds,  play the attack animation ONCE
                      and after that it goes back to walking
                      
                      Then we will deal with attacking the player
                 """
-                self.moving, self.attacking = False, True
+                self.moving, self.attacking, self.idling = False, True, False
+                self.just_attacked = pg.time.get_ticks()
+                self.id_anim = 0
                 enemy_speed = 0
                 # attack !
 
             # Start roaming
-            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) >= 300:
+            if pg.Vector2(self.rect.topleft+self.scroll).distance_to(pg.Vector2(self.player.rect.topleft)) >= 300 and not self.attacking:
                 #  Don't ask why we are doing this
                 # 'its just works' until we come at with a enemy roaming feature
 

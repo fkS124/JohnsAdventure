@@ -47,7 +47,8 @@ class PlayerRoom(GameState):
             Rect(10, 90, 430, 360),
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
-            Rect(36, 400, 77, 94)
+            Rect(36, 400, 77, 94),
+            ShadowDummy(self, self.screen, (600, 600), self.player)
         ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
