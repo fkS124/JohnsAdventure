@@ -5,8 +5,8 @@ import pygame.math
 
 from .dash import update_dash
 
-
 vec = pygame.math.Vector2
+
 
 def animate_level_up_ring(player):
     """
@@ -114,9 +114,15 @@ def set_looking(player, dir_: str, pos):
 
 def user_interface(player, m, player_pos, dt):
     if player.camera_status != "auto":
+
         # Health bar
-        p.draw.rect(player.screen, (255, 0, 0),
-                    p.Rect(player.hp_box_rect.x + 10, player.hp_box_rect.y + 10, player.health, 40))
+        p.draw.rect(player.screen, player.health_colours['normal'],
+            p.Rect(
+                player.hp_box_rect.x + 10,
+                player.hp_box_rect.y + 10,
+                int(player.health / player.health_ratio),
+                40)
+        )
 
         # Dash Cool down bar
         p.draw.rect(player.screen, (0, 255, 0),

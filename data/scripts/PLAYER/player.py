@@ -28,6 +28,7 @@ from ..QUESTS.quest_ui import QuestUI
 
 p.font.init()
 debug_font = p.font.Font(resource_path("data/database/menu-font.ttf"), 12)
+vec = p.math.Vector2
 
 
 class Player:
@@ -120,8 +121,15 @@ class Player:
         # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width /
         # max_hp * hp
         self.level = 1
-        self.health = 200
-        self.damage = 3
+        self.health = 20
+        self.health_ratio = self.health / 200
+        self.health_target = self.health  # for the enemies
+        self.health_colours = {
+            "normal": (255, 0, 0),
+            "health_gen": (0, 255, 0),
+            "attacked": (255, 255, 0)
+        }
+        self.damage = 12
         self.endurance = 15
         self.critical_chance = 0.051  # The critical change the player has gathered without the weapon
         self.xp = 0  # Will soon be loaded from json
@@ -177,8 +185,30 @@ class Player:
 
         # animation for interaction purposes
         self.UI_interaction_anim: list[InteractionName] = []
-
         self.interacting_with = None
+
+    def handle_health(self, dt):
+        if self.health_target > self.health:
+            self.health += 1  # delta time goes here
+            health_bar = p.Rect(*self.hp_box_rect.topleft + vec(10, 10), int(self.health / self.health_ratio), 40)
+            difference = int((self.health_target - self.health) / self.health_ratio) - 10
+            transition_bar = p.Rect(*health_bar.topright - vec(20, 0), difference, 40)
+            p.draw.rect(self.screen, self.health_colours['health_gen'], transition_bar, 40)
+
+        if self.health > 20 - 1:
+            self.health = 20
+
+    def handle_damage(self, dt):
+        if self.health_target < self.health:
+            self.health -= 1  # delta time goes here
+            health_bar = p.Rect(*self.hp_box_rect.topleft + vec(10, 10), int(self.health / self.health_ratio), 40)
+            difference = int((self.health - self.health_target) / self.health_ratio)
+            transition_bar = p.Rect(*health_bar.topright, difference, 40)
+            p.draw.rect(self.screen, self.health_colours['attacked'], transition_bar, 40)
+
+        if self.health <= 0:
+            print("JOHN NOOOO")
+            self.health = 0
 
     def handler(self, dt, exit_rects):
         if not self.InteractPoint:
@@ -201,10 +231,13 @@ class Player:
 
         if self.camera_status != "auto":
             movement(self)
+            self.handle_damage(dt)
+            self.handle_health(dt)
 
         # Update the camera: ALWAYS LAST LINE
         update_camera_status(self)  # works
         self.camera.scroll()
+
 
     def update(self, dt, exit_rects):
         # Function that handles everything :brain:
@@ -251,6 +284,10 @@ class Player:
 
                 case p.KEYDOWN:
                     match e.key:
+
+                        case p.K_F1:
+                            self.health_target += 20
+
                         case p.K_F12:
                             p.display.toggle_fullscreen()
                         case p.K_ESCAPE:

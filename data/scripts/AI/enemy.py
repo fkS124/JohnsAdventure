@@ -11,7 +11,7 @@ from types import coroutine
 import pygame as pg
 from random import choice
 from copy import copy
-from ..utils import load, get_sprite, scale, resource_path
+from ..utils import load, get_sprite, scale, resource_path, flip_vertical
 from .damage_popups import DamagePopUp
 from ..PLAYER.player import Player
 from ..particle_system import SmokeManager, DustManager, Shadow_Manager
@@ -29,7 +29,10 @@ class Enemy:
     as it can be a bit complicated sometimes."""
 
     def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player, hp: int = 100,
-                 xp_drop=int, custom_rect=None, enemy_type="normal", intensiveness=0, vel: int = 1):
+                 xp_drop=int, custom_rect=None, enemy_type="normal", intensiveness=0, vel: int = 1,
+                 up_hitbox=(0, 0), down_hitbox=(0, 0),
+                 right_hitbox=(0, 0), left_hitbox=(0, 0),
+                 ):
 
         self.IDENTITY = "ENEMY"
         self.level = level_instance
@@ -70,7 +73,7 @@ class Enemy:
 
         self.dmg = 0  # I will config this later
         self.just_attacked = 0
-        self.attacking_delay = 1500  # the N ms you were talking about
+        self.attacking_delay = 1500 # the N ms you were talking about
 
         # How powerful the enemy is
         self.intensiveness = intensiveness
@@ -92,6 +95,8 @@ class Enemy:
         self.id_anim = self.delay = 0
         self.hitted = False
         self.idling = False
+        self.hitbox_rect = None
+        self.status = ""  # Chasing, Roaming, Attacking
 
         # IMAGES & SPRITES MANAGEMENT
 
@@ -154,6 +159,12 @@ class Enemy:
             "up": self.attack_up
         }
         self.damage = 0
+        self.hitbox_data = {
+            "up": up_hitbox,
+            "down": down_hitbox,
+            "left": left_hitbox,
+            "right": right_hitbox,
+        }
 
     def load_animation(self,
                        sheet_path: str,
@@ -173,6 +184,7 @@ class Enemy:
                        attack_r_coo=None,
                        attack_u_coo=None,
                        attack_d_coo=None,
+                       flip_anim=False,  # I am too lazy to manually edit the drawings just for left side
                        ):
 
         """
@@ -207,7 +219,7 @@ class Enemy:
             self.walk_down = self.load_sheet(walk_d_coo)
             self.walk_right = self.load_sheet(walk_r_coo)
             self.walk_up = self.load_sheet(walk_u_coo)
-            self.walk_left = self.load_sheet(walk_l_coo)
+            self.walk_left = self.load_sheet(walk_l_coo, flip_anim)
 
         if death_anim in ["static", "animated"] and death_coo is not None:
             self.animating["death"][0] = True
@@ -219,7 +231,7 @@ class Enemy:
             self.attack_down = self.load_sheet(attack_d_coo)
             self.attack_right = self.load_sheet(attack_r_coo)
             self.attack_up = self.load_sheet(attack_u_coo)
-            self.attack_left = self.load_sheet(attack_l_coo)
+            self.attack_left = self.load_sheet(attack_l_coo, flip_anim)
 
         # updates the animations in the dicts
         self.walk_anim_manager = {
@@ -236,16 +248,25 @@ class Enemy:
             "up": self.attack_up
         }
 
-    def load_sheet(self, coo):
+    def load_sheet(self, coo, flip=False):
 
         """Load an animation sequence (of sprites) on a sprites,
         you obviously have to pass the coordinates of the sprites."""
 
         x, y, width, height = coo[:4]
         if coo[-1] != 0:  # check for scale
-            return [scale(get_sprite(self.sheet, x + width * i, y, width, height), coo[-1]) for i in range(coo[-2])]
+            if not flip:
+                return [scale(get_sprite(self.sheet, x + width * i, y, width, height), coo[-1]) for i in range(coo[-2])]
+            else:
+                return [
+                    flip_vertical(scale(get_sprite(self.sheet, x + width * i, y, width, height), coo[-1]))
+                    for i in range(coo[-2])
+                ]
         else:
-            return [get_sprite(self.sheet, x + width * i, y, width, height) for i in range(coo[-2])]
+            if not flip:
+                return [get_sprite(self.sheet, x + width * i, y, width, height) for i in range(coo[-2])]
+            else:
+                return [flip_vertical(get_sprite(self.sheet, x + width * i, y, width, height)) for i in range(coo[-2])]
 
     def animate(self):
 
@@ -282,6 +303,7 @@ class Enemy:
         self.hp -= ceil(value - self.endurance) if not endurance_ignorance else ceil(value)
         if self.hitted:
             self.id_anim = 0
+
         self.hitted = True
         # -> crit : dmg_type="crit" -> health ; dmg_type="health" ...
         if not endurance_ignorance:
@@ -289,6 +311,7 @@ class Enemy:
                                                   dmg_type=("default" if not crit else "crit")))
         else:
             self.damages_texts.append(DamagePopUp(self.screen, self.rect, ceil(value), dmg_type="health"))
+
         if self.hp <= 0:
             self.attackable = False
             self.dead = True
@@ -297,7 +320,6 @@ class Enemy:
         if knock_back is not None:
             self.knocked_back = True
             self.knock_back_vel = knock_back["vel"]
-
             self.knock_back_vel_y = knock_back["vel"].length() // 4
             self.knock_back_duration = knock_back["duration"]
             self.knock_back_friction = knock_back["friction"]
@@ -406,104 +428,135 @@ class Enemy:
 
     def switch_directions(self, last_direction="none", blocked_direction="none"):
         directions = ["left", "right", "up", "down"]
+        print(last_direction, blocked_direction)
         if last_direction != "none":
             directions.remove(last_direction)
             if blocked_direction == "none" and blocked_direction in directions:
                 directions.remove(blocked_direction)
                 self.direction = choice(directions)
 
-    def check_for_hit(self, dt):
+    def check_for_hit(self, dt, p_rect):
         """
 
             Dealing damage to the player.
 
         """
 
-        hit_box = self.current_sprite.get_width()//2, self.current_sprite.get_height()
+        enemy_s = self.current_sprite.get_width(), self.current_sprite.get_height()
+        hit_d = self.hitbox_data
+
         hit_dict = {
-            "up": pg.Rect(self.rect.midtop, hit_box),
+            "up": pg.Rect(
+                self.rect.midtop,
+                hit_d['up']
+            ),
 
-            "down": pg.Rect(self.rect.midbottom, hit_box),
+            "down": pg.Rect(
+                self.rect.midbottom,
+                hit_d['down']
+            ),
 
-            "left": pg.Rect(self.rect.midleft, hit_box),
+            "left": pg.Rect(
+                self.rect.midright - vec(enemy_s[0] + enemy_s[0] // 2, 0),
+                hit_d['left']
+            ),
 
-            "right": pg.Rect(self.rect.midright, hit_box)
+            "right": pg.Rect(
+                self.rect.midright - vec(enemy_s[0] // 2, 0),
+                hit_d['right']
+            ),
         }
 
-        pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction], 15)
+        pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
 
-        if hit_dict[self.direction].colliderect(self.player.rect):
-            if self.player.health >= 0:
-                print("hit john", self.player.health)
-                self.player.health -= self.damage
+        if hit_dict[self.direction].colliderect(p_rect):
+            self.player.health_target = self.player.health - self.damage
 
     def move(self, dt):
         # ___ CHECK ENEMY TYPE ____
         if self.enemy_type != "static":
 
             enemy_speed = 1
-            if pg.Vector2(self.rect.topleft + self.scroll).distance_to(
-                    pg.Vector2(self.player.rect.topleft)) < 300 and not self.attacking:
-                self.moving = True
 
-                try:
-                    vel = ((pg.Vector2(self.player.rect.topleft) - pg.Vector2(
-                        self.rect.topleft + self.scroll)).normalize() *
-                           self.BASE_VEL)
-                    if vel[0] < 0:
-                        self.direction = "left"
-                    else:
-                        self.direction = "right"
-
-                    self.x += vel[0] if self.move_ability[self.direction] else 0
-                    self.y += vel[1] if self.move_ability["up" if vel[1] < 0 else "down"] else 0
-                except ValueError:
-                    pass
-
-            # get our rect
+            # enemy rect
             col_rect = copy(self.rect)
             col_rect.topleft += self.scroll
             col_rect.topleft += pg.Vector2(*self.d_collision[:2])
             col_rect.size = self.d_collision[2:]
+
+            # Update rect data for hit detection ( wrong practice but the damage is huge )
+            self.hitbox_rect = col_rect
+            self.hitbox_rect.topleft -= self.scroll
+
+            # pg.draw.rect(self.screen, (255, 255, 255), self.hitbox_rect)
+            # pg.draw.rect(self.screen, (200, 200, 200), col_rect)
+
             # get player's rect
             pl_rect = copy(self.player.rect)
-            pl_rect.topleft -= pg.Vector2(15, -70)
+            pl_rect.topleft -= pg.Vector2(15, -70) + self.scroll
             pl_rect.w -= 70
             pl_rect.h -= 115
 
-            if (pg.Vector2(self.rect.topleft + self.scroll).distance_to(
-                    pg.Vector2(self.player.rect.topleft)) < 60 or col_rect.colliderect(pl_rect)) and not self.attacking:
-                self.moving, self.attacking, self.idling = False, True, False
-                # Attack John!
-                self.check_for_hit(dt)
-                self.just_attacked = pg.time.get_ticks()
-                self.id_anim = 0
-                enemy_speed = 0
+            # pg.draw.rect(self.screen, (100, 200, 200), pl_rect)
 
+            # -------- BOUND CHECKING ------
 
-            # Start roaming
-            if pg.Vector2(self.rect.topleft + self.scroll).distance_to(
-                    pg.Vector2(self.player.rect.topleft)) >= 300 and not self.attacking:
-                #  Don't ask why we are doing this
-                # 'its just works' until we come at with a enemy roaming feature
+            GET_DISTANCE = vec(col_rect.topleft).distance_to(vec(pl_rect.topleft))
 
-                if self.move_ability[self.direction]:
-                    match self.direction:
-                        case "down":
-                            self.y += enemy_speed
-                        case "up":
-                            self.y -= enemy_speed
-                        case "right":
-                            self.x += enemy_speed
-                        case "left":
-                            self.x -= enemy_speed
+            # Enemy must not be in the attacking state to move around
+            if not self.attacking:
+                # ROAM AROUND
+                self.status = "ROAMING"
 
+                if GET_DISTANCE >= 300:
+                    if self.move_ability[self.direction]:
+                        match self.direction:
+                            case "down":
+                                self.y += enemy_speed
+                            case "up":
+                                self.y -= enemy_speed
+                            case "right":
+                                self.x += enemy_speed
+                            case "left":
+                                self.x -= enemy_speed
+
+                        self.moving = True
+                    else:
+                        self.switch_directions(self.direction)
+                        self.moving = False
+
+                # CHASE THE PLAYER
+                elif GET_DISTANCE > 120:
+                    self.status = "CHASING"
                     self.moving = True
+                    try:
+                        vel = ((pg.Vector2(self.player.rect.topleft) - pg.Vector2(
+                            self.rect.topleft + self.scroll)).normalize() *
+                               self.BASE_VEL)
+                        if vel[0] < 0:
+                            self.direction = "left"
+                        else:
+                            self.direction = "right"
+
+                        self.x += vel[0] if self.move_ability[self.direction] else 0
+                        self.y += vel[1] if self.move_ability["up" if vel[1] < 0 else "down"] else 0
+                    except ValueError:
+                        pass
+
+                # HIT THE PLAYER
                 else:
-                    self.switch_directions(self.direction)
-                    self.moving = False
-        else:
-            self.moving = False
+                    self.status = "ATTACKING"
+                    self.moving, self.attacking, self.idling = False, True, False
+                    self.just_attacked = pg.time.get_ticks()
+                    self.id_anim = 0
+                    enemy_speed = 0
+                    # Attack John!
+                    self.check_for_hit(dt, pl_rect)
+                    self.moving = True
+            else:
+                self.moving = False
+
+            print(self.direction)
 
     def behavior(self, dt):
         self.move(dt)

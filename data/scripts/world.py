@@ -389,6 +389,9 @@ class Debugging:
                                 col_rect.size = obj.d_collision[2:]
                             pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
+                            if obj.IDENTITY == "ENEMY":
+                                self.draw_text(f"STATUS: {obj.status}", (255, 255, 255), obj.rect.topleft)
+
                 exit_rects = self.game.game_state.exit_rects
                 for exit_rect in exit_rects:
                     r = copy(exit_rects[exit_rect][0])

@@ -451,7 +451,8 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
             #ShadowDummy(self, self.screen, (550, 300), self.player, hp=150, xp_drop=125),
-            Guardian(self, self.screen, (700, 400), self.player, hp=150, xp_drop=125),
+            #
+            #Guardian(self, self.screen, (850, 200), self.player, hp=150, xp_drop=125),
             Goblin(self, self.screen, (820, 300), self.player, hp=150, xp_drop=125)
         ]
 

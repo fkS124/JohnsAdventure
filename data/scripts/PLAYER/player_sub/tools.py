@@ -242,8 +242,13 @@ def check_for_hitting(player):
             if obj.attackable:
                 if obj.rect is None or player.attacking_hitbox is None:  # prevent from errors due to unassigned hitbox
                     continue
-                if player.attacking_hitbox.colliderect(obj.rect):
+
+
+                print(obj.hitbox_rect)
+                if player.attacking_hitbox.colliderect(obj.hitbox_rect):
                     equipped_weapon = player.inventory.get_equipped("Weapon")
+
+                    #pygame.draw.line(player.screen, (255, 255, 255), obj.rect.topright, obj.rect.bottomleft)
 
                     # This is where it will play the object's hit sound NOT THE SWORD
                     player.sound_manager.play_sound("dummyHit")
