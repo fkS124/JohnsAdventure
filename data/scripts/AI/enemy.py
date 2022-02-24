@@ -428,12 +428,11 @@ class Enemy:
 
     def switch_directions(self, last_direction="none", blocked_direction="none"):
         directions = ["left", "right", "up", "down"]
-        print(last_direction, blocked_direction)
         if last_direction != "none":
             directions.remove(last_direction)
             if blocked_direction == "none" and blocked_direction in directions:
                 directions.remove(blocked_direction)
-                self.direction = choice(directions)
+        self.direction = choice(directions)
 
     def check_for_hit(self, dt, p_rect):
         """
@@ -519,11 +518,9 @@ class Enemy:
                                 self.x += enemy_speed
                             case "left":
                                 self.x -= enemy_speed
-
-                        self.moving = True
                     else:
                         self.switch_directions(self.direction)
-                        self.moving = False
+                    self.moving = True
 
                 # CHASE THE PLAYER
                 elif GET_DISTANCE > 120:
@@ -571,7 +568,6 @@ class Enemy:
             I believe this issue, a death screen and the cave level are left (hopefully) :pleading_eyes:
             
             """
-            print(self.direction)
 
     def behavior(self, dt):
         self.move(dt)
