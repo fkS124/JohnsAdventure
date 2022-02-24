@@ -556,6 +556,21 @@ class Enemy:
             else:
                 self.moving = False
 
+
+            """
+            
+            BUG: when enemy overlaps with any green rect, it's stuck forever inside the rect
+            
+            output of self.direct when enemy overlaps any rect
+            
+            none up
+            none down
+            none right
+            none left
+            
+            I believe this issue, a death screen and the cave level are left (hopefully) :pleading_eyes:
+            
+            """
             print(self.direction)
 
     def behavior(self, dt):

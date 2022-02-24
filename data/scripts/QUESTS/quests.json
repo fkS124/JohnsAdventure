@@ -16,7 +16,7 @@
         "Talk to manos in the training field": true,
         "Kill the dummies": true,
         "Talk back to manos": true,
-        "Go find Cynthia in school": false,
+        "Go find Cynthia in school": true,
         "Go back to the house": false
       }
     }

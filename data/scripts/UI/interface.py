@@ -2,6 +2,7 @@ import pygame as pg
 import json
 from ..utils import scale, resource_path, l_path, get_sprite
 
+
 class Interface:
 
     def __init__(self, screen, ui_background) -> None:
@@ -16,13 +17,13 @@ class Interface:
                 my_font.render(surface -> Pygame.Surface, 'text here' -> Str, position -> Tuple)
         
         '''
-        self.screen = screen # Screen surface is needed to blit the font surfaces
+        self.screen = screen  # Screen surface is needed to blit the font surfaces
 
         # We might need a more detailed font
         self.img = scale(l_path('data/scripts/UI/interaction_font.png'), 2)
 
         # The json will be switched soon
-        with open(resource_path('data/database/language.json')) as f: 
+        with open(resource_path('data/database/language.json')) as f:
             self.data = json.load(f);
 
         # Your sprite sheet must be absolute identical to this list
@@ -37,24 +38,24 @@ class Interface:
         # To get mathematically the width of the characters (assuming there are no gaps between them)
         character_width = self.img.get_width() // len(self.alphabet)
         character_height = self.img.get_height()
-        
+
         # Here contains the surfaces of the sprite sheet lexer
-        self.text = [get_sprite(self.img, character_width * x, 0, character_width, character_height) for x in range(len(self.alphabet))]
-        
-        self.current_gui_index = 0  
+        self.text = [get_sprite(self.img, character_width * x, 0, character_width, character_height) for x in
+                     range(len(self.alphabet))]
+
+        self.current_gui_index = 0
 
         self.timer = 0
 
         self.ui_bg = ui_background
-        self.pos = (screen.get_width() // 2 - 420, screen.get_height() // 2 + 110)
-        self.sentence_end = False 
+        self.pos = (screen.get_width() // 2 - 430, screen.get_height() // 2 + 110)
+        self.sentence_end = False
 
     def reset(self):
         '''
             Resets the browsing index
         '''
-        self.current_gui_index  =  -1  
-
+        self.current_gui_index = -1
 
     def _get_data(self, entity):
         '''
@@ -85,19 +86,19 @@ class Interface:
         """
 
         # Draw background UI
-        self.screen.blit(self.ui_bg, (155 , self.screen.get_height() // 2 + 80))
+        self.screen.blit(self.ui_bg, (155, self.screen.get_height() // 2 + 80))
 
         text = self._get_data(txt)
         self.timer += dt * 2
-        if self.timer > 0.060: #0.30 default delta time 
+        if self.timer > 0.060:  # 0.30 default delta time
             if self.current_gui_index < len(text):
                 self.current_gui_index += 1
                 # if text[self.current_gui_index] != ' ':  
                 #    self.sound.play()  <- This will soon be implented
             else:
                 # Something for the UI later on.
-                self.sentence_end = True 
-            # Reset the timer
+                self.sentence_end = True
+                # Reset the timer
             self.timer = 0
 
         # Renders the text based on the currect_gui_index
@@ -116,5 +117,5 @@ class Interface:
             x_gap += self.text[0].get_width() + 1
 
             if '\n' == t:
-                y_gap += self.text[0].get_height() + 5
+                y_gap += self.text[0].get_height() + 7
                 x_gap = 0  # Reset X position
