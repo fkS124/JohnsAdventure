@@ -157,12 +157,13 @@ class GameState:
         # colliding points
         points = self.points_side[side](obj_rect, vel)
         if isinstance(moving_object, Enemy):
-            points.extend([
-                obj_rect.topleft + pg.Vector2(-vel[0], -vel[1]),
-                obj_rect.topright + pg.Vector2(vel[0], -vel[1]),
-                obj_rect.bottomleft + pg.Vector2(-vel[0], vel[1]),
-                obj_rect.bottomright + pg.Vector2(vel[0], vel[1]),
-            ])
+            if moving_object.status == "chasing":
+                points.extend([
+                    obj_rect.topleft + pg.Vector2(-vel[0], -vel[1]),
+                    obj_rect.topright + pg.Vector2(vel[0], -vel[1]),
+                    obj_rect.bottomleft + pg.Vector2(-vel[0], vel[1]),
+                    obj_rect.bottomright + pg.Vector2(vel[0], vel[1]),
+                ])
 
         changed = False  # -> gets if a change has been done
         for point in points:
