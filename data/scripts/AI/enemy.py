@@ -73,7 +73,7 @@ class Enemy:
 
         self.dmg = 0  # I will config this later
         self.just_attacked = 0
-        self.attacking_delay = 1500 # the N ms you were talking about
+        self.attacking_delay = 1500  # the N ms you were talking about
 
         # How powerful the enemy is
         self.intensiveness = intensiveness
@@ -472,42 +472,41 @@ class Enemy:
             self.player.health_target = self.player.health - self.damage
 
     def move(self, dt):
+
+        # enemy rect
+        col_rect = copy(self.rect)
+        col_rect.topleft += self.scroll
+        col_rect.topleft += pg.Vector2(*self.d_collision[:2])
+        col_rect.size = self.d_collision[2:]
+
+        # Update rect data for hit detection ( wrong practice but the damage is huge )
+        self.hitbox_rect = col_rect
+        self.hitbox_rect.topleft -= self.scroll
+
+        # pg.draw.rect(self.screen, (255, 255, 255), self.hitbox_rect)
+        # pg.draw.rect(self.screen, (200, 200, 200), col_rect)
+
+        # get player's rect
+        pl_rect = copy(self.player.rect)
+        pl_rect.topleft -= pg.Vector2(15, -70) + self.scroll
+        pl_rect.w -= 70
+        pl_rect.h -= 115
+
+        # pg.draw.rect(self.screen, (100, 200, 200), pl_rect)
+
         # ___ CHECK ENEMY TYPE ____
         if self.enemy_type != "static":
 
-            enemy_speed = 1
-
-            # enemy rect
-            col_rect = copy(self.rect)
-            col_rect.topleft += self.scroll
-            col_rect.topleft += pg.Vector2(*self.d_collision[:2])
-            col_rect.size = self.d_collision[2:]
-
-            # Update rect data for hit detection ( wrong practice but the damage is huge )
-            self.hitbox_rect = col_rect
-            self.hitbox_rect.topleft -= self.scroll
-
-            # pg.draw.rect(self.screen, (255, 255, 255), self.hitbox_rect)
-            # pg.draw.rect(self.screen, (200, 200, 200), col_rect)
-
-            # get player's rect
-            pl_rect = copy(self.player.rect)
-            pl_rect.topleft -= pg.Vector2(15, -70) + self.scroll
-            pl_rect.w -= 70
-            pl_rect.h -= 115
-
-            # pg.draw.rect(self.screen, (100, 200, 200), pl_rect)
+            enemy_speed = self.BASE_VEL
 
             # -------- BOUND CHECKING ------
 
-            GET_DISTANCE = vec(col_rect.topleft).distance_to(vec(pl_rect.topleft))
+            GET_DISTANCE = vec(col_rect.center).distance_to(vec(pl_rect.center))
 
             # Enemy must not be in the attacking state to move around
             if not self.attacking:
-                # ROAM AROUND
-                self.status = "ROAMING"
-
                 if GET_DISTANCE >= 300:
+                    self.status, self.moving = "ROAMING", True
                     if self.move_ability[self.direction]:
                         match self.direction:
                             case "down":
@@ -520,21 +519,17 @@ class Enemy:
                                 self.x -= enemy_speed
                     else:
                         self.switch_directions(self.direction)
-                    self.moving = True
 
                 # CHASE THE PLAYER
-                elif GET_DISTANCE > 120:
-                    self.status = "CHASING"
-                    self.moving = True
+                elif GET_DISTANCE > 90:  # I need to switch this up by enemy's.attack_distance
+                    self.moving, self.status = True, "CHASING"
                     try:
-                        vel = ((pg.Vector2(self.player.rect.topleft) - pg.Vector2(
-                            self.rect.topleft + self.scroll)).normalize() *
-                               self.BASE_VEL)
-                        if vel[0] < 0:
-                            self.direction = "left"
-                        else:
-                            self.direction = "right"
-
+                        vel = (
+                                (
+                                  vec(self.player.rect.center) - vec(self.rect.center + self.scroll)
+                                ).normalize() * self.BASE_VEL
+                        )
+                        self.direction = "left" if vel[0] < 0 else "right"
                         self.x += vel[0] if self.move_ability[self.direction] else 0
                         self.y += vel[1] if self.move_ability["up" if vel[1] < 0 else "down"] else 0
                     except ValueError:
@@ -553,7 +548,6 @@ class Enemy:
             else:
                 self.moving = False
 
-
             """
             
             BUG: when enemy overlaps with any green rect, it's stuck forever inside the rect
@@ -568,6 +562,7 @@ class Enemy:
             I believe this issue, a death screen and the cave level are left (hopefully) :pleading_eyes:
             
             """
+            print(self.direction)
 
     def behavior(self, dt):
         self.move(dt)
@@ -591,6 +586,8 @@ class Enemy:
         if self.show_life_bar:
             if self.show_hp >= self.hp:
                 self.show_hp -= dt * 16 * abs((self.show_hp - self.hp) // 3 + 1)
+                # I believe I add the scratch here
+
             # Show the UI
             self.life_bar(scroll)
 

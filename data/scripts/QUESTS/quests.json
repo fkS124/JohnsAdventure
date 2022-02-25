@@ -1,7 +1,7 @@
 {
   "A new beginning": {
     "xp": 100,
-    "finished": false,
+    "finished": true,
     "content": {
       "steps": {
         "Talk to Cynthia in the kitchen": "TARGET:Cynthia TYPE:Interact LEVEL:kitchen",
@@ -17,7 +17,7 @@
         "Kill the dummies": true,
         "Talk back to manos": true,
         "Go find Cynthia in school": true,
-        "Go back to the house": false
+        "Go back to the house": true
       }
     }
   }

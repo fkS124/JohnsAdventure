@@ -131,7 +131,7 @@ class GameState:
             if hasattr(moving_object, "d_collision"):
                 obj_rect.topleft += pg.Vector2(*moving_object.d_collision[:2])
                 obj_rect.size = moving_object.d_collision[2:]
-            vel = (copy(moving_object.BASE_VEL)/4, copy(moving_object.BASE_VEL)/4)
+            vel = (copy(moving_object.BASE_VEL) / 4, copy(moving_object.BASE_VEL) / 4)
 
         if type(col_obj) is not pg.Rect:
             col_rect = copy(col_obj.rect)
@@ -510,3 +510,10 @@ class GameState:
             road_obj.idle[0] = flip_vertical(road_obj.idle[0])
 
         return road_obj
+
+    def generate_cave_walls(
+            self, direction: str, dep_pos: tuple[int, int], n_hills: int, mid_type: str = "left",
+            end_type: str = "hill_side_inner", no_begin: bool = False, start_type: str = "none"
+    ):
+
+        pass

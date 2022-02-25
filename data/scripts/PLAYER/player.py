@@ -207,7 +207,7 @@ class Player:
             p.draw.rect(self.screen, self.health_colours['attacked'], transition_bar, 40)
 
         if self.health <= 0:
-            print("JOHN NOOOO")
+            # Death SIGNAL
             self.health = 0
 
     def handler(self, dt, exit_rects):

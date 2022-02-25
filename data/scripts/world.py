@@ -26,8 +26,9 @@ from .levels import (
     Kitchen,
     JohnsGarden,
     ManosHut,
-    Cave,
-    Training_Field
+    Training_Field,
+    CaveGarden,
+    CaveEntrance
 )
 
 
@@ -113,9 +114,10 @@ class GameManager:
             "kitchen": Kitchen,
             "johns_garden": JohnsGarden,
             "manos_hut": ManosHut,
-            "cave": Cave,
             "training_field": Training_Field,
-            "gymnasium": Gymnasium
+            "gymnasium": Gymnasium,
+            "cave_garden": CaveGarden,
+            "cave_entrance": CaveEntrance
         }
         self.loaded_states: dict[str: GameState] = {}
         self.game_state: GameState = None

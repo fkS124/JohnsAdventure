@@ -3,7 +3,9 @@
   "johns_garden": false,
   "kitchen": false,
   "manos_hut": false,
-  "cave_level": false,
+  "cave_garden": false,
+  "cave_entrance": false,
+  "cave_room_1": false,
   "training_field": false,
   "gymnasium": false
 }

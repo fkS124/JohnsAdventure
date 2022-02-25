@@ -73,5 +73,11 @@
   "hill_side_inner":{"x":0, "y": 2, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
   "hill_side_inner_rev":{"x":0, "y": 2, "w": 224, "h": 160, "it": 1, "sc": 3, "reverse": true, "crect":  [0, 17, 223, 137], "sheet":  "hills"},
   "hill_side_mid": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "crect":  [0, 17, 223, 208], "sheet":  "hills"},
-  "hill_side_mid_rev": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "reverse": true , "crect":  [0, 17, 223, 208], "sheet":  "hills"}
+  "hill_side_mid_rev": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "reverse": true , "crect":  [0, 17, 223, 208], "sheet":  "hills"},
+
+
+  "c_wall_mid":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
+  "c_wall_corner":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
+  "c_wall_corner_turn":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
+  "c_wall_side": {"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"}
 }
