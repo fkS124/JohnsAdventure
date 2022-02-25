@@ -55,12 +55,12 @@ class GameState:
 
         self.points_side = {  # -> lambda functions to get the coordinates of the colliding points
             "left": lambda rect, vel: [
-                rect.topleft + pg.Vector2(vel[0], vel[1]),
+                rect.topleft + pg.Vector2(vel[0], -vel[1]),
                 rect.midleft - pg.Vector2(-vel[0], 0),
                 rect.bottomleft - pg.Vector2(-vel[0], vel[1])
             ],
             "right": lambda rect, vel: [
-                rect.topright + pg.Vector2(-vel[0], vel[1]),
+                rect.topright + pg.Vector2(-vel[0], -vel[1]),
                 rect.midright - pg.Vector2(vel[0], 0),
                 rect.bottomright - pg.Vector2(vel[0], vel[1])
             ],
@@ -131,7 +131,13 @@ class GameState:
             if hasattr(moving_object, "d_collision"):
                 obj_rect.topleft += pg.Vector2(*moving_object.d_collision[:2])
                 obj_rect.size = moving_object.d_collision[2:]
-            vel = (copy(moving_object.BASE_VEL) / 4, copy(moving_object.BASE_VEL) / 4)
+            if hasattr(moving_object, "tp_V"):
+                if moving_object.tp_V[0] != 0 or moving_object.tp_V[0] != 0:
+                    vel = abs(moving_object.tp_V[0]), abs(moving_object.tp_V[1])
+                else:
+                    vel = copy(moving_object.BASE_VEL), copy(moving_object.BASE_VEL)
+            else:
+                vel = copy(moving_object.BASE_VEL), copy(moving_object.BASE_VEL)
 
         if type(col_obj) is not pg.Rect:
             col_rect = copy(col_obj.rect)
@@ -156,25 +162,26 @@ class GameState:
 
         # colliding points
         points = self.points_side[side](obj_rect, vel)
-        if isinstance(moving_object, Enemy):
+        """if isinstance(moving_object, Enemy):
             if moving_object.status == "chasing":
                 points.extend([
                     obj_rect.topleft + pg.Vector2(-vel[0], -vel[1]),
                     obj_rect.topright + pg.Vector2(vel[0], -vel[1]),
                     obj_rect.bottomleft + pg.Vector2(-vel[0], vel[1]),
                     obj_rect.bottomright + pg.Vector2(vel[0], vel[1]),
-                ])
+                ])"""
 
-        changed = False  # -> gets if a change has been done
         for point in points:
-            # pg.draw.circle(self.screen, (0, 255, 255), point, 5)   ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
+            # pg.draw.circle(self.screen, (0, 255, 255), point, 5)   # ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
             if col_rect.collidepoint(point):
-                changed = True
+                pg.draw.circle(self.screen, (255, 0, 0), point, 5)
                 moving_object.move_ability[side] = False
-        if not changed:
+                break
+        else:
             moving_object.move_ability[side] = True  # if no change have been done, resets the value
         if not moving_object.move_ability[side]:
             return "kill"
+
             # -> tell the "parent script" to break the loop because a collision has already occured on this side
 
     def collision_system(self, obj_moving, objects_to_collide):
@@ -512,8 +519,86 @@ class GameState:
         return road_obj
 
     def generate_cave_walls(
-            self, direction: str, dep_pos: tuple[int, int], n_hills: int, mid_type: str = "left",
-            end_type: str = "hill_side_inner", no_begin: bool = False, start_type: str = "none"
+            self,
+            direction: str,
+            dep_pos: tuple[int, int],
+            n_walls: int,
+            no_begin: bool = False,
+            start_type: str = "none",
+            end_type: str = "none",
     ):
+        """ Cave Walls (cave_walls) Title : tag
+        "c_wall_mid":
+        "c_wall_corner"
+        "c_wall_corner_turn":
+        "c_wall_side":
 
-        pass
+        same as the above with slight changes
+        """
+
+        c_wall_mid = "c_wall_mid"
+        c_wall_corner = "c_wall_corner"
+        c_wall_corner_turn = "c_wall_corner_turn"
+        c_wall_side = "c_wall_side"
+        c_flipped_corner = "c_flipped_corner"
+        c_flipped_corner_turn = "c_flipped_corner_turn"
+
+        sizes = {
+            c_wall_mid: self.prop_objects[c_wall_mid]((0, 0)).current_frame.get_size(),
+            c_wall_corner: self.prop_objects[c_wall_corner]((0, 0)).current_frame.get_size(),
+            c_wall_corner_turn: self.prop_objects[c_wall_corner_turn]((0, 0)).current_frame.get_size(),
+            c_wall_side: self.prop_objects[c_wall_side]((0, 0)).current_frame.get_size(),
+            c_flipped_corner: self.prop_objects[c_flipped_corner]((0, 0)).current_frame.get_size(),
+            c_flipped_corner_turn: self.prop_objects[c_flipped_corner_turn]((0, 0)).current_frame.get_size()
+        }
+
+        # first pos of the first hill, will be incremented
+        current_pos = list(dep_pos)
+        walls = []  # list that contains all the generated hills
+
+        if start_type == "none" and no_begin:
+            # according to the direction, increment the position for the next hill according to the size of the
+            # hill currently being added
+            # walls += self.prop_objects[c_wall_corner](dep_pos) if direction in ['right', 'up', 'down'] \
+            # else self.prop_objects[c_flipped_corner](dep_pos)
+            match direction:
+                case "right":
+                    current_pos[0] += sizes[c_wall_corner][0]
+                case "down":
+                    current_pos[1] += sizes[c_wall_corner][1]
+                    current_pos[1] -= 102
+        else:
+            walls.append(self.prop_objects[start_type](dep_pos))
+            match direction:
+                case "right":
+                    current_pos[0] += sizes[start_type][0]
+                case "down":
+                    current_pos[1] += sizes[start_type][1]
+                    current_pos[1] -= 102
+
+        # n_hills - 2 because the ending and starting hills are generated outside the loop
+        for i in range(n_walls - 2):
+            new_wall = None
+            # according to the direction, increment the position for the next hill according to the size of the
+            # hill currently being added
+            match direction:
+                case "right":
+                    new_wall = self.prop_objects[c_wall_mid](current_pos)
+                    current_pos[0] += sizes[c_wall_mid][0]
+                case "down":
+                    new_wall = self.prop_objects[c_wall_side](current_pos)
+                    current_pos[1] += sizes[c_wall_side][1]
+                    # "cancel" the gap that the sprites are applying (can't take the height of the sprite without
+                    # generating a graphical gap
+                    current_pos[1] -= 51
+
+            if new_wall is not None:
+                # appends the generated hill to the list
+                walls.append(new_wall)
+
+        # add the last wall
+        if end_type == "none":
+            walls.append(self.prop_objects[c_flipped_corner](current_pos))
+        else:
+            walls.append(self.prop_objects[end_type](current_pos))
+        return walls

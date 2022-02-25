@@ -76,8 +76,15 @@
   "hill_side_mid_rev": {"x":450, "y": 0, "w": 224, "h": 222, "it": 1, "sc": 3, "reverse": true , "crect":  [0, 17, 223, 208], "sheet":  "hills"},
 
 
-  "c_wall_mid":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
-  "c_wall_corner":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
-  "c_wall_corner_turn":{"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"},
-  "c_wall_side": {"x":0, "y": 0, "w": 0, "h": 0, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "walls"}
+  "c_wall_mid":{"x":36, "y": 1, "w": 158, "h": 73, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls"},
+  "c_wall_corner":{"x":35, "y": 150, "w": 159, "h": 73, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls"},
+  "c_wall_corner_turn": {"x":35, "y": 76, "w": 159, "h": 73, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls"},
+  "c_wall_side": {"x":6, "y": 66, "w": 12, "h": 157, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls"},
+
+  "c_flipped_corner":{"x":35, "y": 150, "w": 159, "h": 73, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls",
+    "reverse": true
+  },
+  "c_flipped_corner_turn": {"x":35, "y": 76, "w": 159, "h": 73, "it": 1, "sc": 3, "crect":  [0, 0, 0, 0], "sheet":  "cave_walls",
+    "reverse": true
+  }
 }

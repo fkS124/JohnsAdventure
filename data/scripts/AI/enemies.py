@@ -33,7 +33,7 @@ class ShadowDummy(Enemy):
         calc_intensity = ceil(12 * hp / xp_drop)  # 12 will be re-written else where later
 
         super().__init__(level_instance, screen, pos, player, hp=100, xp_drop=210, custom_rect=[10, 25, 29 * 3, 24 * 3],
-                         enemy_type="shadow", intensiveness=calc_intensity, vel=5)
+                         enemy_type="shadow", intensiveness=calc_intensity, vel=2)
         self.load_animation(
             resource_path("data/sprites/shadow_dummie.png"),
             idle="static",

@@ -16,20 +16,24 @@ sheets_translator = {
     "open_world": 'data/sprites/world/open_world_dec1.png',
     # TODO -> needs to be deleted when the manos hut furniture get deleted from spritesheet
     "temp_open_world": 'data/sprites/world/world_sheet.png',
-    "school_gate": 'data/sprites/world/school_barriers.png'
+    "school_gate": 'data/sprites/world/school_barriers.png',
+    "cave_walls": 'data/sprites/world/cave_walls.png'
+    ""
 }
 sheets = {}
 
 def init_sheets():
     global sheets
     sheets = {
+
         'data/sprites/world/c1_bds.png': l_path('data/sprites/world/c1_bds.png'),
         'data/sprites/world/hills.png': l_path('data/sprites/world/hills.png'),
         'data/sprites/world/open_world_dec1.png': l_path('data/sprites/world/open_world_dec1.png'),
         'data/sprites/items/chest.png': l_path('data/sprites/items/chest.png'),
         # TODO -> needs to be deleted when the manos hut furniture get deleted from spritesheet
         'data/sprites/world/world_sheet.png': l_path('data/sprites/world/world_sheet.png'),
-        'data/sprites/world/school_barriers.png': l_path('data/sprites/world/school_barriers.png')
+        'data/sprites/world/school_barriers.png': l_path('data/sprites/world/school_barriers.png'),
+        'data/sprites/world/cave_walls.png': l_path('data/sprites/world/cave_walls.png')
     }
 
 

@@ -45,6 +45,7 @@ class Enemy:
             "up": pg.Vector2(0, -1).normalize() * self.BASE_VEL
         }
 
+        self.tp_V = pg.Vector2(0, 0)
         self.enemy_type = enemy_type
 
         self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=False)
@@ -97,6 +98,11 @@ class Enemy:
         self.idling = False
         self.hitbox_rect = None
         self.status = ""  # Chasing, Roaming, Attacking
+
+        self.delay_after_getting_stuck = 1500
+        self.time_got_stuck = 0
+        self.got_stuck = False
+        self.chase_available = True
 
         # IMAGES & SPRITES MANAGEMENT
 
@@ -441,37 +447,47 @@ class Enemy:
 
         """
 
-        enemy_s = self.current_sprite.get_width(), self.current_sprite.get_height()
-        hit_d = self.hitbox_data
+        if self.current_sprite is not None:
+            enemy_s = self.current_sprite.get_width(), self.current_sprite.get_height()
+            hit_d = self.hitbox_data
 
-        hit_dict = {
-            "up": pg.Rect(
-                self.rect.midtop,
-                hit_d['up']
-            ),
+            hit_dict = {
+                "up": pg.Rect(
+                    self.rect.midtop,
+                    hit_d['up']
+                ),
 
-            "down": pg.Rect(
-                self.rect.midbottom,
-                hit_d['down']
-            ),
+                "down": pg.Rect(
+                    self.rect.midbottom,
+                    hit_d['down']
+                ),
 
-            "left": pg.Rect(
-                self.rect.midright - vec(enemy_s[0] + enemy_s[0] // 2, 0),
-                hit_d['left']
-            ),
+                "left": pg.Rect(
+                    self.rect.midright - vec(enemy_s[0] + enemy_s[0] // 2, 0),
+                    hit_d['left']
+                ),
 
-            "right": pg.Rect(
-                self.rect.midright - vec(enemy_s[0] // 2, 0),
-                hit_d['right']
-            ),
-        }
+                "right": pg.Rect(
+                    self.rect.midright - vec(enemy_s[0] // 2, 0),
+                    hit_d['right']
+                ),
+            }
 
-        pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
+            pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
 
-        if hit_dict[self.direction].colliderect(p_rect):
-            self.player.health_target = self.player.health - self.damage
+            if hit_dict[self.direction].colliderect(p_rect):
+                self.player.health_target = self.player.health - self.damage
 
     def move(self, dt):
+
+        if self.got_stuck:
+            if pg.time.get_ticks() - self.time_got_stuck > self.delay_after_getting_stuck:
+                self.chase_available = True
+                self.got_stuck = False
+            else:
+                self.chase_available = False
+        else:
+            self.chase_available = True
 
         # enemy rect
         col_rect = copy(self.rect)
@@ -524,14 +540,29 @@ class Enemy:
                 elif GET_DISTANCE > 90:  # I need to switch this up by enemy's.attack_distance
                     self.moving, self.status = True, "CHASING"
                     try:
-                        vel = (
+                        self.tp_V = (
                                 (
                                   vec(self.player.rect.center) - vec(self.rect.center + self.scroll)
                                 ).normalize() * self.BASE_VEL
                         )
-                        self.direction = "left" if vel[0] < 0 else "right"
-                        self.x += vel[0] if self.move_ability[self.direction] else 0
-                        self.y += vel[1] if self.move_ability["up" if vel[1] < 0 else "down"] else 0
+                        self.direction = "left" if self.tp_V[0] < 0 else "right"
+                        self.x += self.tp_V[0] if self.move_ability[self.direction] else 0
+                        self.y += self.tp_V[1] if self.move_ability[
+                            sec_dir := "up" if self.tp_V[1] < 0 else "down"] else 0
+
+                        if not (self.move_ability[self.direction] and self.move_ability[sec_dir]):
+                            self.got_stuck = True
+                            self.time_got_stuck = pg.time.get_ticks()
+                            self.switch_directions(self.direction, sec_dir)
+                            match self.direction:
+                                case "down":
+                                    self.y += enemy_speed
+                                case "up":
+                                    self.y -= enemy_speed
+                                case "right":
+                                    self.x += enemy_speed
+                                case "left":
+                                    self.x -= enemy_speed
                     except ValueError:
                         pass
 

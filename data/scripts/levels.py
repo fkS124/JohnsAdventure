@@ -629,17 +629,18 @@ class ManosHut(GameState):
         sc_x = 1280 / 453
         sc_y = 720 / 271
         self.objects = [
-            Rect(0, 0, 10, 720),  # Left borders
-            Rect(1270, 134, 10, 586),  # Right borders
-            Rect(0, 0, 1280, 133),  # Up borders
-            Rect(0, 711, 1280, 9),  # Down borders
+            Rect(-40, 0, 40, 720),  # Left borders
+            Rect(1270, 134, 40, 586),  # Right borders
+            Rect(0, 4-0, 1280, 133+40),  # Up borders
+            Rect(0, 711, 1280, 40),  # Down borders
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
             npc.Candy(pg.Vector2(205, 395)),
             Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
-            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y))
+            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
+            ShadowDummy(self, self.screen, (600, 600), self.player)
         ]
 
         self.spawn = {
@@ -733,13 +734,6 @@ class CaveEntrance(GameState):
             light_state="inside_clear"
         )
 
-        self.objects = \
-            [
-
-
-
-            ]
-
         self.spawn = {
             "cave_entrance": (
                 self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width() * 3 + 50,
@@ -748,6 +742,28 @@ class CaveEntrance(GameState):
 
             "cave_garden": (1100, 100)
         }
+
+        self.objects = \
+            [
+
+                *self.generate_cave_walls(
+                    direction="right",
+                    dep_pos=self.spawn['cave_garden'] - vec(1350, self.spawn['cave_garden'][1] * 2),
+                    n_walls=6,
+                    no_begin=True,
+                    start_type="none",
+                    end_type="c_flipped_corner"
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down",
+                    dep_pos=self.spawn['cave_garden'] - vec(1350, (self.spawn['cave_garden'][1] * 3) * 6 + 197),
+                    n_walls=6,
+                    start_type="c_wall_corner_turn",
+                    end_type="c_wall_corner"
+                )
+
+            ]
 
         self.exit_rects = {
 
@@ -763,6 +779,6 @@ class CaveEntrance(GameState):
         }
 
     def update(self, camera, dt):
-        print(self.player.rect.center)
+        #print(self.player.rect.center)
         pg.draw.rect(self.screen, (220, 220, 220), [0, 0, *self.screen.get_size()])
         return super(CaveEntrance, self).update(camera, dt)
