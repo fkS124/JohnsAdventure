@@ -6,6 +6,8 @@
   "cave_garden": false,
   "cave_entrance": false,
   "cave_room_1": false,
+  "cave_room_2": false,
+  "cave_passage": false,
   "training_field": false,
   "gymnasium": false
 }

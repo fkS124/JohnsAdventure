@@ -174,7 +174,7 @@ class GameState:
         for point in points:
             # pg.draw.circle(self.screen, (0, 255, 255), point, 5)   # ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
             if col_rect.collidepoint(point):
-                pg.draw.circle(self.screen, (255, 0, 0), point, 5)
+                # pg.draw.circle(self.screen, (255, 0, 0), point, 5)
                 moving_object.move_ability[side] = False
                 break
         else:
@@ -526,12 +526,15 @@ class GameState:
             no_begin: bool = False,
             start_type: str = "none",
             end_type: str = "none",
+            door_n: int = None
     ):
         """ Cave Walls (cave_walls) Title : tag
         "c_wall_mid":
         "c_wall_corner"
         "c_wall_corner_turn":
         "c_wall_side":
+        "c_flipped_corner":
+        "c_flipped_corner_turn":
 
         same as the above with slight changes
         """
@@ -593,12 +596,103 @@ class GameState:
                     current_pos[1] -= 51
 
             if new_wall is not None:
-                # appends the generated hill to the list
-                walls.append(new_wall)
+                if type(door_n) is list:
+                    if i not in door_n:
+                        walls.append(new_wall)
+                else:
+                    if door_n != i:
+                        walls.append(new_wall)
 
-        # add the last wall
-        if end_type == "none":
-            walls.append(self.prop_objects[c_flipped_corner](current_pos))
-        else:
+        # add the last wall (this has a logic flaw, I will fix it later)
+        if end_type != "none":
             walls.append(self.prop_objects[end_type](current_pos))
+
         return walls
+
+    def generate_wall_chunk(self,
+                            n=0,  # N chunks of walls
+                            x_side=0,  # in case you want N*N+X rather than N*N
+                            y_side=0,
+                            pos=(0, 0),
+                            left_side=True,
+                            right_side=True,
+                            up_side=True,
+                            down_side=True,
+                            u_n=None,  # up gate
+                            d_n=None,  # down gate
+                            l_n=None,  # left gate
+                            r_n=None  # right gate
+                            ):
+        """
+            Easy and way creating blocks
+
+            Reference:
+                "c_wall_mid":
+                "c_wall_corner"
+                "c_wall_corner_turn":
+                "c_wall_side":
+                "c_flipped_corner":
+                "c_flipped_corner_turn":
+
+
+            Left sizes and Upsides are easy because we position based on top left.
+
+            Right and Downside tho need a bit of calculations :')
+
+        """
+
+        w = self.prop_objects['c_wall_mid']((0, 0)).idle[0].get_width()
+        h = (self.prop_objects['c_wall_side']((0, 0)).idle[0].get_width() * 3 * 2) + 23
+
+        new_list = []
+
+        if up_side:
+            new_list.extend(
+                self.generate_cave_walls(
+                    direction="right",
+                    dep_pos=pos,
+                    n_walls=n + x_side,
+                    start_type="c_wall_corner",
+                    end_type="c_flipped_corner_turn",
+                    door_n=u_n
+                )
+            )
+
+        if left_side:
+            new_list.extend(
+                self.generate_cave_walls(
+                    direction="down",
+                    dep_pos=pos,
+                    n_walls=n + y_side,
+                    start_type="c_wall_corner_turn",
+                    end_type="none",
+                    door_n=l_n
+                )
+            )
+
+        if right_side:
+            new_list.extend(
+                self.generate_cave_walls(
+                    direction="down",
+                    dep_pos=(pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30, pos[1]),
+                    n_walls=n + y_side,
+                    no_begin=True,
+                    start_type="none",
+                    end_type="none",
+                    door_n=r_n
+                )
+            )
+
+        if down_side:
+            new_list.extend(
+                self.generate_cave_walls(
+                    direction="right",
+                    dep_pos=(pos[0], pos[1] + h * n + 1),  # NOTE: do what you did on the below in here
+                    n_walls=n + x_side,
+                    start_type="c_wall_corner",
+                    end_type="c_flipped_corner",
+                    door_n=d_n
+                )
+            )
+
+        return new_list

@@ -16,7 +16,6 @@ from .PLAYER.player_sub.tools import set_camera_to
 
 from .PLAYER.player_sub.animation_handler import user_interface
 
-
 from .levels import (
     Gymnasium,
     get_cutscene_played,
@@ -28,7 +27,10 @@ from .levels import (
     ManosHut,
     Training_Field,
     CaveGarden,
-    CaveEntrance
+    CaveEntrance,
+    CaveRoomOne,
+    CaveRoomTwo,
+    CaveRoomPassage
 )
 
 
@@ -52,7 +54,7 @@ class GameManager:
     # CONSTS
 
     DISPLAY = pg.display.set_mode((1280, 720),
-                                )  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+                                  flags=pg.SRCALPHA | pg.HWSURFACE)  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
@@ -74,7 +76,7 @@ class GameManager:
 
         # 
         self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
-        
+
         # (main menu title)
         self.blacksword = pg.font.Font(resource_path("data/database/Blacksword.otf"), 113)
 
@@ -107,7 +109,7 @@ class GameManager:
         self.state = first_state
         self.first_state = False
         self.prop_objects = PropGetter(self.player).PROP_OBJECTS
-        
+
         # THIS IS WHERE YOU LOAD THE WORLDS
         self.state_manager = {
             "player_room": PlayerRoom,
@@ -117,7 +119,10 @@ class GameManager:
             "training_field": Training_Field,
             "gymnasium": Gymnasium,
             "cave_garden": CaveGarden,
-            "cave_entrance": CaveEntrance
+            "cave_entrance": CaveEntrance,
+            "cave_room_1": CaveRoomOne,
+            "cave_room_2": CaveRoomTwo,
+            "cave_passage": CaveRoomPassage
         }
         self.loaded_states: dict[str: GameState] = {}
         self.game_state: GameState = None
@@ -165,16 +170,16 @@ class GameManager:
                 # 52 48 are players height and width
                 self.player.rect.x - 52 - self.player.camera.offset.x,
                 self.player.rect.y - self.player.camera.offset.y - 48
-                ), 
-                self.dt  # <- is needed for the NPC interaction
-            ) 
+            ),
+                           self.dt  # <- is needed for the NPC interaction
+                           )
             self.pause()
             if hasattr(self.player.camera.method, "fov"):
                 if self.player.camera.method.fov != 1:
                     surface = self.DISPLAY.subsurface(self.player.camera.method.capture_rect)
                     surface = smooth_scale(surface, self.player.camera.method.fov)
-                    self.DISPLAY.blit(surface, surface.get_rect(center=(self.DISPLAY.get_width()//2,
-                                                                        self.DISPLAY.get_height()//2)))
+                    self.DISPLAY.blit(surface, surface.get_rect(center=(self.DISPLAY.get_width() // 2,
+                                                                        self.DISPLAY.get_height() // 2)))
             self.cutscene_engine.render()
             if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
                 self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
@@ -182,7 +187,6 @@ class GameManager:
 
         if self.debug:
             self.debugger.update()
-
 
         pg.display.update()
 
@@ -347,7 +351,8 @@ class Debugging:
             "interaction_rect": (255, 255, 0),
             "collision_rect": (0, 255, 0),
             "attacking_rect": (255, 0, 0),
-            "exit_rect": (255, 255, 0)
+            "exit_rect": (255, 255, 0),
+            "void": (0, 0, 0)
         }
 
         self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 15)
@@ -372,6 +377,7 @@ class Debugging:
                 objects.append(self.player)
 
                 for obj in objects:
+                    # Remove this once debugging stops
                     if type(obj) is pg.Rect:
                         pg.draw.rect(self.screen, self.colors["collision_rect"],
                                      pg.Rect(obj.topleft - self.player.camera.offset.xy, obj.size), 2)

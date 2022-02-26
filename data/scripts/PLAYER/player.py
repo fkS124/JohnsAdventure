@@ -38,7 +38,7 @@ class Player:
         self.game_instance = game_instance
         self.screen, self.InteractPoint = screen, 0
         self.sound_manager = SoundManager(sound_only=True)
-        self.base_vel = 6
+        self.base_vel = 10
         self.velocity = p.Vector2(0, 0)  # Player's speed
         self.direction = "left"
         self.move_ability = {

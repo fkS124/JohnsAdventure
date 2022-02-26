@@ -605,19 +605,23 @@ class Gymnasium(GameState):
             Rect(40, -900, hills_width * 8, 50),  # Up
 
             self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
+            *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
             npc.Bababooye(pg.Vector2(2702, -75))
         ]
 
         self.exit_rects = {
-            "johns_garden": (pg.Rect(-100, -center_spawn - 121, 300, 600), "Go back to open world ?", "mandatory")
+            "johns_garden": (pg.Rect(-100, -center_spawn - 121, 300, 600), "Go back to open world ?", "mandatory"),
+            "cave_passage": (pg.Rect(4970, -200, 64, 64), "Are you sure you want to get in ?")
         }
 
         self.spawn = {
-            "johns_garden": pg.Vector2(300, 0)
+            "johns_garden": (300, 0),
+            "cave_passage": (4750, -150)
         }
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
+        print(self.player.rect.topleft)
         return super(Gymnasium, self).update(camera, dt)
 
 
@@ -631,7 +635,7 @@ class ManosHut(GameState):
         self.objects = [
             Rect(-40, 0, 40, 720),  # Left borders
             Rect(1270, 134, 40, 586),  # Right borders
-            Rect(0, 4-0, 1280, 133+40),  # Up borders
+            Rect(0, 4 - 0, 1280, 133 + 40),  # Up borders
             Rect(0, 711, 1280, 40),  # Down borders
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
             npc.Candy(pg.Vector2(205, 395)),
@@ -640,7 +644,7 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
-            ShadowDummy(self, self.screen, (600, 600), self.player)
+            # ShadowDummy(self, self.screen, (600, 600), self.player)
         ]
 
         self.spawn = {
@@ -731,7 +735,7 @@ class CaveEntrance(GameState):
             player_instance,
             prop_objects,
             "cave_entrance",
-            light_state="inside_clear"
+            light_state="inside_dark"
         )
 
         self.spawn = {
@@ -740,45 +744,350 @@ class CaveEntrance(GameState):
                 self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width() * 4 + 100
             ),
 
-            "cave_garden": (1100, 100)
+            "cave_garden": (1300, 100),
+
+            "cave_room_1": (-2400, 120)
         }
 
         self.objects = \
             [
-
                 *self.generate_cave_walls(
                     direction="right",
-                    dep_pos=self.spawn['cave_garden'] - vec(1350, self.spawn['cave_garden'][1] * 2),
-                    n_walls=6,
-                    no_begin=True,
-                    start_type="none",
-                    end_type="c_flipped_corner"
+                    dep_pos=self.spawn['cave_garden'] - vec(1350 * 4, self.spawn['cave_garden'][1] * 2),
+                    n_walls=14,
+                    start_type="c_wall_corner",
+                    end_type="c_flipped_corner",
                 ),
 
                 *self.generate_cave_walls(
-                    direction="down",
-                    dep_pos=self.spawn['cave_garden'] - vec(1350, (self.spawn['cave_garden'][1] * 3) * 6 + 197),
-                    n_walls=6,
+                    direction="right",
+                    dep_pos=self.spawn['cave_garden'] - vec(1350 * 4, -self.spawn['cave_garden'][1] * 2),
+                    n_walls=14,
                     start_type="c_wall_corner_turn",
-                    end_type="c_wall_corner"
-                )
-
+                    end_type="c_flipped_corner"
+                ),
+                # Since cave exit is optional, I need to add a bound
+                Rect(1400 + 140, self.spawn['cave_garden'][1], 150, 300),
+                Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300)
             ]
 
         self.exit_rects = {
 
             "cave_garden": (
                 pg.Rect(
-                    self.spawn['cave_garden'][0] + 150,
-                    self.spawn['cave_garden'][1] + 40,
-                    150, 140
+                    1400,
+                    self.spawn['cave_garden'][1],
+                    150, 300
                 ),
                 "Go back to open world ?"
-            )
+            ),
 
+            "cave_room_1": (
+                pg.Rect(
+                    -2700, self.spawn['cave_garden'][1],
+                    150, 300
+                ),
+                "", "mandatory"
+            )
+        }
+
+        self.additional_lights = [
+
+            PolygonLight(
+                vec(1400, self.spawn['cave_garden'][1] + 40),
+                68 * 3,  # height
+                350,  # radius
+                50,  # dep_angle
+                85,  # end_angle
+                (255, 255, 255),  # color
+                dep_alpha=50,
+                horizontal=True,
+                additional_alpha=175
+            )
+        ]
+
+    def update(self, camera, dt):
+        # Background
+        pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
+
+        # Top void
+        pg.draw.rect(self.screen, (0, 0, 0),
+                     [
+                         *(vec(-3200, -335) - vec(self.scroll))
+                         , 5350, 400
+                     ]
+                     )
+
+        # Flashlight
+        pg.draw.circle(
+            self.screen,
+            (240, 240, 240, 30),
+            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
+            70
+        )
+
+        # Bottom and left void (it would be best if we could blit it after the cave objects)
+        pg.draw.rect(self.screen, (0, 0, 0),
+                     [
+                         *(vec(-3200, 335) - vec(self.scroll))
+                         , 5350, 400
+                     ]
+                     )
+
+        return super(CaveEntrance, self).update(camera, dt)
+
+
+class CaveRoomOne(GameState):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(CaveRoomOne, self).__init__(
+            DISPLAY,
+            player_instance,
+            prop_objects,
+            "cave_room_1",
+            light_state="inside_dark"
+        )
+
+        self.player.DEFAULT_VEL = 30
+
+        w = self.prop_objects['c_wall_mid']((0, 0)).idle[0].get_width()
+        h = (self.prop_objects['c_wall_side']((0, 0)).idle[0].get_width() * 3 * 2) + 23
+
+        self.objects = \
+            [
+                # Borders
+                *self.generate_wall_chunk(n=12, pos=(-300, -300), x_side=6),
+
+                # Right side of the map
+                *self.generate_wall_chunk(n=5, pos=(-300 + (18-5) * w, -300), up_side=False, right_side=False, d_n=1, l_n=1),
+                *self.generate_wall_chunk(n=5, pos=(-300 + (18-5) * w, 1300), down_side=False, right_side=False, u_n=1),
+
+                # Right-bottom left room
+                *self.generate_cave_walls(
+                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 3) * w - w // 2 - 160, 1300),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w//2, 1300),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w // 2, -384),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                # Left side
+
+                *self.generate_cave_walls(
+                    direction="right", n_walls=13, door_n=[2, 9], dep_pos=(-270, 900),
+                    start_type="none", end_type="c_flipped_corner", no_begin=True
+                ),
+
+                # This one has a 'layering' issue
+                *self.generate_cave_walls(
+                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 6) * w + 174, 1000),
+                    start_type="none", end_type="none", no_begin=True
+                ),  # draw over the above broken block
+
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=4, dep_pos=(6 * w, -200),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=5, dep_pos=(6 * w, -320),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=4, dep_pos=(1000,  900),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=4, dep_pos=(1750, 900),
+                    start_type="none", end_type="none", no_begin=True
+                ),
+            ]
+
+        self.spawn = {
+            "cave_entrance": (8000, 1160),
+        }
+        self.exit_rects = {
+            "cave_room_2": (pg.Rect(800, 100, 150, 200), "", "mandatory"),
+            "cave_entrance": (pg.Rect(8100, 1112, 150, 280), "", "mandatory")
         }
 
     def update(self, camera, dt):
-        #print(self.player.rect.center)
-        pg.draw.rect(self.screen, (220, 220, 220), [0, 0, *self.screen.get_size()])
-        return super(CaveEntrance, self).update(camera, dt)
+        print("floor 1")
+        # Background
+        pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
+
+        print(self.player.rect.center)
+
+        pg.draw.circle(  # Flashlight
+            self.screen,
+            (240, 240, 240, 30),
+            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
+            70
+        )
+
+        return super(CaveRoomOne, self).update(camera, dt)
+
+
+class CaveRoomTwo(GameState):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(CaveRoomTwo, self).__init__(
+            DISPLAY,
+            player_instance,
+            prop_objects,
+            "cave_room_2",
+            light_state="inside_dark"
+        )
+
+        self.objects = \
+            [
+                *self.generate_wall_chunk(n=12, pos=(-300, -300), x_side=6),
+            ]
+
+        self.spawn = {
+            "cave_room_1": (0, 0),
+            "cave_passage": (860, 200)
+        }
+
+        self.exit_rects = {
+            "cave_passage": (pg.Rect(800, 100, 150, 140), "", "mandatory")
+        }
+
+    def update(self, camera, dt):
+        # Background
+        pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
+
+        # Flashlight
+        pg.draw.circle(
+            self.screen,
+            (240, 240, 240, 30),
+            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
+            70
+        )
+
+        return super(CaveRoomTwo, self).update(camera, dt)
+
+
+class CaveRoomPassage(GameState):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(CaveRoomPassage, self).__init__(
+            DISPLAY,
+            player_instance,
+            prop_objects,
+            "cave_passage",
+            light_state="inside_dark"
+        )
+
+        self.spawn = {
+            "cave_room_2": (880, 2100),
+            "gymnasium": (783, 730)
+        }
+
+        w = self.prop_objects['c_wall_mid']((0, 0)).idle[0].get_width()
+
+        self.objects = \
+            [
+
+                *self.generate_cave_walls(
+                    direction="right",
+                    dep_pos=(300, 300),
+                    n_walls=2,
+                    start_type="c_wall_corner_turn",
+                    end_type="c_flipped_corner_turn",
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down",
+                    dep_pos=(300, 300),
+                    n_walls=8,
+                    no_begin=True,
+                    start_type="none",
+                    end_type="none",
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down",
+                    dep_pos=(800 + 150 + 300 - 32, 300),
+                    n_walls=8,
+                    no_begin=True,
+                    start_type="none",
+                    end_type="none",
+                ),
+
+                *self.generate_cave_walls(
+                    direction="right",
+                    dep_pos=(300, (w * 6) + 1),
+                    n_walls=2,
+                    start_type="c_wall_corner",
+                    end_type="c_flipped_corner",
+                ),
+
+
+                *self.generate_chunk('ladder', x=770, y=300, row=1, col=1, step_x=0, step_y=0, randomize=0)
+
+            ]
+
+        self.exit_rects = {
+            "gymnasium": (pg.Rect(732, 530, 150, 140), "Are you sure you want to exit the cave ?"),
+            "cave_room_2": (
+                pg.Rect(
+                    726,
+                    self.spawn['cave_room_2'][1] + 620,
+                    150,
+                    140),
+                "", "mandatory"
+            ),
+        }
+
+        self.additional_lights = [
+
+            PolygonLight(
+                vec(800, 300),
+                68 * 3,  # height
+                350,  # radius
+                50,  # dep_angle
+                85,  # end_angle
+                (255, 255, 255),  # color
+                dep_alpha=50,
+                horizontal=True,
+                additional_alpha=175
+            )
+        ]
+
+    def update(self, camera, dt):
+        # Background
+        pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
+
+        print(self.player.rect.topleft)
+
+        # Flashlight
+        pg.draw.circle(
+            self.screen,
+            (240, 240, 240, 30),
+            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
+            70
+        )
+
+        pg.draw.rect(self.screen, (0, 0, 0),
+                     [
+                         *(vec(-294, -335) - vec(self.scroll))
+                         , 600, 4000
+                     ]
+                     )
+
+        pg.draw.rect(self.screen, (0, 0, 0),
+                     [
+                         *(vec(1244, -335) - vec(self.scroll))
+                         , 600, 4000
+                     ]
+                     )
+
+        return super(CaveRoomPassage, self).update(camera, dt)
