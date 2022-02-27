@@ -104,7 +104,7 @@ class Goblin(Enemy):
             level_instance, screen, pos, player, hp=100, xp_drop=210,
             custom_rect=[15, 35, 17 * 2, 25 * 2 + 10],
             enemy_type="normal",
-            vel=2,
+            vel=3,
             up_hitbox=(17 * 4, 15 * 4),
             down_hitbox=(17 * 4, 15 * 4),
             left_hitbox=(15 * 4, 18 * 4),
@@ -133,4 +133,39 @@ class Goblin(Enemy):
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
 
-# Soon REDACTED
+
+class BigShadowDummy(Enemy):
+    def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 1200,
+                 xp_drop=700):
+        # OC formula
+        # calc_intensity = ceil(damage * health ) / xp_drop (this process must be automated instead of passed in
+        # __init__)
+
+        self.damage = 15
+
+        calc_intensity = ceil(self.damage * hp / xp_drop)  # 12 is the damage
+
+        super().__init__(level_instance, screen, pos, player, hp, xp_drop,
+                         custom_rect=[50, 50, 29 * 4, 24 * 6],
+                         enemy_type="shadow", intensiveness=calc_intensity, vel=1,
+                         )
+        self.load_animation(
+            resource_path("data/sprites/shadow_dummie.png"),
+            idle="static",
+            hit_anim="animated",
+            walk_anim="animated",
+            attack_anim="animated",
+            idle_coo=[0, 0, 29, 24, 1, 8],
+            walk_d_coo=[0, 25, 29, 24, 5, 8],
+            walk_l_coo=[0, 0, 29, 24, 5, 8],
+            walk_r_coo=[0, 25, 29, 24, 5, 8],
+            walk_u_coo=[0, 0, 29, 24, 5, 8],
+            attack_d_coo=[0, 50, 29, 24, 5, 8],
+            attack_l_coo=[0, 50, 29, 24, 5, 8],
+            attack_r_coo=[0, 75, 29, 24, 5, 8],
+            attack_u_coo=[0, 75, 29, 24, 5, 8],
+
+        )
+        self.custom_center = 250
+        self.xp_drop = self.xp_available = xp_drop
+        self.scale = 4

@@ -90,7 +90,7 @@ class Menu:
 
     def save_data(self):
         with open(resource_path('data/database/data.json'), 'w+') as f:
-            return json.dump(self.save, f)
+            return json.dump(self.save, f, indent=4)
 
     # This function is for centering the keywords in control section
     def draw_txt(self, txt, rect, surf):

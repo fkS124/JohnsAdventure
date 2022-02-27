@@ -83,6 +83,7 @@
 
   "ladder": {"x":3, "y": 39, "w": 17, "h": 75, "it": 1, "sc": 4, "crect":  [0, 0, 0, 0], "sheet":  "open_world"},
   "h_ladder": {"x":5, "y": 269, "w": 23, "h": 15, "it": 1, "sc": 4, "col": false, "sheet":  "open_world"},
+  "door": {"x":369, "y": 2, "w": 30, "h": 47, "it": 1, "sc": 4, "col": false, "sheet":  "open_world"},
 
   "c_flipped_corner":{"x":35, "y": 150, "w": 159, "h": 73, "it": 1, "sc": 3, "crect":  [0, 30, 158, 43], "sheet":  "cave_walls",
     "reverse": true

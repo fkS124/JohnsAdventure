@@ -24,7 +24,7 @@ def get_player(img, row, col):
         row (int): [description]
         col (int): [description]
     """
-    img.set_colorkey(0x000000)  # this is hacking, idk why it works but it does (you could take a further look pls)
+    img.set_colorkey(0x000000)
     return scale(get_sprite(img, 46 * row, 52 * col, 46, 52), 3)
 
 
@@ -243,8 +243,6 @@ def check_for_hitting(player):
                 if obj.rect is None or player.attacking_hitbox is None:  # prevent from errors due to unassigned hitbox
                     continue
 
-
-                print(obj.hitbox_rect)
                 if player.attacking_hitbox.colliderect(obj.hitbox_rect):
                     equipped_weapon = player.inventory.get_equipped("Weapon")
 

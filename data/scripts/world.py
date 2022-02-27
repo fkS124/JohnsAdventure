@@ -59,7 +59,7 @@ class GameManager:
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
 
-    FPS = 35
+    FPS = 55
 
     def __init__(self, debug=False, first_state="player_room", no_rect=False):
 
@@ -331,7 +331,7 @@ class GameManager:
                     if not self.game_state.ended_script and len(self.game_state.camera_script) > 0:
                         self.cutscene_engine.init_script(self.game_state.camera_script)
 
-                    self.FPS = 35
+                    self.FPS = 55
                 else:
                     set_camera_to(self.player.camera, self.player.camera_mode, "follow")
 

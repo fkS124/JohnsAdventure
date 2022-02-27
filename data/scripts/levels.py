@@ -10,7 +10,7 @@ from random import gauss
 # from .PLAYER.items import Chest
 from .PLAYER.player import *
 from .PLAYER.inventory import *
-from .AI.enemies import Dummy, ShadowDummy, Guardian, Goblin
+from .AI.enemies import *
 from .AI import npc
 from .utils import resource_path, load, l_path
 from .props import Chest
@@ -178,6 +178,66 @@ class Kitchen(GameState):
             PolygonLight(pg.Vector2(103 * 3, 9 * 3), 68 * 3, 350, 50, 85, (255, 255, 255), dep_alpha=80,
                          horizontal=True, additional_alpha=150),
         ]
+
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.ended_script = True
+        self.spawned = False
+        self.started_script = False
+        self.camera_script = [
+            {
+                "duration": 2000,
+                "pos": (570, 220),
+                "zoom": 1.2,
+                "text": "Cynthia: Hello brother. you seem dread. are you alright?",
+                "text_dt": 1500
+            },
+            {
+                "duration": 2000,
+                "pos": (570, 220),
+                "text": "Cynthia: Anyway.. Manos is waiting for you in training field",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 2000,
+                "pos": (570, 220),
+                "text": "Cynthia: I will go meet my friends in school, see you around",
+                "text_dt": 1500
+            },
+            {
+                # Show the door
+                "duration": 2000,
+                "pos": (620, 600),
+            },
+            {
+                # Go back to the player
+                "zoom": 1,
+                "zoom_duration": 1800,
+                "pos": (570, 220),  # I assume I have to return the camera somewhere near the player?
+            }
+        ]
+
+    def update(self, camera, dt):
+
+        # if level in json = false and cutscene not played
+        # if not get_cutscene_played(self.id) and not self.started_script:
+
+        if not get_cutscene_played(self.id) and not self.started_script:
+            # gets player's current main mission and then sub mission
+            if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                "Talk to Cynthia in the kitchen"]:
+                self.started_script = True
+                self.ended_script = False
+
+        # if the cutscene is played. do something
+        # if self.started_script:
+        # if self.player.game_instance.cutscene_engine.index_script == 3:
+        # pass"""
+        # print("ACTION")
+
+        print(self.player.rect.topleft)
+
+        return super(Kitchen, self).update(camera, dt)
 
 
 class JohnsGarden(GameState):
@@ -394,8 +454,6 @@ class JohnsGarden(GameState):
                                  start_type="hill_side_outer_rev"),
         ]
 
-        # print(F"HOLY F* {len(self.objects)} SURFACES!11")
-
         self.exit_rects = {
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
                         "Go back to your house?"),
@@ -456,7 +514,7 @@ class Training_Field(GameState):
 
             # Left
             *self.generate_chunk("tree", -200, 1000, 4, 2, 150, 400, randomize=50),
-            npc.Candy(pg.Vector2(1250, 1470), awake=True),  # Όταν
+            npc.Candy(pg.Vector2(1250, 1470), tell_story="meow meow meow", awake=True),
             npc.Manos(pg.Vector2(1150, 1480)),
             Chest((1630, 1410), {"items": Training_Sword(), "coins": 50}),
             Dummy(self, self.screen, (1850, 1534), self.player),
@@ -490,7 +548,7 @@ class Training_Field(GameState):
             },
             {
                 "duration": 3000,
-                "text": "Manos - Congratulations ! These dummies are dead as fuck !",
+                "text": "Manos: Well done john. now its time for movement-",
                 "text_dt": 1500
             },
             {
@@ -503,7 +561,7 @@ class Training_Field(GameState):
             {
                 "duration": 2000,
                 "pos": (1138, 1526),
-                "text": "Manos - Oh shit what the hell is that !",
+                "text": "Manos: Oh shit what the hell is that !",
                 "text_dt": 1500,
                 "zoom": 1,
                 "zoom_duration": 1800
@@ -606,7 +664,7 @@ class Gymnasium(GameState):
 
             self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
             *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
-            npc.Bababooye(pg.Vector2(2702, -75))
+            npc.Alexia(pg.Vector2(2702, -75))
         ]
 
         self.exit_rects = {
@@ -621,7 +679,6 @@ class Gymnasium(GameState):
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
-        print(self.player.rect.topleft)
         return super(Gymnasium, self).update(camera, dt)
 
 
@@ -638,13 +695,12 @@ class ManosHut(GameState):
             Rect(0, 4 - 0, 1280, 133 + 40),  # Up borders
             Rect(0, 711, 1280, 40),  # Down borders
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
-            npc.Candy(pg.Vector2(205, 395)),
+            npc.Candy(pg.Vector2(205, 395), tell_story="zzzzz.\n she is sleeping on the warm carpet."),
             Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
-            # ShadowDummy(self, self.screen, (600, 600), self.player)
         ]
 
         self.spawn = {
@@ -704,7 +760,9 @@ class CaveGarden(GameState):
             *self.generate_chunk("tree", hills_width * 3 - 50, hills_height * 2 - 50, 4, 3, 100 * 5, 100 * 3),
             *self.generate_chunk("tree", hills_width, hills_height * 2 - 50, 3, 3, 100 * 4, 100 * 3),
             *self.generate_chunk("tree", hills_width + 10, 3350, 3, 3, 100 * 4, 100 * 3),
-            *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3)
+            *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3),
+
+            BigShadowDummy(self, self.screen, (hills_width * 5 - 100, hills_height * 4), self.player)
         ]
 
         self.spawn = {
@@ -768,7 +826,9 @@ class CaveEntrance(GameState):
                 ),
                 # Since cave exit is optional, I need to add a bound
                 Rect(1400 + 140, self.spawn['cave_garden'][1], 150, 300),
-                Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300)
+                Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300),
+                Goblin(self, self.screen, (-1400, self.spawn['cave_garden'][1] + 10), self.player),
+                Goblin(self, self.screen, (-1300, self.spawn['cave_garden'][1] + 20), self.player)
             ]
 
         self.exit_rects = {
@@ -858,8 +918,10 @@ class CaveRoomOne(GameState):
                 *self.generate_wall_chunk(n=12, pos=(-300, -300), x_side=6),
 
                 # Right side of the map
-                *self.generate_wall_chunk(n=5, pos=(-300 + (18-5) * w, -300), up_side=False, right_side=False, d_n=1, l_n=1),
-                *self.generate_wall_chunk(n=5, pos=(-300 + (18-5) * w, 1300), down_side=False, right_side=False, u_n=1),
+                *self.generate_wall_chunk(n=5, pos=(-300 + (18 - 5) * w, -300), up_side=False, right_side=False, d_n=1,
+                                          l_n=1),
+                *self.generate_wall_chunk(n=5, pos=(-300 + (18 - 5) * w, 1300), down_side=False, right_side=False,
+                                          u_n=1),
 
                 # Right-bottom left room
                 *self.generate_cave_walls(
@@ -868,7 +930,7 @@ class CaveRoomOne(GameState):
                 ),
 
                 *self.generate_cave_walls(
-                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w//2, 1300),
+                    direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w // 2, 1300),
                     start_type="none", end_type="none", no_begin=True
                 ),
 
@@ -890,7 +952,6 @@ class CaveRoomOne(GameState):
                     start_type="none", end_type="none", no_begin=True
                 ),  # draw over the above broken block
 
-
                 *self.generate_cave_walls(
                     direction="down", n_walls=4, dep_pos=(6 * w, -200),
                     start_type="none", end_type="none", no_begin=True
@@ -902,7 +963,7 @@ class CaveRoomOne(GameState):
                 ),
 
                 *self.generate_cave_walls(
-                    direction="down", n_walls=4, dep_pos=(1000,  900),
+                    direction="down", n_walls=4, dep_pos=(1000, 900),
                     start_type="none", end_type="none", no_begin=True
                 ),
 
@@ -910,22 +971,39 @@ class CaveRoomOne(GameState):
                     direction="down", n_walls=4, dep_pos=(1750, 900),
                     start_type="none", end_type="none", no_begin=True
                 ),
+
+                self.prop_objects['door']((440, -268)),
+
+                Goblin(self, self.screen, (6900, 1200), self.player),
+
+                Goblin(self, self.screen, (6600, 400), self.player),
+                Goblin(self, self.screen, (6700, 450), self.player),
+                Goblin(self, self.screen, (6300, 350), self.player),
+
+                Goblin(self, self.screen, (7300, 2050), self.player),
+                Goblin(self, self.screen, (6800, 2050), self.player),
+
+                Goblin(self, self.screen, (3500, 500), self.player),
+                Goblin(self, self.screen, (3700, 650), self.player),
+                Goblin(self, self.screen, (3800, 620), self.player),
+                Goblin(self, self.screen, (4120, 600), self.player),
+                Goblin(self, self.screen, (4570, 750), self.player),
+                Goblin(self, self.screen, (5900, 850), self.player),
+
             ]
 
         self.spawn = {
             "cave_entrance": (8000, 1160),
+            "cave_room_2": (460, -20)
         }
         self.exit_rects = {
-            "cave_room_2": (pg.Rect(800, 100, 150, 200), "", "mandatory"),
+            "cave_room_2": (pg.Rect(425, -82, 150, 75), "check the room?"),
             "cave_entrance": (pg.Rect(8100, 1112, 150, 280), "", "mandatory")
         }
 
     def update(self, camera, dt):
-        print("floor 1")
         # Background
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
-
-        print(self.player.rect.center)
 
         pg.draw.circle(  # Flashlight
             self.screen,
@@ -947,18 +1025,137 @@ class CaveRoomTwo(GameState):
             light_state="inside_dark"
         )
 
+        w = self.prop_objects['c_wall_mid']((0, 0)).idle[0].get_width()
+        h = (self.prop_objects['c_wall_side']((0, 0)).idle[0].get_width() * 3 * 2) + 23
+
         self.objects = \
             [
+
+                self.prop_objects['door']((-50, -268)),
+
+                # bounds
                 *self.generate_wall_chunk(n=12, pos=(-300, -300), x_side=6),
+
+                # 4 chunks
+
+                # chunk 1
+                *self.generate_wall_chunk(
+                    n=2, pos=(-300, 300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(-300, 1300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0, r_n=0
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(1092, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                # chunk 2
+                *self.generate_wall_chunk(
+                    n=2, pos=(1096, 300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(1096, 1300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0, r_n=0
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(2488, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                # chunk 4
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(3878, -300),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(3878, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(3878, 300), y_side=1, up_side=False, corner=True, d_n=0
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(3878, 1300), y_side=1, up_side=False, corner=True, d_n=0, r_n=0
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(5270, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                # chunk 5
+                *self.generate_wall_chunk(
+                    n=2, pos=(5276, 300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(5276, 1300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0, r_n=0
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(6668, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                # chunk 6
+                *self.generate_wall_chunk(
+                    n=2, pos=(6674, 300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0
+                ),
+
+                *self.generate_wall_chunk(
+                    n=2, pos=(6674, 1300), y_side=1, left_side=False, up_side=False, corner=True, d_n=0, r_n=0
+                ),
+
+                *self.generate_cave_walls(
+                    direction="down", n_walls=3, dep_pos=(8066, 1650),
+                    start_type="none", end_type="c_wall_side", no_begin=True
+                ),
+
+                self.prop_objects['door']((7450, -268)),
+
+                Goblin(self, self.screen, (1600, 1100), self.player),
+                Goblin(self, self.screen, (1780, 1150), self.player),
+                Goblin(self, self.screen, (1800, 1270), self.player),
+
+                Guardian(self, self.screen, (1600, 400), self.player),
+                Guardian(self, self.screen, (1800, 400), self.player),
+
+                Guardian(self, self.screen, (3600, 800), self.player),
+                Guardian(self, self.screen, (3600, 1400), self.player),
+
+                Goblin(self, self.screen, (5700, 1100), self.player),
+                Goblin(self, self.screen, (5820, 1150), self.player),
+                Goblin(self, self.screen, (5900, 1270), self.player),
+                Goblin(self, self.screen, (6120, 1270), self.player),
+
+                Guardian(self, self.screen, (6600, 1200), self.player),
+
+                Goblin(self, self.screen, (5700, 2100), self.player),
+                Goblin(self, self.screen, (5820, 2150), self.player),
+                Goblin(self, self.screen, (5900, 2270), self.player),
+                Goblin(self, self.screen, (6120, 2270), self.player),
+
+                Guardian(self, self.screen, (7100, 300), self.player),
+                Guardian(self, self.screen, (7200, 380), self.player),
+                Guardian(self, self.screen, (7300, 300), self.player),
+
             ]
 
         self.spawn = {
-            "cave_room_1": (0, 0),
-            "cave_passage": (860, 200)
+            "cave_room_1": (-65, -40),
+            "cave_passage": (7500, 20)
         }
 
         self.exit_rects = {
-            "cave_passage": (pg.Rect(800, 100, 150, 140), "", "mandatory")
+            "cave_passage": (pg.Rect(7450, -100, 150, 75), "are you sure you want to go back ?"),
+            "cave_room_1": (pg.Rect(-65, -80, 150, 75), "are you sure you want to go back ?")
         }
 
     def update(self, camera, dt):
@@ -1030,8 +1227,12 @@ class CaveRoomPassage(GameState):
                     end_type="c_flipped_corner",
                 ),
 
+                *self.generate_chunk('ladder', x=770, y=300, row=1, col=1, step_x=0, step_y=0, randomize=0),
 
-                *self.generate_chunk('ladder', x=770, y=300, row=1, col=1, step_x=0, step_y=0, randomize=0)
+                Goblin(self, self.screen, (440, 920), self.player),
+                Goblin(self, self.screen, (490, 920), self.player),
+                Goblin(self, self.screen, (940, 920), self.player),
+                Goblin(self, self.screen, (970, 920), self.player)
 
             ]
 
@@ -1065,8 +1266,6 @@ class CaveRoomPassage(GameState):
     def update(self, camera, dt):
         # Background
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
-
-        print(self.player.rect.topleft)
 
         # Flashlight
         pg.draw.circle(

@@ -92,7 +92,7 @@ class DustManager(ParticleManager):
                     400
                     )
             except Exception as e:
-                print(e)
+                pass
             return True
         return False
 

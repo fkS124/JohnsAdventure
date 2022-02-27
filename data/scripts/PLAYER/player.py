@@ -32,7 +32,7 @@ vec = p.math.Vector2
 
 
 class Player:
-    DEFAULT_VEL = 6
+    DEFAULT_VEL = 4
 
     def __init__(self, game_instance, screen, font, ux, ui, data):
         self.game_instance = game_instance

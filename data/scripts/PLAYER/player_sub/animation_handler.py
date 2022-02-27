@@ -154,9 +154,17 @@ def user_interface(player, m, player_pos, dt):
     if hasattr(equipped, "special_effect"):
         equipped.special_effect(player)
 
-    # if player presses interaction key and is in a interaction zone
+    # Summon the interaction block only when there is no script or interaction block
     if player.Interactable and player.is_interacting:
-        player.npc_catalog.draw(player.npc_text, dt)
+        if hasattr(player.interacting_with, "IDENTITY"):
+            if player.interacting_with.IDENTITY == "NPC":
+                if not player.interacting_with.remove_bubble:
+                    player.npc_catalog.draw(player.npc_text, dt)
+        # It's an object or other interaction area
+        else:
+            player.npc_catalog.draw(player.npc_text, dt)
+
+
 
 
 def update_attack(player, pos):

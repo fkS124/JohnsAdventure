@@ -9,6 +9,8 @@ from random import choice
 import pygame as pg
 from pygame import sprite
 from ..utils import load, get_sprite, flip_vertical, scale, resource_path, UI_Spritesheet
+
+
 class NPC:
     """Base class for every NPC."""
 
@@ -26,7 +28,8 @@ class NPC:
                  move_right=None,
                  move_down=None,
                  move_up=None,
-                 tell_story=""
+                 tell_story="",
+                 remove_bubble=False
                  ):
 
         self.IDENTITY = "NPC"  # -> useful to check fastly the type of object we're dealing with
@@ -60,7 +63,7 @@ class NPC:
         }
 
         # Story telling
-
+        self.remove_bubble = remove_bubble
         self.tell_story = tell_story
 
         self.idle = idle
@@ -139,14 +142,13 @@ class NPC:
                                                 *self.it_re_size)
         self.interaction_rect.topleft -= scroll
 
-
     def render_highlight(self, screen, scroll):
         """ Outlining the npcs, to show interactness
         Args:
             screen (pygame.Surface): main window of the game
             scroll (int tuple): the camera scroller offset
         """
-        
+
         outline = pg.mask.from_surface(self.image).to_surface()
         outline.set_colorkey((0, 0, 0))
         outline.set_alpha(155)
@@ -190,7 +192,8 @@ class MovingNPC(NPC):
                  move_right=None,
                  move_down=None,
                  move_up=None,
-                 tell_story=None
+                 tell_story=None,
+                 remove_bubble=False
                  ):
 
         super().__init__(
@@ -198,6 +201,7 @@ class MovingNPC(NPC):
             move_right, move_down, move_up, tell_story
         )
 
+        self.remove_bubble = remove_bubble
         self.movement = movement
         self.range_rect = range_rect
         self.velocity = velocity
@@ -292,7 +296,7 @@ class Mau(MovingNPC):
 
         self.it_re_size = (75, 100)
         self.anim_duration = {
-            "idle": 115, # HE FLOPS
+            "idle": 115,  # HE FLOPS
             "move": 100
         }
 
@@ -313,8 +317,7 @@ class Candy(MovingNPC):
             idle_down=[119, 87, 37, 27, 2, 2],
             move_anim=True,
             move_right=[2, 86, 38, 29, 2, 2],
-            move_left=[2, 86, 38, 29, 2, 2, "flip"],
-            tell_story='Zzzz'
+            move_left=[2, 86, 38, 29, 2, 2, "flip"]
         )
         self.direction = "down"
         self.state = "idle"
@@ -364,7 +367,7 @@ class Cynthia(NPC):
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
             idle_down=[1, 1, 26, 42, 3, 3],
-            tell_story='cynthia'
+            remove_bubble=True
         )
         self.direction = "down"
         self.state = "idle"
@@ -384,7 +387,7 @@ class Manos(NPC):
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
             idle_down=[2, 120, 20, 45, 3, 3],
-            tell_story='Sup john'
+            remove_bubble=True
         )
         self.direction = "down"
         self.state = "idle"
@@ -395,16 +398,16 @@ class Manos(NPC):
         self.it_re_size = (90, 60)
 
 
-class Bababooye(NPC):
+class Alexia(NPC):
 
     def __init__(self, pos, tell_story=""):
-        super(Bababooye, self).__init__(
+        super(Alexia, self).__init__(
             moving=False,
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
             idle_down=[0, 169, 26, 43, 3, 3],
-            tell_story=tell_story
+            remove_bubble=True
         )
         self.direction = "down"
         self.state = "idle"

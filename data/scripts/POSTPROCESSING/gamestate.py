@@ -621,7 +621,8 @@ class GameState:
                             u_n=None,  # up gate
                             d_n=None,  # down gate
                             l_n=None,  # left gate
-                            r_n=None  # right gate
+                            r_n=None,  # right gate
+                            corner=None
                             ):
         """
             Easy and way creating blocks
@@ -671,17 +672,33 @@ class GameState:
             )
 
         if right_side:
-            new_list.extend(
-                self.generate_cave_walls(
-                    direction="down",
-                    dep_pos=(pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30, pos[1]),
-                    n_walls=n + y_side,
-                    no_begin=True,
-                    start_type="none",
-                    end_type="none",
-                    door_n=r_n
+            if corner is None:
+                new_list.extend(
+                    self.generate_cave_walls(
+                        direction="down",
+                        dep_pos=(pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30, pos[1]),
+                        n_walls=n + y_side,
+                        no_begin=True,
+                        start_type="none",
+                        end_type="none",
+                        door_n=r_n
+                    )
                 )
-            )
+            else:
+                new_list.extend(
+                    self.generate_cave_walls(
+                        direction="down",
+                        dep_pos=(
+                            pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30,
+                            pos[1] - h * n - 90 
+                        ),
+                        n_walls=n + y_side,
+                        start_type="c_wall_side",
+                        end_type="c_wall_side",
+                        door_n=r_n
+                    )
+
+               )
 
         if down_side:
             new_list.extend(
