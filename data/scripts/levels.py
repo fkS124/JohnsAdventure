@@ -1,11 +1,5 @@
-import random
-
-import pygame as pg
 from pygame import Rect
-from copy import copy
-from operator import attrgetter
 import json
-from random import gauss
 
 # from .PLAYER.items import Chest
 from .PLAYER.player import *
@@ -13,10 +7,8 @@ from .PLAYER.inventory import *
 from .AI.enemies import *
 from .AI import npc
 from .utils import resource_path, load, l_path
-from .props import Chest
+from .props import Chest, Torch
 from .PLAYER.items import Training_Sword, Knight_Sword
-from .AI.death_animator import DeathManager
-from .POSTPROCESSING.lights_manager import LightManager
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
 from .POSTPROCESSING.gamestate import GameState
 from .sound_manager import SoundManager
@@ -185,31 +177,32 @@ class Kitchen(GameState):
         self.started_script = False
         self.camera_script = [
             {
-                "duration": 2000,
+                "duration": 4000,
                 "pos": (570, 220),
                 "zoom": 1.2,
                 "text": "Cynthia: Hello brother. you seem dread. are you alright?",
                 "text_dt": 1500
             },
             {
-                "duration": 2000,
+                "duration": 4000,
                 "pos": (570, 220),
                 "text": "Cynthia: Anyway.. Manos is waiting for you in training field",
                 "text_dt": 1500
             },
 
             {
-                "duration": 2000,
+                "duration": 4000,
                 "pos": (570, 220),
                 "text": "Cynthia: I will go meet my friends in school, see you around",
                 "text_dt": 1500
             },
             {
                 # Show the door
-                "duration": 2000,
+                "duration": 3000,
                 "pos": (620, 600),
             },
             {
+                "duration": 1800,
                 # Go back to the player
                 "zoom": 1,
                 "zoom_duration": 1800,
@@ -828,7 +821,8 @@ class CaveEntrance(GameState):
                 Rect(1400 + 140, self.spawn['cave_garden'][1], 150, 300),
                 Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300),
                 Goblin(self, self.screen, (-1400, self.spawn['cave_garden'][1] + 10), self.player),
-                Goblin(self, self.screen, (-1300, self.spawn['cave_garden'][1] + 20), self.player)
+                Goblin(self, self.screen, (-1300, self.spawn['cave_garden'][1] + 20), self.player),
+                Torch(self, self.spawn["cave_entrance"], radius=80)
             ]
 
         self.exit_rects = {

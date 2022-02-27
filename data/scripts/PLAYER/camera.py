@@ -235,8 +235,14 @@ class Auto(CamScroll):
         )
 
         dist_x, dist_y = abs(pos[0] - self.looking_at[0]), abs(pos[1] - self.looking_at[1])
-        self.dx = math.cos(angle) * abs(dist_x / (duration / 30 * math.cos(angle)))
-        self.dy = math.sin(angle) * abs(dist_y / (duration / 30 * math.sin(angle)))
+        if dist_x > 0:
+            self.dx = math.cos(angle) * abs(dist_x / (duration / 30 * math.cos(angle)))
+        else:
+            self.dx = 0
+        if dist_y > 0:
+            self.dy = math.sin(angle) * abs(dist_y / (duration / 30 * math.sin(angle)))
+        else:
+            self.dy = 0
         self.delay_mvt = pygame.time.get_ticks()
         self.target = pos
 

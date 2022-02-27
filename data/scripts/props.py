@@ -1,4 +1,6 @@
 import pygame as pg
+from random import gauss, choice
+from copy import copy
 from .utils import *
 from .particle_system import PARTICLE_EFFECTS
 import json
@@ -448,3 +450,47 @@ class SimplePropObject(Prop):
         update = super(SimplePropObject, self).update(screen, scroll)
         p_effect = self.particle_effect.update(screen) if self.particle_effect is not None else None
         return update
+
+
+class Torch:
+
+    def __init__(self, level_instance, pos: tuple[int, int], radius: int = 50):
+        self.level = level_instance
+        # colors
+        self.fire_color = [pg.Color(222, 0, 18),  # red
+                           pg.Color(255, 81, 23),  # orange
+                           pg.Color(255, 187, 0)  # yellow
+                           ]
+
+        # torch image
+        self.image = pg.Surface((10, 50), pg.SRCALPHA)
+        pg.draw.rect(self.image, self.fire_color[2], [0, 0, 10, 10])
+        pg.draw.rect(self.image, (150, 75, 0), [0, 10, 10, 40], border_bottom_right_radius=10,
+                     border_bottom_left_radius=10)
+        # position
+        self.rect = self.image.get_rect(topleft=pos)
+
+        # light sources
+        self.lights = [  # generates multiple lights so we can make an effect of radius changes
+            LightTypes.light_types["light_sources"](pg.Vector2(pos)+pg.Vector2(5, 5),
+                                                    int(gauss(radius, 2)),
+                                                    int(gauss(225, 30)),
+                                                    self.fire_color[2])
+            for _ in range(10)
+        ]
+        self.cur_light = choice(self.lights)
+        self.delay_between_light = 100  # ms
+        self.new_light_time = pg.time.get_ticks()  # ms
+
+        self.light_sources = [self.cur_light]  # this will be appended at the loading
+
+    def update(self, screen, scroll):
+        if pg.time.get_ticks() - self.new_light_time > self.delay_between_light:
+            self.level.lights_manager.lights.remove(self.cur_light)
+            tp_list = copy(self.lights)
+            tp_list.remove(self.cur_light)
+            self.cur_light = choice(tp_list)
+            self.level.lights_manager.lights.append(self.cur_light)
+            self.new_light_time = pg.time.get_ticks()
+
+        screen.blit(self.image, (self.rect.topleft-scroll))
