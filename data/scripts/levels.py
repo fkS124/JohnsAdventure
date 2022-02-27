@@ -822,7 +822,7 @@ class CaveEntrance(GameState):
                 Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300),
                 Goblin(self, self.screen, (-1400, self.spawn['cave_garden'][1] + 10), self.player),
                 Goblin(self, self.screen, (-1300, self.spawn['cave_garden'][1] + 20), self.player),
-                Torch(self, self.spawn["cave_entrance"], radius=80)
+                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"])-pg.Vector2(100, 80)), radius=80)
             ]
 
         self.exit_rects = {
@@ -848,20 +848,22 @@ class CaveEntrance(GameState):
         self.additional_lights = [
 
             PolygonLight(
-                vec(1400, self.spawn['cave_garden'][1] + 40),
+                vec(2150, self.spawn['cave_garden'][1] + 95),
                 68 * 3,  # height
-                350,  # radius
-                50,  # dep_angle
-                85,  # end_angle
+                400,  # radius
+                -15,  # dep_angle
+                110,  # end_angle
                 (255, 255, 255),  # color
-                dep_alpha=50,
-                horizontal=True,
-                additional_alpha=175
+                dep_alpha=70,
+                horizontal=False,
+                additional_alpha=175,
+                rotated=True
             )
         ]
 
     def update(self, camera, dt):
         # Background
+        print(self.player.rect)
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
 
         # Top void

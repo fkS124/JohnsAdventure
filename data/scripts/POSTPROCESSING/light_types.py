@@ -37,7 +37,8 @@ class LightSource:
 class PolygonLight:
 
     def __init__(self, origin: pg.Vector2, height: int, radius: int, dep_angle: int, end_angle: int,
-                 color: tuple[int, int, int], dep_alpha: int, horizontal: bool = False, additional_alpha: int = 0):
+                 color: tuple[int, int, int], dep_alpha: int, horizontal: bool = False, additional_alpha: int = 0,
+                 rotated: bool = False):
 
         self.pos = origin - pg.Vector2(radius, radius)  # position on the screen
         self.radius = radius  # radius of the light
@@ -58,11 +59,20 @@ class PolygonLight:
 
         # generate a surface of twice radius width/height
         self.surface = pg.Surface((self.radius * 2, self.radius * 2), pg.SRCALPHA)
+
+        self.rotated = rotated
         # draw the actual light
         self.draw_light(self.surface)
+        #if rotated:
+        #    self.surface = pg.transform.rotate(self.surface, 180)
 
     def get_points(self, radius) -> list:
         # we take a variable radius, as we will need to generate points according to different radius
+        if self.rotated:
+            new_list = [pg.Vector2(self.radius - radius * cos(radians(self.dep_angle + i)),
+                        self.radius - radius * sin(radians(self.dep_angle + i))) for i in range(self.end_angle)]
+            new_list.reverse()
+            return new_list
         return [pg.Vector2(self.radius+radius*cos(radians(self.dep_angle+i)),
                            self.radius+radius*sin(radians(self.dep_angle+i))) for i in range(self.end_angle)]
 

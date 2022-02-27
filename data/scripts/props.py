@@ -474,7 +474,7 @@ class Torch:
         self.lights = [  # generates multiple lights so we can make an effect of radius changes
             LightTypes.light_types["light_sources"](pg.Vector2(pos)+pg.Vector2(5, 5),
                                                     int(gauss(radius, 2)),
-                                                    int(gauss(225, 30)),
+                                                    int(gauss(225, 15)),
                                                     self.fire_color[2])
             for _ in range(10)
         ]
