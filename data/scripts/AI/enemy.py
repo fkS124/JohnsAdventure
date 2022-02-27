@@ -48,6 +48,11 @@ class Enemy:
         self.tp_V = pg.Vector2(0, 0)
         self.enemy_type = enemy_type
 
+        if enemy_type == 'boss':
+            self.boss_name = ''  # gets filled by oop
+            self.show_boss_bar = False
+            self.level_instance = level_instance
+
         self.sheet = load(resource_path("data/sprites/dummy.png"), alpha=False)
         self.attackable = True
         self.screen = screen
@@ -80,8 +85,8 @@ class Enemy:
         self.intensiveness = intensiveness
 
         self.player = player
-        # SHADOW PARTICLES
-        if enemy_type == "shadow":
+        # SHADOW PARTICLES only for shadow monsters and bosses
+        if enemy_type in ['shadow', 'boss']:
             # Initialize Shadow Particles only if they are shadow monsters
             self.aura_particles = Shadow_Manager(self.intensiveness, self.player, self.screen, self)
 
@@ -146,8 +151,7 @@ class Enemy:
         }
 
         # KNOCK BACK
-        # Only moving enemy objects will be able to get knocked
-        self.knockable = True if self.enemy_type != "static" else False
+        self.knockable = True if self.enemy_type not in ["static", 'boss'] else False
         self.knocked_back = False  # true if currently affected by a knock back
         self.knock_back_duration = 0  # duration in ms of the knock back movement
         self.start_knock_back = 0  # time of starting the knock back
@@ -365,31 +369,31 @@ class Enemy:
 
         """Draw a life bar if the enemy is not at its max hp"""
         if self.MAX_HP != self.hp:
-            width = self.current_sprite.get_width() if self.health_bar_width is None else self.health_bar_width
 
-            curr_x = self.pos[0] if self.health_bar_width is None else self.pos[0] + 15  # we need / 3 here
+            if self.enemy_type != 'boss':
+                width = self.current_sprite.get_width() if self.health_bar_width is None else self.health_bar_width
 
-            # Outline
-            pg.draw.rect(
-                self.screen,
-                (0, 0, 0),
-                [
-                    curr_x,
-                    self.pos[1] - 12,
-                    width, 10
-                ],
-                border_radius=25
-            )
+                curr_x = self.pos[0] if self.health_bar_width is None else self.pos[0] + 15  # we need / 3 here
 
-            # Health Bar
-            pg.draw.rect(self.screen, (255, 0, 0),
-                         [
-                             curr_x,
-                             self.pos[1] - 11,
-                             int((width / self.MAX_HP) * self.show_hp) - 2, 8
-                         ],
-                         border_radius=25)
+                # Outline
+                pg.draw.rect(
+                    self.screen,
+                    (0, 0, 0),
+                    [
+                        self.hitbox_rect[0] - 15,
+                        self.pos[1] - 12,
+                        width, 10
+                    ],
+                    border_radius=25
+                )
 
+                pg.draw.rect(self.screen, (255, 0, 0),
+                             [
+                                 self.hitbox_rect[0] - 15,
+                                 self.pos[1] - 11,
+                                 int((width / self.MAX_HP) * self.show_hp) - 2, 8
+                             ],
+                             border_radius=25)
             # pg.draw.rect(self.screen, (255,255,255), self.rect, 1)
 
     def update_dmg_popups(self, scroll):
@@ -522,7 +526,7 @@ class Enemy:
 
             # Enemy must not be in the attacking state to move around
             if not self.attacking:
-                if GET_DISTANCE >= 300:
+                """if GET_DISTANCE >= 300 or self.enemy_type == 'boss' and GET_DISTANCE >= 1200:
                     self.status, self.moving = "ROAMING", True
                     if self.move_ability[self.direction]:
                         match self.direction:
@@ -535,15 +539,15 @@ class Enemy:
                             case "left":
                                 self.x -= enemy_speed
                     else:
-                        self.switch_directions(self.direction)
+                        self.switch_directions(self.direction)"""
 
                 # CHASE THE PLAYER
-                elif GET_DISTANCE > 90:  # I need to switch this up by enemy's.attack_distance
+                if GET_DISTANCE > 90:  # I need to switch this up by enemy's.attack_distance
                     self.moving, self.status = True, "CHASING"
                     try:
                         self.tp_V = (
                                 (
-                                  vec(self.player.rect.center) - vec(self.rect.center + self.scroll)
+                                        vec(self.player.rect.center) - vec(self.rect.center + self.scroll)
                                 ).normalize() * self.BASE_VEL
                         )
                         self.direction = "left" if self.tp_V[0] < 0 else "right"
@@ -598,6 +602,10 @@ class Enemy:
         """We gather all the methods needed to make the enemy work here.
         We pass the scroll."""
 
+        if self.enemy_type == 'boss':
+            if self.level_instance.ended_script:
+                self.show_boss_bar = True
+
         # update the life bar if it's shown
         if self.show_life_bar:
             if self.show_hp >= self.hp:
@@ -619,9 +627,9 @@ class Enemy:
                 self.knocked_back = False
 
             if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration / 2:
-                self.y += self.knock_back_vel_y * dt * 25
+                self.y += self.knock_back_vel_y * dt * 35
             else:
-                self.y -= self.knock_back_vel_y * dt * 25  # will later be changed to player's crit damage / endurance
+                self.y -= self.knock_back_vel_y * dt * 35  # will later be changed to player's crit damage / endurance
 
             self.x += self.knock_back_vel[0] * dt * 25
             self.y += self.knock_back_vel[1] * dt * 25

@@ -40,7 +40,6 @@ class PlayerRoom(GameState):
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
             Rect(36, 400, 77, 94),
-            ShadowDummy(self, self.screen, (600, 600), self.player)
         ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -228,7 +227,7 @@ class Kitchen(GameState):
         # pass"""
         # print("ACTION")
 
-        print(self.player.rect.topleft)
+        # print(self.player.rect.topleft)
 
         return super(Kitchen, self).update(camera, dt)
 
@@ -688,7 +687,7 @@ class ManosHut(GameState):
             Rect(0, 4 - 0, 1280, 133 + 40),  # Up borders
             Rect(0, 711, 1280, 40),  # Down borders
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
-            npc.Candy(pg.Vector2(205, 395), tell_story="zzzzz.\n she is sleeping on the warm carpet."),
+            npc.Candy(pg.Vector2(205, 395)),
             Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
@@ -708,7 +707,8 @@ class ManosHut(GameState):
 class CaveGarden(GameState):
 
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
-        super(CaveGarden, self).__init__(DISPLAY, player_instance, prop_objects, "cave_garden", light_state="day")
+        super(CaveGarden, self).__init__(DISPLAY, player_instance, prop_objects, "cave_garden", light_state="day",
+                                         has_boss=True)
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
 
@@ -755,11 +755,12 @@ class CaveGarden(GameState):
             *self.generate_chunk("tree", hills_width + 10, 3350, 3, 3, 100 * 4, 100 * 3),
             *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3),
 
-            BigShadowDummy(self, self.screen, (hills_width * 5 - 100, hills_height * 4), self.player)
+            BigShadowDummy(self, self.screen, (3300, hills_height * 4 + 10), self.player)
         ]
 
+
         self.spawn = {
-            "johns_garden": (hills_width * 5 - 100, hills_height * 4 + 100),
+            "johns_garden": (2150, 2830),  # (hills_width * 5 - 100, hills_height * 4 + 100)
             "cave_entrance": (2150, 2830)
         }
 
@@ -774,8 +775,49 @@ class CaveGarden(GameState):
             )
         }
 
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.ended_script = True
+        self.spawned = False
+        self.started_script = False
+
+        self.camera_script = [
+            {
+                "duration": 4000,
+                "pos": (2080, 2800),
+                "text": "John: well that was.. dangerous.",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4000,
+                "pos": (2080, 2800),
+                "text": "John: Mmmm? what is that?",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 3000,
+                "pos": (2900, 2800),  # enemy position
+                "zoom": 1.2,
+            },
+            {
+                "duration": 4200,
+                # Go back to the player
+                "zoom": 1,
+                "zoom_duration": 1800,
+                "text": "John: Oh no!",
+                "text_dt": 1500,
+                "pos": (2080, 2800),  # I assume I have to return the camera somewhere near the player?
+            }
+        ]
+
     def update(self, camera, dt):
         pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
+
+        # Play cutscene
+        if not get_cutscene_played(self.id) and not self.started_script:
+            self.started_script = True
+            self.ended_script = False
+
         return super(CaveGarden, self).update(camera, dt)
 
 
@@ -822,7 +864,10 @@ class CaveEntrance(GameState):
                 Rect(-(2700 + 140), self.spawn['cave_garden'][1], 150, 300),
                 Goblin(self, self.screen, (-1400, self.spawn['cave_garden'][1] + 10), self.player),
                 Goblin(self, self.screen, (-1300, self.spawn['cave_garden'][1] + 20), self.player),
-                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"])-pg.Vector2(100, 80)), radius=80)
+                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"]) - pg.Vector2(100, 80)), radius=80),
+                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"]) - pg.Vector2(1100, 80)), radius=80),
+                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"]) - pg.Vector2(2100, 80)), radius=80),
+                Torch(self, tuple(pg.Vector2(self.spawn["cave_garden"]) - pg.Vector2(3100, 80)), radius=80),
             ]
 
         self.exit_rects = {
@@ -863,7 +908,6 @@ class CaveEntrance(GameState):
 
     def update(self, camera, dt):
         # Background
-        print(self.player.rect)
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
 
         # Top void
@@ -873,14 +917,6 @@ class CaveEntrance(GameState):
                          , 5350, 400
                      ]
                      )
-
-        # Flashlight
-        pg.draw.circle(
-            self.screen,
-            (240, 240, 240, 30),
-            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
-            70
-        )
 
         # Bottom and left void (it would be best if we could blit it after the cave objects)
         pg.draw.rect(self.screen, (0, 0, 0),
@@ -924,6 +960,30 @@ class CaveRoomOne(GameState):
                     direction="down", n_walls=5, door_n=1, dep_pos=((18 - 3) * w - w // 2 - 160, 1300),
                     start_type="none", end_type="none", no_begin=True
                 ),
+
+                # A few torches...
+
+                Torch(self, (7530, -140), radius=80),
+                Torch(self, (7530, 1040), radius=80),
+                Torch(self, (7530, 1450), radius=80),
+                Torch(self, (6520, 1450), radius=80),
+                Torch(self, (6520, 1040), radius=80),
+                Torch(self, (6520, -140), radius=80),
+
+                Torch(self, (5170, -140), radius=80),
+                Torch(self, (3700, -140), radius=80),
+
+                Torch(self, (1080, 1040), radius=80),
+                Torch(self, (1680, 1040), radius=80),
+
+                Torch(self, (5170, 1040), radius=80),
+                Torch(self, (3700, 1040), radius=80),
+                Torch(self, (2280, 1040), radius=80),
+
+                Torch(self, (2280, -140), radius=80),
+                Torch(self, (750, -140), radius=80),
+                Torch(self, (280, -140), radius=80),
+
 
                 *self.generate_cave_walls(
                     direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w // 2, 1300),
@@ -970,6 +1030,7 @@ class CaveRoomOne(GameState):
 
                 self.prop_objects['door']((440, -268)),
 
+
                 Goblin(self, self.screen, (6900, 1200), self.player),
 
                 Goblin(self, self.screen, (6600, 400), self.player),
@@ -998,16 +1059,7 @@ class CaveRoomOne(GameState):
         }
 
     def update(self, camera, dt):
-        # Background
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
-
-        pg.draw.circle(  # Flashlight
-            self.screen,
-            (240, 240, 240, 30),
-            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
-            70
-        )
-
         return super(CaveRoomOne, self).update(camera, dt)
 
 
@@ -1116,6 +1168,50 @@ class CaveRoomTwo(GameState):
 
                 self.prop_objects['door']((7450, -268)),
 
+                Torch(self, (240, -140), radius=80),
+
+                Torch(self, (850, 920), radius=80),
+                Torch(self, (-60, 920), radius=80),
+                Torch(self, (-60, 1920), radius=80),
+                Torch(self, (850, 1920), radius=80),
+
+                Torch(self, (1300, 920), radius=80),
+                Torch(self, (1300, -140), radius=80),
+                Torch(self, (1300, 1920), radius=80),
+
+                Torch(self, (2250, 920), radius=80),
+                Torch(self, (2250, -140), radius=80),
+                Torch(self, (2250, 1920), radius=80),
+
+                Torch(self, (2760, -140), radius=80),
+                Torch(self, (3670, -140), radius=80),
+
+                Torch(self, (4100, 440), radius=80),
+                Torch(self, (4100, 1920), radius=80),
+                Torch(self, (4100, 1440), radius=80),
+
+                Torch(self, (4100, 920), radius=80),
+                Torch(self, (5030, 920), radius=80),
+                Torch(self, (5030, 1920), radius=80),
+                Torch(self, (5480, 920), radius=80),
+
+                Torch(self, (4100, -140), radius=80),
+                Torch(self, (5030, -140), radius=80),
+                Torch(self, (5480, -140), radius=80),
+                Torch(self, (5480, 1920), radius=80),
+
+                Torch(self, (6430, -140), radius=80),
+                Torch(self, (6430, 920), radius=80),
+                Torch(self, (6430, 1920), radius=80),
+
+                Torch(self, (6900, 920), radius=80),
+                Torch(self, (6900, -140), radius=80),
+                Torch(self, (6900, 1920), radius=80),
+
+                Torch(self, (7820, 920), radius=80),
+                Torch(self, (7820, -140), radius=80),
+                Torch(self, (7820, 1920), radius=80),
+
                 Goblin(self, self.screen, (1600, 1100), self.player),
                 Goblin(self, self.screen, (1780, 1150), self.player),
                 Goblin(self, self.screen, (1800, 1270), self.player),
@@ -1141,8 +1237,8 @@ class CaveRoomTwo(GameState):
                 Guardian(self, self.screen, (7100, 300), self.player),
                 Guardian(self, self.screen, (7200, 380), self.player),
                 Guardian(self, self.screen, (7300, 300), self.player),
-
             ]
+
 
         self.spawn = {
             "cave_room_1": (-65, -40),
@@ -1157,15 +1253,6 @@ class CaveRoomTwo(GameState):
     def update(self, camera, dt):
         # Background
         pg.draw.rect(self.screen, (23, 22, 22), [0, 0, *self.screen.get_size()])
-
-        # Flashlight
-        pg.draw.circle(
-            self.screen,
-            (240, 240, 240, 30),
-            (self.screen.get_width() // 2 + 20, self.screen.get_height() // 2 + 92),
-            70
-        )
-
         return super(CaveRoomTwo, self).update(camera, dt)
 
 
@@ -1236,9 +1323,9 @@ class CaveRoomPassage(GameState):
             "gymnasium": (pg.Rect(732, 530, 150, 140), "Are you sure you want to exit the cave ?"),
             "cave_room_2": (
                 pg.Rect(
-                    726,
-                    self.spawn['cave_room_2'][1] + 620,
-                    150,
+                    300,
+                    self.spawn['cave_room_2'][1] + 420,
+                    950,
                     140),
                 "", "mandatory"
             ),

@@ -111,11 +111,11 @@ class CamScroll(ABC):
             # scale it according to fov -> size * fov = new_size => fov ∈ [1, 2] where 2 is 100% zoom.
             scaled = pygame.transform.smoothscale(
                 surface,
-                (surface.get_width()*self.fov, surface.get_height()*self.fov)
+                (surface.get_width() * self.fov, surface.get_height() * self.fov)
             )
 
-            dw = surface.get_width()*self.fov - surface.get_width()
-            dh = surface.get_height()*self.fov - surface.get_height()
+            dw = surface.get_width() * self.fov - surface.get_width()
+            dh = surface.get_height() * self.fov - surface.get_height()
 
             # blit it
             self.camera.display.blit(
@@ -220,6 +220,8 @@ class Auto(CamScroll):
         self.d_fov = 0
         self.delay_zmo = 0
 
+        self.fps = 90
+
     def look_at(self, pos):
         self.camera.offset.xy = [pos[0] - self.screen.get_width() // 2, pos[1] - self.screen.get_height() // 2]
 
@@ -262,7 +264,7 @@ class Auto(CamScroll):
         self.target_zoom_out = value
         self.zooming_out = True
         self.start_time_zoom_out = pygame.time.get_ticks()
-        self.d_fov = 30 * (self.target_zoom_out - self.fov) / duration
+        self.d_fov = self.fps * (self.target_zoom_out - self.fov) / duration
         self.delay_zmo = self.start_time_zoom_out
 
     def scroll(self):
@@ -278,13 +280,14 @@ class Auto(CamScroll):
         if self.moving_cam:
 
             dx, dy = self.target[0] - self.looking_at[0], self.target[1] - self.looking_at[1]
+
             if pygame.time.get_ticks() - self.delay_mvt > 30:
                 self.delay_mvt = pygame.time.get_ticks()
                 if abs(dx) < abs(self.dx) or abs(dy) < abs(self.dy):
-                    self.looking_at += vec(dx, dy) * dt * 35
+                    self.looking_at += vec(dx, dy) * dt * self.fps // 2
 
                 else:
-                    self.looking_at += vec(self.dx, self.dy) * dt * 35
+                    self.looking_at += vec(self.dx, self.dy) * dt * self.fps // 2
 
             if -3 < dx < 3 and -3 < dy < 3:
                 self.moving_cam = False
@@ -294,7 +297,7 @@ class Auto(CamScroll):
 
         if self.zooming_out:
 
-            if abs(self.fov-self.target_zoom_out) < 0.01:
+            if abs(self.fov - self.target_zoom_out) < 0.01:
                 self.zooming_out = False
                 self.fov = self.target_zoom_out
 

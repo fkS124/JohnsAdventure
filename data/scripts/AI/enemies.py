@@ -147,7 +147,7 @@ class BigShadowDummy(Enemy):
 
         super().__init__(level_instance, screen, pos, player, hp, xp_drop,
                          custom_rect=[50, 50, 29 * 4, 24 * 6],
-                         enemy_type="shadow", intensiveness=calc_intensity, vel=1,
+                         enemy_type='boss', intensiveness=calc_intensity, vel=1,
                          )
         self.load_animation(
             resource_path("data/sprites/shadow_dummie.png"),
@@ -166,6 +166,9 @@ class BigShadowDummy(Enemy):
             attack_u_coo=[0, 75, 29, 24, 5, 8],
 
         )
+
+        self.boss_name = 'The Big D'
+
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4

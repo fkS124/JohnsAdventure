@@ -5,7 +5,7 @@ from pygame import Rect
 from copy import copy
 from operator import attrgetter
 import json
-from random import gauss
+from random import gauss, randint
 
 from ..PLAYER.player import *
 from ..PLAYER.inventory import *
@@ -25,7 +25,9 @@ class GameState:
     It handles every objects and handle their update method's arguments.
     (These args can of course be different than other objects of the list)"""
 
-    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, id_: str, light_state="day"):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects, id_: str, light_state="day",
+                 has_boss=False
+                 ):
         self.id = id_
 
         # ------- SCREEN -----------------
@@ -41,6 +43,14 @@ class GameState:
         self.scroll = self.player.camera.offset.xy
         # Get the prop object dict, (basically all the objects generated from open_world.json)
         self.prop_objects = prop_objects
+
+        self.boss_found = False  # To save iterations
+        if has_boss:
+            self.spawned_boss = False
+            self.boss_data = None
+            self.boss_name = None
+            self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 36)
+            self.kill_hp_bar = False
 
         # This might be the reason why players blit at top left for a nano second when you boot the game
         self.world = pg.Surface((1, 1))  # set default values for world -> supposed to be replaced
@@ -268,6 +278,39 @@ class GameState:
                         scale = 1 if not hasattr(obj, "scale") else obj.scale
                         self.death_anim_manager.input_death_animation(obj.current_sprite,
                                                                       obj.rect.topleft + self.scroll, scale)
+                        if obj.enemy_type == 'boss':
+                            self.kill_hp_bar = True
+
+                    if obj.enemy_type == 'boss' and not self.boss_found:
+                        self.player.screen_shake = True
+                        self.spawned_boss = True
+                        self.boss_data = obj
+                        self.boss_name = self.font.render(obj.boss_name, True, (255, 255, 255))
+                        self.boss_found = True
+
+        # EXIT FOR LOOP
+        if self.boss_found and self.spawned_boss and not self.kill_hp_bar:
+            if self.boss_data.show_boss_bar:
+                self.player.camera.offset += randint(-2, 2), randint(-2, 2)
+                pg.draw.rect(self.screen, (0, 0, 0),
+                             [
+                                 200 - 4,
+                                 610 - 4
+                                 ,
+                                 920 + 4, 68
+                             ],
+                             border_radius=25)
+
+                pg.draw.rect(self.screen, (255, 0, 0),
+                             [
+                                 200,
+                                 610
+                                 ,
+                                 int((920 / self.boss_data.MAX_HP) * self.boss_data.show_hp) - 2, 60
+                             ],
+                             border_radius=25)
+
+                self.screen.blit(self.boss_name, (200, 555))
 
         # remove all the objects that need to be removed from self.objects
         for removing in to_remove:
@@ -676,7 +719,7 @@ class GameState:
                 new_list.extend(
                     self.generate_cave_walls(
                         direction="down",
-                        dep_pos=(pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30, pos[1]),
+                        dep_pos=(pos[0] + w * (n + (x_side := x_side if x_side != 0 else 1)) - 30, pos[1]),
                         n_walls=n + y_side,
                         no_begin=True,
                         start_type="none",
@@ -689,8 +732,8 @@ class GameState:
                     self.generate_cave_walls(
                         direction="down",
                         dep_pos=(
-                            pos[0] + w * (n + (x_side := x_side if x_side is not 0 else 1)) - 30,
-                            pos[1] - h * n - 90 
+                            pos[0] + w * (n + (x_side := x_side if x_side != 0 else 1)) - 30,
+                            pos[1] - h * n - 90
                         ),
                         n_walls=n + y_side,
                         start_type="c_wall_side",
@@ -698,7 +741,7 @@ class GameState:
                         door_n=r_n
                     )
 
-               )
+                )
 
         if down_side:
             new_list.extend(

@@ -51,6 +51,8 @@ class Player:
         # Mouse icon for the inventory and some other things
         self.mouse_icon = ui.parse_sprite("mouse.png")
 
+        self.screen_shake = False
+
         # For displaying npc text
         self.npc_catalog = ux
 

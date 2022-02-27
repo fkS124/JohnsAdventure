@@ -41,6 +41,8 @@ class DeathAnim:
         length_y = 1
 
         surf = pg.surfarray.array3d(self.image).swapaxes(0, 1)
+
+        # Increase the pixel depth pretty please
         for y in range(0, len(surf), sprite_scale):
             for x in range(0, len(surf[y]), sprite_scale):
                 if not (surf[y][x][0] == 255 and surf[y][x][1] == 255 and surf[y][x][2] == 255):
@@ -51,7 +53,7 @@ class DeathAnim:
                     )
 
         for particle in self.particles:
-            particle.delay = [pg.time.get_ticks(), pg.time.get_ticks()]
+            particle.delay = list(pg.time.get_ticks(), pg.time.get_ticks())
 
     def update(self, screen, scroll, death_anim_manager):
 
