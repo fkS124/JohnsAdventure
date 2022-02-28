@@ -273,7 +273,7 @@ class Auto(CamScroll):
 
         We have to somehow find a way to put x, y cords and dt and then use them to move the camera
         """
-        dt = pygame.time.Clock().tick(35) / 1000
+        dt = pygame.time.Clock().tick(55) / 1000
 
         self.look_at(self.looking_at)
 
@@ -284,10 +284,9 @@ class Auto(CamScroll):
             if pygame.time.get_ticks() - self.delay_mvt > 30:
                 self.delay_mvt = pygame.time.get_ticks()
                 if abs(dx) < abs(self.dx) or abs(dy) < abs(self.dy):
-                    self.looking_at += vec(dx, dy) * dt * self.fps // 2
-
+                    self.looking_at += vec(dx, dy) * dt * 45
                 else:
-                    self.looking_at += vec(self.dx, self.dy) * dt * self.fps // 2
+                    self.looking_at += vec(self.dx, self.dy) * dt * 45
 
             if -3 < dx < 3 and -3 < dy < 3:
                 self.moving_cam = False

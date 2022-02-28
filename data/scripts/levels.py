@@ -82,6 +82,11 @@ class PlayerRoom(GameState):
         ]"""
 
         self.camera_script = [
+
+            {
+                "duration": 4000,
+                "image": scale(l_path("data/sprites/cutscenes/cutscene1.png"), 3)
+            },
             {
                 "no_init": True,  # basically removes the cinema bar init that won't be seen because of black bg
                 "duration": 4000,
@@ -90,30 +95,47 @@ class PlayerRoom(GameState):
                 "image": pg.Surface((1280, 720))
             },
             {
-                "duration": 4000,
-                "image": scale(l_path("data/sprites/cutscenes/cutscene1.png"), 3)
+                "duration": 3000,
+                "image": pg.Surface((1280, 720)),
+                "centered_text": "An alternative universe were mythical creatures exist and peacefully",
+                "centered_text_dt": 2000,
+                "waiting_end": 1000
             },
             {
-                "duration": 4000,
+                "duration": 3000,
                 "image": pg.Surface((1280, 720)),
-                "centered_text": "THAT'S WHERE YOU PUT YOUR TEXT YOU SUSSIEST",
+                "centered_text": "But.. on this bare day.. the unpredictable happened.",
+                "centered_text_dt": 2000,
+                "waiting_end": 1000
+            },
+            {
+                "duration": 3000,
+                "image": pg.Surface((1280, 720)),
+                "centered_text": "and John's Adventure started.",
+                "centered_text_dt": 2000,
+                "waiting_end": 1000
+            },
+            {
+                "duration": 3000,
+                "image": pg.Surface((1280, 720)),
+                "centered_text": "C.. Cynthia!",
                 "centered_text_dt": 2000,
                 "waiting_end": 1000
             },
             {
                 "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
                 "duration": 0,
-                "text": f"Hello Player. Welcome to John's Adventure.",
+                "text": "Man. what a dream.",
                 "waiting_end": 4000,
                 "zoom": 1.4,
-                "text_dt": 2000
+                "text_dt": 1600
             },
             {
                 "pos": (1100, 225),
                 "duration": 1000,
                 "waiting_end": 2000,
-                "text": "Your quest is waiting for you downstairs.",
-                "text_dt": 1000
+                "text": "I better check on her.",
+                "text_dt": 1600
             },
             {
                 "pos": (self.screen.get_width() // 2 - 120, self.screen.get_height() // 2 - 20),
@@ -151,11 +173,11 @@ class Kitchen(GameState):
             Rect(1270, 134, 10, 586),
             Rect(0, 0, 1280, 133),
             Rect(0, 711, 1280, 9),
-            npc.Cynthia((570, 220)),
             Rect(20, 250, 250, 350),
             Rect(280, 300, 64, 256),
             Rect(10, 0, 990, 230),
-            Rect(1020, 440, 256, 200)
+            Rect(1020, 440, 256, 200),
+            npc.Cynthia((570, 220)),
         ]
         self.exit_rects = {
             "player_room": (pg.Rect(1054, 68, 138, 119), "Back to your room?"),
@@ -170,6 +192,7 @@ class Kitchen(GameState):
                          horizontal=True, additional_alpha=150),
         ]
 
+        self.pop_cynthia = False
         self.sound_manager = SoundManager(True, False, volume=1)
         self.ended_script = True
         self.spawned = False
@@ -221,13 +244,11 @@ class Kitchen(GameState):
                 self.started_script = True
                 self.ended_script = False
 
-        # if the cutscene is played. do something
-        # if self.started_script:
-        # if self.player.game_instance.cutscene_engine.index_script == 3:
-        # pass"""
-        # print("ACTION")
-
-        # print(self.player.rect.topleft)
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
+            if not self.pop_cynthia:
+                # SHE IS GONE MATE
+                self.objects.pop()
+                self.pop_cynthia = True  # Save iteration
 
         return super(Kitchen, self).update(camera, dt)
 
@@ -450,8 +471,6 @@ class JohnsGarden(GameState):
             "kitchen": (pg.Rect((jh_pos[0] + 846 - 728) * jh_sc + 3, (jh_pos[1] + 268) * jh_sc, 100, 60),
                         "Go back to your house?"),
             # pg.Rect(1829*3-200, 888*3+500, 100, 100) -> debug (spawn to manos hut roof) 
-            "manos_hut": (pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
-                          "Enter Mano's hut ?"),
 
             # mandatory forced level switch, useless requires input
             # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
@@ -461,15 +480,40 @@ class JohnsGarden(GameState):
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
-            "manos_hut": self.exit_rects["manos_hut"][0].midbottom,
             "cave_garden": self.exit_rects["cave_garden"][0].midright + pg.Vector2(120, -140),
             "training_field": self.exit_rects["training_field"][0].midleft - pg.Vector2(100, 100),
             "gymnasium": pg.Vector2(10300, 500)
         }
 
+        self.spawn_mh = False
+        self.pop_g_exit = False
+
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, self.W, self.H])
+
         update = super().update(camera, dt)
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
+            pg.draw.rect(self.screen, (0, 0, 0), pg.Rect(1330 - self.scroll[0], 3290 - self.scroll[1], 95, 162))
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Go back to the house"]:
+            if not self.spawn_mh:
+                self.spawn["manos_hut"] = self.exit_rects["manos_hut"][0].midbottom,
+                mano_pos = self.positions["manos_hut"][0]
+                mano_sc = self.get_scale("manos_hut")
+                self.exit_rects["manos_hut"] = (
+                    pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
+                    "Enter Mano's hut ?"
+                )
+                self.spawn_mh = True
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
+            if not self.pop_g_exit:
+                self.exit_rects.pop("gymnasium")
+                self.spawn.pop("gymnasium")
+                self.objects.append(pg.Rect(10000, 200, 600, 800))
+                self.pop_g_exit = True
+
         return update
 
 
@@ -506,8 +550,8 @@ class Training_Field(GameState):
 
             # Left
             *self.generate_chunk("tree", -200, 1000, 4, 2, 150, 400, randomize=50),
-            npc.Candy(pg.Vector2(1250, 1470), tell_story="meow meow meow", awake=True),
-            npc.Manos(pg.Vector2(1150, 1480)),
+            npc.Candy((1250, 1470), awake=True),
+            npc.Manos((1150, 1480)),
             Chest((1630, 1410), {"items": Training_Sword(), "coins": 50}),
             Dummy(self, self.screen, (1850, 1534), self.player),
             Dummy(self, self.screen, (1850, 1734), self.player)
@@ -656,7 +700,8 @@ class Gymnasium(GameState):
 
             self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
             *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
-            npc.Alexia(pg.Vector2(2702, -75))
+            npc.Alex((2702, -75)),
+            npc.Cynthia((2762, -75)),
         ]
 
         self.exit_rects = {
@@ -666,11 +711,19 @@ class Gymnasium(GameState):
 
         self.spawn = {
             "johns_garden": (300, 0),
-            "cave_passage": (4750, -150)
+            "cave_passage": (4790, -150)
         }
+
+        self.cyn_gone = False
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Go find Cynthia in school"]:
+            self.objects.pop()  # pop cynthia
+            self.spawn.pop("johns_garden")
+            self.cyn_gone = True
+
         return super(Gymnasium, self).update(camera, dt)
 
 
@@ -701,6 +754,7 @@ class ManosHut(GameState):
 
         self.exit_rects = {
             "johns_garden": (pg.Rect(560, 635, 150, 75), "Go back to open world ?")
+            # Or rather... 0_0
         }
 
 
@@ -711,6 +765,9 @@ class CaveGarden(GameState):
                                          has_boss=True)
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
+
+        self.hh = hills_height
+        self.ww = hills_width
 
         self.objects = [
             # The chunk cut in 4 pieces for easyness 
@@ -755,12 +812,10 @@ class CaveGarden(GameState):
             *self.generate_chunk("tree", hills_width + 10, 3350, 3, 3, 100 * 4, 100 * 3),
             *self.generate_chunk("tree", 2100, 2970, 4, 3, 100 * 4, 100 * 3),
 
-            BigShadowDummy(self, self.screen, (3300, hills_height * 4 + 10), self.player)
         ]
 
-
         self.spawn = {
-            "johns_garden": (2150, 2830),  # (hills_width * 5 - 100, hills_height * 4 + 100)
+            "johns_garden": (hills_width * 5 - 100, hills_height * 4 + 100),
             "cave_entrance": (2150, 2830)
         }
 
@@ -769,10 +824,9 @@ class CaveGarden(GameState):
                 pg.Rect(hills_width * 5 + 50, hills_height * 4, 200, 400),
                 "", "mandatory"
             ),
-            "cave_entrance": (
-                pg.Rect(hills_width * 3, hills_height * 4 + 177, 100, 100),
-                "Get inside the cave ?"
-            )
+
+            # Cave has been removed to avoid more complex code.
+            # it will be returned once john has defeated the boss
         }
 
         self.sound_manager = SoundManager(True, False, volume=1)
@@ -810,13 +864,52 @@ class CaveGarden(GameState):
             }
         ]
 
+        self.spawn_b = False
+        self.killed_b = False
+
     def update(self, camera, dt):
         pg.draw.rect(self.screen, (60, 128, 0), [0, 0, *self.screen.get_size()])
 
-        # Play cutscene
-        if not get_cutscene_played(self.id) and not self.started_script:
-            self.started_script = True
-            self.ended_script = False
+        # Spawn the big dummie and then play the cutscene
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+            "Reach the main entrance"] and not self.spawn_b:
+            # Just for security
+            if not self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Kill the big dummie"]:
+
+                self.objects.append(BigShadowDummy(self, self.screen, (3300, self.hh * 4 + 10), self.player))
+
+                # Kill exits
+                self.spawn = {}
+                self.exit_rects = {}
+
+                # Play cutscene
+                if not get_cutscene_played(self.id) and not self.started_script:
+                    self.started_script = True
+                    self.ended_script = False
+
+                self.objects.append(Rect(self.ww * 5 + 200, self.hh * 4, 200, 400))
+
+                self.spawn_b = True
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+            "Kill the big dummie"] and not self.killed_b:
+            self.spawn = {
+                "johns_garden": (self.ww * 5 - 100, self.hh * 4 + 100),
+                "cave_entrance": (2150, 2830)
+            }
+
+            self.exit_rects = {
+                "johns_garden": (
+                    pg.Rect(self.ww * 5 + 50, self.hh * 4, 200, 400),
+                    "", "mandatory"
+                ),
+                "cave_entrance": (
+                    pg.Rect(self.ww * 3, self.hh * 4 + 177, 100, 100),
+                    "Get inside the cave ?"
+                )
+            }
+
+            self.killed_b = True
 
         return super(CaveGarden, self).update(camera, dt)
 
@@ -939,8 +1032,6 @@ class CaveRoomOne(GameState):
             light_state="inside_dark"
         )
 
-        self.player.DEFAULT_VEL = 30
-
         w = self.prop_objects['c_wall_mid']((0, 0)).idle[0].get_width()
         h = (self.prop_objects['c_wall_side']((0, 0)).idle[0].get_width() * 3 * 2) + 23
 
@@ -983,7 +1074,6 @@ class CaveRoomOne(GameState):
                 Torch(self, (2280, -140), radius=80),
                 Torch(self, (750, -140), radius=80),
                 Torch(self, (280, -140), radius=80),
-
 
                 *self.generate_cave_walls(
                     direction="down", n_walls=5, door_n=1, dep_pos=((18 - 2) * w - w // 2, 1300),
@@ -1029,7 +1119,6 @@ class CaveRoomOne(GameState):
                 ),
 
                 self.prop_objects['door']((440, -268)),
-
 
                 Goblin(self, self.screen, (6900, 1200), self.player),
 
@@ -1238,7 +1327,6 @@ class CaveRoomTwo(GameState):
                 Guardian(self, self.screen, (7200, 380), self.player),
                 Guardian(self, self.screen, (7300, 300), self.player),
             ]
-
 
         self.spawn = {
             "cave_room_1": (-65, -40),

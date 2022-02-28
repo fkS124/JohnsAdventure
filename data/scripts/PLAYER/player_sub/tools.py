@@ -246,7 +246,7 @@ def check_for_hitting(player):
                 if player.attacking_hitbox.colliderect(obj.hitbox_rect):
                     equipped_weapon = player.inventory.get_equipped("Weapon")
 
-                    #pygame.draw.line(player.screen, (255, 255, 255), obj.rect.topright, obj.rect.bottomleft)
+                    # pygame.draw.line(player.screen, (255, 255, 255), obj.rect.topright, obj.rect.bottomleft)
 
                     # This is where it will play the object's hit sound NOT THE SWORD
                     player.sound_manager.play_sound("dummyHit")
@@ -289,29 +289,27 @@ def attack(player, pos):
     click_time = pygame.time.get_ticks()
     player.last_attacking_click = click_time
 
-    if not player.attacking and player.inventory.get_equipped("Weapon") is not None:
+    if not player.attacking:
         player.attacking = True
-        player.sound_manager.play_sound("woodenSword")  # Play first hit
         player.current_combo += 1
         player.next_combo_available = False
         update_attack(player, pos)
         check_for_hitting(player)
-
+        player.sound_manager.play_sound("woodenSword")
     else:
-        # if its time to show the next combo, make sure player isn't moving else cancel
+        # if It's time to show the next combo, make sure player isn't moving else cancel
         if player.next_combo_available:
             if click_time - player.last_attacking_click > player.attack_speed:
                 player.attacking = False
                 player.current_combo = 0
             else:
-                player.sound_manager.play_sound("woodenSword")  # Play sound 2
                 player.restart_animation = True
                 player.current_combo += 1
                 player.last_attacking_click = click_time
                 update_attack(player, pos)
                 check_for_hitting(player)
                 player.next_combo_available = False
-
+                player.sound_manager.play_sound("woodenSword")
                 if player.current_combo > player.last_attack:
                     player.last_combo_hit_time = pygame.time.get_ticks()
 

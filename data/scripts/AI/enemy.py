@@ -631,8 +631,8 @@ class Enemy:
             else:
                 self.y -= self.knock_back_vel_y * dt * 35  # will later be changed to player's crit damage / endurance
 
-            self.x += self.knock_back_vel[0] * dt * 25
-            self.y += self.knock_back_vel[1] * dt * 25
+            self.x += self.knock_back_vel[0] * dt * 35
+            self.y += self.knock_back_vel[1] * dt * 35
             self.knock_back_vel -= self.knock_back_friction
 
         # print(self.direction, self.moving, self.idling, self.move_ability)

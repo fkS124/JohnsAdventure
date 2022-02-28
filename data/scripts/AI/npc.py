@@ -278,12 +278,12 @@ class MovingNPC(NPC):
 
 class Mau(MovingNPC):
 
-    def __init__(self, dep_pos, range_, tell_story=""):
+    def __init__(self, dep_pos, range_):
         super().__init__(
             pos=dep_pos,
             movement="lateral",
             range_rect=pg.Rect(*dep_pos, *range_),
-            velocity=pg.Vector2(1.25, 1.25),
+            velocity=pg.Vector2(1, 1),
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
             idle=True,
             idle_right=[131, 49, 43, 33, 2, 3],
@@ -329,6 +329,10 @@ class Candy(MovingNPC):
         if awake:
             self.direction = "right"
             self.state = "move"
+            self.tell_story = "Meow meow meow"
+        else:
+            self.tell_story = "Zzzz.\nshe is sleeping on the warm carpet.\nbetter not wake her up."
+
         self.animate()
 
     def state_manager(self):
@@ -360,7 +364,7 @@ class Candy(MovingNPC):
 
 class Cynthia(NPC):
 
-    def __init__(self, pos, tell_story=""):
+    def __init__(self, pos):
         super().__init__(
             moving=False,
             pos=pos,
@@ -375,7 +379,7 @@ class Cynthia(NPC):
             "idle": 750,
             "move": 100
         }
-        self.it_re_size = (90, 60)
+        self.it_re_size = (60, 60)
 
 
 class Manos(NPC):
@@ -395,13 +399,13 @@ class Manos(NPC):
             "idle": 750,
             "move": 100
         }
-        self.it_re_size = (90, 60)
+        self.it_re_size = (60, 60)
 
 
-class Alexia(NPC):
+class Alex(NPC):
 
-    def __init__(self, pos, tell_story=""):
-        super(Alexia, self).__init__(
+    def __init__(self, pos):
+        super(Alex, self).__init__(
             moving=False,
             pos=pos,
             sprite_sheet_path='data/sprites/npc_spritesheet.png',
@@ -415,4 +419,4 @@ class Alexia(NPC):
             "idle": 750,
             "move": 100
         }
-        self.it_re_size = (90, 60)
+        self.it_re_size = (60, 60)

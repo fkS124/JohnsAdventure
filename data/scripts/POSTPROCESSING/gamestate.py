@@ -51,6 +51,7 @@ class GameState:
             self.boss_name = None
             self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 36)
             self.kill_hp_bar = False
+            self.shake_time = pg.time.get_ticks()
 
         # This might be the reason why players blit at top left for a nano second when you boot the game
         self.world = pg.Surface((1, 1))  # set default values for world -> supposed to be replaced
@@ -291,7 +292,12 @@ class GameState:
         # EXIT FOR LOOP
         if self.boss_found and self.spawned_boss and not self.kill_hp_bar:
             if self.boss_data.show_boss_bar:
-                self.player.camera.offset += randint(-2, 2), randint(-2, 2)
+                # Shake the camera to show expressions of the boss
+                if pg.time.get_ticks() - self.shake_time > 380:
+                    power = 4
+                    self.player.camera.offset += randint(-power, power), randint(-power, power)
+                    self.shake_time = pg.time.get_ticks()
+
                 pg.draw.rect(self.screen, (0, 0, 0),
                              [
                                  200 - 4,

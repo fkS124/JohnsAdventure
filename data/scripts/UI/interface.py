@@ -22,10 +22,6 @@ class Interface:
         # We might need a more detailed font
         self.img = scale(l_path('data/scripts/UI/interaction_font.png'), 2)
 
-        # The json will be switched soon
-        with open(resource_path('data/database/language.json')) as f:
-            self.data = json.load(f);
-
         # Your sprite sheet must be absolute identical to this list
         self.alphabet = [
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
@@ -61,11 +57,7 @@ class Interface:
         '''
             Try/except method will be temporary until the script is ready and implemented into json
         '''
-        try:
-            text = self.data[entity]['txt']
-        except:
-            text = entity
-        return text
+        return entity
 
     def draw(self, txt, dt):
         """

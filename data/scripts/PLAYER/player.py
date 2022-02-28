@@ -335,10 +335,12 @@ class Player:
                                     self.quest_UI.set_active()
                                     changed_activities = True
 
-                            # Attack only when player is not in inv
+                            # Attack only on the below conditions, and of course if he has a weapon
                             if not self.inventory.show_menu and not self.upgrade_station.show_menu \
                                     and not changed_activities and not self.dashing:
-                                attack(self, pos)
+                                if self.inventory.get_equipped("Weapon") is not None:
+                                    attack(self, pos)
+
                             self.click = True
                             # scroll up
                         case 4:
