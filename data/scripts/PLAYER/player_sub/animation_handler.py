@@ -113,7 +113,9 @@ def set_looking(player, dir_: str, pos):
 
 
 def user_interface(player, m, player_pos, dt):
+    print("ui func called, ", end="")
     if player.camera_status != "auto":
+        print("update ui")
 
         # Health bar
         p.draw.rect(player.screen, player.health_colours['normal'],

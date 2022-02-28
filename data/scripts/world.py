@@ -11,6 +11,7 @@ from .QUESTS.quest_ui import QuestUI
 from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
 from .POSTPROCESSING.cutscene_engine import CutsceneManager
+from math import floor
 
 from .PLAYER.player_sub.tools import set_camera_to
 
@@ -32,6 +33,20 @@ from .levels import (
     CaveRoomTwo,
     CaveRoomPassage
 )
+
+TITLE_TRANSLATOR = {
+    "player_room": "Player's Room",
+    "johns_garden": "Open world",
+    "training_field": "Training field",
+    "gymnasium": "Gymnasium",
+    "kitchen": "Kitchen",
+    "manos_hut": "Mano's hut",
+    "cave_garden": "Cave garden",
+    "cave_entrance": "Cave entrance",
+    "cave_room_1": "Cave room 1",
+    "cave_room_2": "Cave room 2",
+    "cave_passage": "Cave passage"
+}
 
 
 def main(debug=False, first_state="player_room", no_rect=False):
@@ -73,6 +88,7 @@ class GameManager:
         # ----------- GAME STATE VARIABLES --------
         self.menu = True
         self.loading = False
+        self.death_screen = False
 
         # 
         self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
@@ -104,6 +120,10 @@ class GameManager:
             self.ui,  # Other UI like Inventory
             self.menu_manager.save,  # controls
         )
+        self.last_player_instance: Player | None = copy(self.player)
+        self.last_loaded_states: dict[str, GameState] = {}
+        self.last_game_state_tag: str = first_state
+        self.last_game_state: GameState | None = None
 
         # ----------- GAME STATE ------------------
         self.state = first_state
@@ -124,8 +144,8 @@ class GameManager:
             "cave_room_2": CaveRoomTwo,
             "cave_passage": CaveRoomPassage
         }
-        self.loaded_states: dict[str: GameState] = {}
-        self.game_state: GameState = None
+        self.loaded_states: dict[str, GameState] = {}
+        self.game_state: GameState | None = None
 
         # ------------ DEBUG ----------------------
         self.debug = debug
@@ -138,6 +158,36 @@ class GameManager:
         self.quest_manager = QuestManager(self, self.player)
         self.quest_UI = QuestUI(self.DISPLAY, self.quest_manager)
         self.player.quest_UI = self.quest_UI
+
+        # ------------- DEATH SCREEN --------------
+        self.begin_end_screen = 0
+        # layer + bg
+        self.end_game_bg = self.DISPLAY.copy()
+        self.black_layer = pg.Surface(self.DISPLAY.get_size())
+        self.black_layer.set_alpha(200)
+
+        # text + font
+        self.title_font = pg.font.Font("data/database/menu-font.ttf", 75)
+        self.subtitle_font = pg.font.Font("data/database/menu-font.ttf", 15)
+        self.end_game_ui_texts = [
+            self.title_font.render("DEATH", True, (255, 0, 0)),
+            self.subtitle_font.render(f"Press {pg.key.name(self.player.data['controls']['interact'])} "
+                                      f"to respawn.", True, (255, 255, 255))]
+        self.end_game_ui_rects = [self.end_game_ui_texts[0].get_rect(center=(self.W // 2, self.H // 2)),
+                                  self.end_game_ui_texts[1].get_rect(center=(self.W // 2, self.H * 3 / 4))]
+
+        # ------------ NEW LEVEL POPUP ----------------
+        self.begin_new_level_popup = 0
+        self.falling_duration = 750
+        self.fade_duration = 500
+        self.standing_duration = 1500
+        # font
+        self.new_level_font = pg.font.Font("data/database/menu-font.ttf", 30)
+        self.new_level_popup = self.new_level_font.render(TITLE_TRANSLATOR[self.state], True, (255, 255, 255))
+        self.new_level_popup_rect = self.new_level_popup.get_rect(centerx=self.W // 2, bottom=0)
+        self.popup_target_y = self.new_level_popup.get_height() - 10
+        # booleans
+        self.showing_nl_popup = False
 
     def pause(self):
         if self.player.paused:
@@ -165,7 +215,7 @@ class GameManager:
 
         self.dt = self.framerate.tick(self.FPS) / 1000
 
-        if not self.menu and not self.loading:  # if the game is playing
+        if not self.menu and not self.loading and not self.death_screen:  # if the game is playing
             user_interface(self.player, pg.mouse.get_pos(), (
                 # 52 48 are players height and width
                 self.player.rect.x - 52 - self.player.camera.offset.x,
@@ -184,6 +234,19 @@ class GameManager:
             if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
                 self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
             self.quest_manager.update_quests()
+
+            if self.showing_nl_popup:
+                self.DISPLAY.blit(self.new_level_popup, self.new_level_popup_rect)
+                time_elapsed = pg.time.get_ticks() - self.begin_new_level_popup
+                if time_elapsed < self.falling_duration:
+                    self.new_level_popup_rect.y = (self.popup_target_y/self.falling_duration)*time_elapsed
+                elif self.falling_duration < time_elapsed < self.standing_duration:
+                    pass
+                elif time_elapsed > self.standing_duration + self.falling_duration + self.fade_duration:
+                    self.showing_nl_popup = False
+                else:
+                    self.new_level_popup.set_alpha(
+                        floor(255-255*(time_elapsed-self.falling_duration-self.standing_duration)/self.fade_duration))
 
         if self.debug:
             self.debugger.update()
@@ -231,6 +294,16 @@ class GameManager:
 
         # load all the sheets (to delete them afterwards)
         init_sheets()
+
+        if last_state != "none":
+            self.last_game_state_tag = last_state
+        if self.game_state is not None:
+            self.last_game_state = copy(self.game_state)
+        self.last_player_instance = copy(self.player)
+        self.last_loaded_states = copy(self.loaded_states)
+
+        print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
+        print(self.player, self.state, self.loaded_states)
 
         def load_new_level(parent, level_):
             parent.game_state = parent.state_manager[level_](parent.DISPLAY, parent.player, parent.prop_objects) \
@@ -285,6 +358,35 @@ class GameManager:
         # stop the player from moving
         self.player.Left = self.player.Right = self.player.Up = self.player.Down = False
 
+        self.new_level_popup = self.new_level_font.render(TITLE_TRANSLATOR[self.state], True, (255, 255, 255))
+        self.new_level_popup_rect = self.new_level_popup.get_rect(centerx=self.W // 2, bottom=0)
+        self.begin_new_level_popup = pg.time.get_ticks()
+        self.showing_nl_popup = True
+
+    def respawn(self):
+        self.player.rect = self.last_player_instance.rect
+        self.player.xp = self.last_player_instance.xp
+        self.player.experience = self.last_player_instance.experience
+        self.player.inventory = self.last_player_instance.inventory
+        self.player.health_target = self.last_player_instance.health_target
+        self.player.health_ratio = self.last_player_instance.health_ratio
+        self.player.health = self.last_player_instance.health
+        self.loaded_states = copy(self.last_loaded_states)
+        if self.last_game_state_tag in self.loaded_states:
+            self.player.rect.topleft = self.loaded_states[self.last_game_state_tag].spawn[self.state]
+            self.game_state = self.loaded_states[self.last_game_state_tag]
+            self.state = self.last_game_state_tag
+        else:
+            self.player.camera_status = "follow"
+            self.start_new_level(self.state, first_pos=(self.DISPLAY.get_width() // 2 - 120,
+                                                        self.DISPLAY.get_height() // 2 - 20))
+        self.death_screen = False
+
+    def init_death_screen(self):
+        self.begin_end_screen = pg.time.get_ticks()
+        self.black_layer.set_alpha(0)
+        self.end_game_ui_texts[0].set_alpha(0)
+
     def update(self):
 
         """
@@ -315,6 +417,29 @@ class GameManager:
                                                      self.DISPLAY.get_height() // 2 - 20) if not self.first_state
                                                     else None))
 
+            elif self.death_screen:
+
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        self.quit_()
+
+                    if event.type == pg.KEYDOWN:
+                        if event.key == self.player.data['controls']['interact']:
+                            self.respawn()
+
+                self.black_layer.set_alpha(floor((200/1500)*(pg.time.get_ticks() - self.begin_end_screen)))
+                self.end_game_ui_texts[0].set_alpha(floor((255/1500) * (pg.time.get_ticks() - self.begin_end_screen)))
+                if pg.time.get_ticks() - self.begin_end_screen > 1500:
+                    self.black_layer.set_alpha(200)
+                    self.end_game_ui_texts[0].set_alpha(255)
+
+                self.DISPLAY.fill((0, 0, 0))
+                self.DISPLAY.blit(self.end_game_bg, (0, 0))
+                self.DISPLAY.blit(self.black_layer, (0, 0))
+                self.DISPLAY.blit(self.end_game_ui_texts[0], self.end_game_ui_rects[0])
+                if floor(pg.time.get_ticks() / 1000) % 2 == 0 and self.black_layer.get_alpha() == 200:
+                    self.DISPLAY.blit(self.end_game_ui_texts[1], self.end_game_ui_rects[1])
+
             else:
                 self.DISPLAY.fill((0, 0, 0))
                 update = self.game_state.update(self.player.camera, self.dt)
@@ -334,6 +459,11 @@ class GameManager:
                     self.FPS = 55
                 else:
                     set_camera_to(self.player.camera, self.player.camera_mode, "follow")
+
+                if self.player.health == 0:
+                    self.death_screen = True
+                    self.end_game_bg = self.DISPLAY.copy()
+                    self.init_death_screen()
 
             self.routine()
 

@@ -150,7 +150,12 @@ key_translator = {
     "kitchen": "Kitchen",
     "manos_hut": "Mano's hut",
     "cave": "Cave",
-    "cave2": "Cave Entrance"
+    "cave2": "Cave Entrance",
+    "cave_garden": "Cave garden",
+    "cave_entrance": "Cave entrance",
+    "cave_room_1": "Cave room 1",
+    "cave_room_2": "Cave room 2",
+    "cave_passage": "Cave passage"
 }
 
 
