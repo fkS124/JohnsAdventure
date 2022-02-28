@@ -53,7 +53,7 @@ class DeathAnim:
                     )
 
         for particle in self.particles:
-            particle.delay = list(pg.time.get_ticks(), pg.time.get_ticks())
+            particle.delay = [pg.time.get_ticks(), pg.time.get_ticks()]
 
     def update(self, screen, scroll, death_anim_manager):
 

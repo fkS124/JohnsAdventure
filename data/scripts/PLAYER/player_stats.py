@@ -18,18 +18,18 @@ class UpgradeStation:
         # upgrade station button
         self.button_upgrade_station = scale(self.spr_sh.parse_sprite("level_status"),
                                             3)  # The button that launches the upgrade station
-        
+
         # LVL UI BOX
         self.bu_rect = self.button_upgrade_station.get_rect(right=self.w - 10, y=12)
         self.level_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 28)
-        
+
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
-        
+
         # 
         self.rect_t_level = self.t_level.get_rect(center=(self.bu_rect.centerx, self.bu_rect.centery))
 
         self.up_st_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
-        
+
         # UPGRADE STATION UI BOX
         self.us_rect = self.up_st_menu.get_rect(right=self.w - 25, y=160 + self.h // 3 - 25)  # center
 
@@ -66,7 +66,7 @@ class UpgradeStation:
 
     def update(self, parent_class):
         self.t_level = self.level_font.render(str(self.player_instance.level), True, (0, 0, 0))
-        self.rect_t_level = self.t_level.get_rect(midtop=self.bu_rect.midtop+pg.Vector2(0, 10))
+        self.rect_t_level = self.t_level.get_rect(midtop=self.bu_rect.midtop + pg.Vector2(0, 10))
 
         additionals = [parent_class.inventory.get_equipped("Weapon")]  # support for multiples equiped items
         for stat in self.stats:
@@ -114,6 +114,10 @@ class UpgradeStation:
             # step = h / item_l * self.index_scroll * item_l
             # pg.draw.rect(self.inv_menu, (255, 0, 0), [self.uii_rect.right-10, step+10, 5, h * 1.5])
             self.screen.blit(self.up_st_menu, self.us_rect)  # Show menu
+
+
+
+
 
     def get_equiped(self, type_: str):
 

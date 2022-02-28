@@ -19,6 +19,14 @@ def get_cutscene_played(id_: str):
         return json.load(data)[id_]
 
 
+def reset_cutscene(id_: str):
+    with open(resource_path('data/database/cutscenes.json'), "r") as data:
+        data = json.load(data)
+    data[id_] = False
+    with open(resource_path('data/database/cutscenes.json'), "w") as data2:
+        json.dump(data, data2, indent=2)
+
+
 def play_cutscene(id_: str):
     with open(resource_path('data/database/cutscenes.json'), "r") as data:
         data = json.load(data)
@@ -554,7 +562,7 @@ class Training_Field(GameState):
             npc.Manos((1150, 1480)),
             Chest((1630, 1410), {"items": Training_Sword(), "coins": 50}),
             Dummy(self, self.screen, (1850, 1534), self.player),
-            Dummy(self, self.screen, (1850, 1734), self.player)
+            Dummy(self, self.screen, (1850, 1734), self.player),
         ]
 
         self.exit_rects = {
@@ -576,7 +584,42 @@ class Training_Field(GameState):
         self.exploded = False
         self.centers = [(0, 0), (0, 0)]
         self.dummies = []
-        self.camera_script = [
+
+        self.script_1 = [
+            {
+                "duration": 0,
+                "pos": (1138, 1526),
+                "zoom": 1.2
+            },
+            {
+                "duration": 3000,
+                "text": "Manos: Hello john, are you ready to fight?",
+                "text_dt": 1500
+            },
+            {
+                "duration": 3000,
+                "text": "Candy: *meow meow* ",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4500,
+                "pos": (1660, 1682),
+                "text": "Manos: show me your sword skills in those dummies i've placed.",
+                "text_dt": 1500
+            },
+            {
+                "duration": 2500  # show the __static__ dummies
+            },
+            {
+                "duration": 2000,
+                "pos": (1138, 1526),
+                "zoom": 1,
+                "zoom_duration": 1800
+            }
+        ]
+
+        self.script_2 = [
+            # Shadow enemies pop up
             {
                 "duration": 0,
                 "pos": (1138, 1526),
@@ -597,33 +640,98 @@ class Training_Field(GameState):
             {
                 "duration": 2000,
                 "pos": (1138, 1526),
-                "text": "Manos: Oh shit what the hell is that !",
+                "text": "Manos: What the heck is that !",
                 "text_dt": 1500,
                 "zoom": 1,
                 "zoom_duration": 1800
             }
-
         ]
+
+        self.script_3 = [
+            {
+                "duration": 4000,
+                "pos": (1138, 1526),
+                "text": "Manos: This purple aura..",
+                "text_dt": 1200
+            },
+            {
+                "duration": 4000,
+                "pos": (1138, 1526),
+                "text": "Manos: It couldn't be him.. No. IT IS HIM.",
+                "text_dt": 1200
+            },
+            {
+                "duration": 4000,
+                "pos": (1138, 1526),
+                "text": "Manos: John I need you to get your sister IMMEDIATELY.",
+                "text_dt": 1200
+            },
+            {
+                "duration": 4000,
+                "pos": (1138, 1526),
+                "text": "Manos: Check the school and then your house",
+                "text_dt": 1200
+            },
+            {
+                "duration": 4000,
+                "pos": (1138, 1526),
+                "text": "Manos: Meet me to my hut after that. I will explain everything.",
+                "text_dt": 1200
+            },
+        ]
+
+        self.camera_script = self.script_1
+        self.cutscene_index = 0
+        self.reset_scr = False
+        self.killed_enemies = False
+        self.played_3 = False
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
 
+        # if any mission is true start the cutscene
         if not get_cutscene_played(self.id) and not self.started_script:
-            if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
+            if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                "Talk to manos in the training field"] \
+                    or self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                "Talk back to manos"] \
+                    or self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                "Talk again to manos"]:
                 self.started_script = True
                 self.ended_script = False
                 self.player.is_interacting = False
                 self.player.InteractPoint = 0
 
-        if self.started_script and not self.spawned:
-            if self.player.game_instance.cutscene_engine.index_script == 3:
-                self.spawned = True
-                self.dummies = [ShadowDummy(self, self.screen, (1700, 1540), self.player, hp=150, xp_drop=125),
-                                ShadowDummy(self, self.screen, (1700, 1720), self.player, hp=150, xp_drop=125)]
-                self.centers = [dummy.rect.center for dummy in self.dummies]
-                self.radius_circles += 2
-                self.sound_manager.play_sound("magic_shooting")
-                self.exploded = True
+        # Cutscene 2 script
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
+            if self.started_script and not self.spawned:
+                if self.player.game_instance.cutscene_engine.index_script == 3:
+                    self.spawned = True
+                    self.dummies = [ShadowDummy(self, self.screen, (1700, 1540), self.player, hp=150, xp_drop=125),
+                                    ShadowDummy(self, self.screen, (1700, 1720), self.player, hp=150, xp_drop=125)]
+                    self.centers = [dummy.rect.center for dummy in self.dummies]
+                    self.radius_circles += 2
+                    self.sound_manager.play_sound("magic_shooting")
+                    self.exploded = True
+
+            if not self.reset_scr:
+                reset_cutscene(self.id)
+                self.started_script = False
+                self.camera_script = self.script_2
+                self.reset_scr = True
+
+            for obj in self.objects:
+                if isinstance(obj, ShadowDummy):
+                    self.killed_enemies = False
+                else:
+                    self.killed_enemies = True
+
+        if self.killed_enemies and self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk again to manos"] and not self.played_3:
+            reset_cutscene(self.id)
+            self.started_script = False
+            self.camera_script = self.script_3
+            self.reset_scr = True
+            self.played_3 = True
 
         update = super(Training_Field, self).update(camera, dt)
 
@@ -653,10 +761,8 @@ class Training_Field(GameState):
 class Gymnasium(GameState):
     def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
         super(Gymnasium, self).__init__(DISPLAY, player_instance, prop_objects, "gymnasium", light_state="day")
-
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
-
         center_spawn = 200
 
         self.objects = [
@@ -669,9 +775,6 @@ class Gymnasium(GameState):
             *self.generate_hills("right", (-400, center_spawn), 10, mid_type="hill_mid",
                                  end_type="hill_side_outer_rev"),
 
-            # Weird bug, temp patch
-            # The road turns 90 degrees on the end if I add more than 2 roads that use Vver_end,
-            # so I made 2 on top of each othet
             *self.build_road(
                 start_pos=(-600, 40),
                 n_road=2,
@@ -714,15 +817,58 @@ class Gymnasium(GameState):
             "cave_passage": (4790, -150)
         }
 
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.ended_script = True
+        self.spawned = False
+        self.started_script = False
+        self.camera_script = [
+            {
+                "duration": 4000,
+                "pos": (2762, -75),
+                "zoom": 1.2,
+                "text": "Alex: John! monsters attacked the area!",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4000,
+                "text": "Alex: A huge monster is roaming the area! you cannot go back",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4000,
+                "text": "Alex: There is a secret spot around here",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4000,
+                "text": "Alex: find it, it will help you go back home through the cave.",
+                "text_dt": 1500
+            },
+            {
+                "duration": 4000,
+                "zoom": 1,
+                "text": "Alex: Good luck! hopefully it won't have any monsters.",
+                "text_dt": 1500
+            },
+
+        ]
+
         self.cyn_gone = False
 
     def update(self, camera, dt):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
 
-        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Go find Cynthia in school"]:
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+            "Go find Cynthia in school"] and not self.cyn_gone:
             self.objects.pop()  # pop cynthia
             self.spawn.pop("johns_garden")
             self.cyn_gone = True
+
+        if not get_cutscene_played(self.id) and not self.started_script:
+            # gets player's current main mission and then sub mission
+            if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Ask alexia"]:
+                self.started_script = True
+                self.ended_script = False
 
         return super(Gymnasium, self).update(camera, dt)
 

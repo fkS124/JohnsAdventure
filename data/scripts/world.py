@@ -35,17 +35,17 @@ from .levels import (
 )
 
 TITLE_TRANSLATOR = {
-    "player_room": "Player's Room",
-    "johns_garden": "Open world",
-    "training_field": "Training field",
+    "player_room": "John's Room",
+    "johns_garden": "Open World",
+    "training_field": "Training Field",
     "gymnasium": "Gymnasium",
-    "kitchen": "Kitchen",
+    "kitchen": "John's Kitchen",
     "manos_hut": "Mano's hut",
-    "cave_garden": "Cave garden",
-    "cave_entrance": "Cave entrance",
-    "cave_room_1": "Cave room 1",
-    "cave_room_2": "Cave room 2",
-    "cave_passage": "Cave passage"
+    "cave_garden": "Cave Garden",
+    "cave_entrance": "Cave Entrance",
+    "cave_room_1": "C-Floor 1",
+    "cave_room_2": "C-Floor 2",
+    "cave_passage": "Cave Passage"
 }
 
 
@@ -302,8 +302,8 @@ class GameManager:
         self.last_player_instance = copy(self.player)
         self.last_loaded_states = copy(self.loaded_states)
 
-        print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
-        print(self.player, self.state, self.loaded_states)
+        #print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
+        #print(self.player, self.state, self.loaded_states)
 
         def load_new_level(parent, level_):
             parent.game_state = parent.state_manager[level_](parent.DISPLAY, parent.player, parent.prop_objects) \

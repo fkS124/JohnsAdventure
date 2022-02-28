@@ -13,19 +13,17 @@ class Inventory:
         self.spr_sh = sprite_sheet
         self.screen, self.w, self.h = screen, screen.get_width(), screen.get_height()
         self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 18)
-        
 
         # inventory button
         self.button_inv = scale(self.spr_sh.parse_sprite("inventory"), 3)
-        
+
         self.button_inv_h = scale(self.spr_sh.parse_sprite("inventory_hover"), 3)
-        
-        
-        self.bi_rect = self.button_inv.get_rect(right=self.w - 10, y= 86)
+
+        self.bi_rect = self.button_inv.get_rect(right=self.w - 10, y=86)
         # the menu where all the items in the inventory will be displayed
         # only if the player is currently in this state
         self.inv_menu = pg.Surface((self.w // 3, self.h // 3), pg.SRCALPHA)
-        self.im_rect = self.inv_menu.get_rect(right=self.w-25, y=160)  # center
+        self.im_rect = self.inv_menu.get_rect(right=self.w - 25, y=160)  # center
 
         # ui piece for the inventory
         self.ui_inv = scale(self.spr_sh.parse_sprite("catalog_button.png"), 5)
@@ -37,9 +35,10 @@ class Inventory:
 
         # Player's items:
         self.item_sorter = ItemSorter  # put this to avoid unused import
-        self.items = [self.item_sorter.weapons["Knight_Sword"](),
-                      self.item_sorter.weapons["Training_Sword"]()]  # -> self.item_sorter.weapons["Knight_Sword"]()
+        self.items = []  # -> self.item_sorter.weapons["Knight_Sword"]()
         self.index_scroll = 0  # Useful to track the scrolling
+
+        self.backup_item_len = len(self.items)
 
     def scroll_down(self):
         self.index_scroll += 1 * (self.index_scroll < len(self.items) - 3)
@@ -53,7 +52,7 @@ class Inventory:
 
         if self.show_menu:  # if it shows the menu, then it does not show the down bar
             self.inv_menu.blit(self.ui_inv, self.uii_rect)  # blit the inventory ui
-            
+
             # Hover img 
             self.screen.blit(self.button_inv_h, self.bi_rect)
 

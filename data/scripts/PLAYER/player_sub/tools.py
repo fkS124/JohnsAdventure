@@ -145,18 +145,19 @@ def update_ui_animations(player, dt):
 
 
 key_translator = {
-    "player_room": "Player's Room",
-    "johns_garden": "Open world",
+    "player_room": "John's Room",
+    "johns_garden": "Open World",
     "kitchen": "Kitchen",
     "manos_hut": "Mano's hut",
     "cave": "Cave",
     "cave2": "Cave Entrance",
     "cave_garden": "Cave garden",
-    "cave_entrance": "Cave entrance",
-    "cave_room_1": "Cave room 1",
-    "cave_room_2": "Cave room 2",
-    "cave_passage": "Cave passage"
+    "cave_entrance": "Cave Entrance",
+    "cave_room_1": "Cave floor 1",
+    "cave_room_2": "Cave floor 2",
+    "cave_passage": "? ? ?"
 }
+
 
 
 def movement(player):

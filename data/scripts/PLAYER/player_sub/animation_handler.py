@@ -113,10 +113,7 @@ def set_looking(player, dir_: str, pos):
 
 
 def user_interface(player, m, player_pos, dt):
-    print("ui func called, ", end="")
     if player.camera_status != "auto":
-        print("update ui")
-
         # Health bar
         p.draw.rect(player.screen, player.health_colours['normal'],
             p.Rect(
@@ -147,6 +144,16 @@ def user_interface(player, m, player_pos, dt):
         # quest UI
         player.quest_UI.render()
 
+        if player.upgrade_station.new_points_available != 0 or len(player.inventory.items) != player.inventory.backup_item_len:
+            player.show_notif = True
+
+        if player.show_notif:
+            p.draw.circle(player.screen, (0, 0, 0), (1185, 94), 11)  # outline
+            p.draw.circle(player.screen, (255, 0, 0), (1185, 94), 9)  # red notif
+            if player.inventory.show_menu:
+                player.inventory.backup_item_len = len(player.inventory.items)
+                player.show_notif = False
+
         # sending its own object in order that the inventory can access to the player's damages
 
     # recalculate the damages, considering the equipped weapon
@@ -165,8 +172,6 @@ def user_interface(player, m, player_pos, dt):
         # It's an object or other interaction area
         else:
             player.npc_catalog.draw(player.npc_text, dt)
-
-
 
 
 def update_attack(player, pos):

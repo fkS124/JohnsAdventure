@@ -189,6 +189,8 @@ class Player:
         self.UI_interaction_anim: list[InteractionName] = []
         self.interacting_with = None
 
+        self.show_notif = False
+
     def handle_health(self, dt):
         if self.health_target > self.health:
             self.health += 1  # delta time goes here
@@ -244,6 +246,8 @@ class Player:
     def update(self, dt, exit_rects):
         # Function that handles everything :brain:
         self.handler(dt, exit_rects)
+
+
 
     def controls(self, pos):
         """
