@@ -381,6 +381,24 @@ class Cynthia(NPC):
         }
         self.it_re_size = (60, 60)
 
+class CynthiaSchool(NPC):
+    def __init__(self, pos):
+        super().__init__(
+            moving=False,
+            pos=pos,
+            sprite_sheet_path='data/sprites/npc_spritesheet.png',
+            idle=True,
+            idle_down=[1, 1, 26, 42, 3, 3],
+            tell_story="John what are you doing here?\nyou are supposed to go to Manos."
+        )
+        self.direction = "down"
+        self.state = "idle"
+        self.anim_duration = {
+            "idle": 750,
+            "move": 100
+        }
+        self.it_re_size = (60, 60)
+
 
 class Manos(NPC):
 

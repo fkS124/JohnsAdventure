@@ -18,10 +18,10 @@
       },
       "completed": {
         "Talk to Cynthia in the kitchen": true,
-        "Talk to manos in the training field": true,
+        "Talk to manos in the training field": false,
         "Kill the dummies": true,
-        "Talk back to manos": true,
-        "Talk again to manos": true,
+        "Talk back to manos": false,
+        "Talk again to manos": false,
         "Go find Cynthia in school": false,
         "Ask alexia": false,
         "Find the hidden cave entrance": false,

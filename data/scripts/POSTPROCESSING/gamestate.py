@@ -20,6 +20,9 @@ def get_cutscene_played(id_: str):
         return json.load(data)[id_]
 
 
+vec = pg.math.Vector2
+
+
 class GameState:
     """Parent class of every level.
     It handles every objects and handle their update method's arguments.
@@ -65,26 +68,10 @@ class GameState:
         # ----------- COLLISION SYSTEM ---------
 
         self.points_side = {  # -> lambda functions to get the coordinates of the colliding points
-            "left": lambda rect, vel: [
-                rect.topleft + pg.Vector2(vel[0], -vel[1]),
-                rect.midleft - pg.Vector2(-vel[0], 0),
-                rect.bottomleft - pg.Vector2(-vel[0], vel[1])
-            ],
-            "right": lambda rect, vel: [
-                rect.topright + pg.Vector2(-vel[0], -vel[1]),
-                rect.midright - pg.Vector2(vel[0], 0),
-                rect.bottomright - pg.Vector2(vel[0], vel[1])
-            ],
-            "up": lambda rect, vel: [
-                rect.topright - pg.Vector2(-vel[0], vel[1]),
-                rect.midtop - pg.Vector2(0, vel[1]),
-                rect.topleft - pg.Vector2(vel[0], vel[1])
-            ],
-            "down": lambda rect, vel: [
-                rect.bottomright + pg.Vector2(vel[0], vel[1]),
-                rect.midbottom + pg.Vector2(0, vel[1]),
-                rect.bottomleft + pg.Vector2(-vel[0], vel[1])
-            ]
+            "left": lambda rect, vel: [rect.midleft - vec(-vel[0], 0)],
+            "right": lambda rect, vel: [rect.midright - vec(vel[0], 0)],
+            "up": lambda rect, vel: [rect.midtop - vec(0, vel[1])],
+            "down": lambda rect, vel: [rect.midbottom + vec(0, vel[1])]
         }
 
         self.spawn = {}
@@ -123,7 +110,7 @@ class GameState:
         
         It handles the change of dictionary of the moving object.
         
-        During the whole func, we use copy to get rects. It's not always useful, 
+         During the whole func, we use copy to get rects. It's not always useful,
         but it's necessary sometimes, so to prevent from eventual assignement bugs
         we do it by default."""
 
@@ -133,14 +120,14 @@ class GameState:
 
         # apply a few modifications from the original player's rect to fit better to the collision system
         if type(moving_object) is Player:
-            obj_rect.topleft -= pg.Vector2(15, -70)
+            obj_rect.topleft -= vec(15, -70)
             obj_rect.w -= 70
             obj_rect.h -= 115
 
         if isinstance(moving_object, Enemy):
             obj_rect.topleft += self.scroll
             if hasattr(moving_object, "d_collision"):
-                obj_rect.topleft += pg.Vector2(*moving_object.d_collision[:2])
+                obj_rect.topleft += vec(*moving_object.d_collision[:2])
                 obj_rect.size = moving_object.d_collision[2:]
             if hasattr(moving_object, "tp_V"):
                 if moving_object.tp_V[0] != 0 or moving_object.tp_V[0] != 0:
@@ -173,27 +160,20 @@ class GameState:
 
         # colliding points
         points = self.points_side[side](obj_rect, vel)
-        """if isinstance(moving_object, Enemy):
-            if moving_object.status == "chasing":
-                points.extend([
-                    obj_rect.topleft + pg.Vector2(-vel[0], -vel[1]),
-                    obj_rect.topright + pg.Vector2(vel[0], -vel[1]),
-                    obj_rect.bottomleft + pg.Vector2(-vel[0], vel[1]),
-                    obj_rect.bottomright + pg.Vector2(vel[0], vel[1]),
-                ])"""
 
         for point in points:
-            # pg.draw.circle(self.screen, (0, 255, 255), point, 5)   # ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
+            #pg.draw.circle(self.screen, (0, 255, 255), point, 5)   # ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
             if col_rect.collidepoint(point):
-                # pg.draw.circle(self.screen, (255, 0, 0), point, 5)
+                pg.draw.circle(self.screen, (255, 0, 0), point, 5)
                 moving_object.move_ability[side] = False
                 break
-        else:
-            moving_object.move_ability[side] = True  # if no change have been done, resets the value
+            else:
+                moving_object.move_ability[side] = True  # if no change have been done, resets the value
+
         if not moving_object.move_ability[side]:
             return "kill"
 
-            # -> tell the "parent script" to break the loop because a collision has already occured on this side
+        # -> tell the "parent script" to break the loop because a collision has already occured on this side
 
     def collision_system(self, obj_moving, objects_to_collide):
 
@@ -206,6 +186,7 @@ class GameState:
                 if check == "kill":  # a collision has occured on this side, no need to check more, so break
                     if hasattr(obj_moving, "switch_directions"):
                         obj_moving.switch_directions(blocked_direction=direction)  # switch NPCs direction for eg.
+
                     break
 
     def update(self, camera, dt):
@@ -243,6 +224,8 @@ class GameState:
                     if hasattr(obj_, "sort"):
                         if not obj_.sort:
                             obj_.centery = -1000000
+
+
 
                 # append the objects in the list
                 all_objects.append(obj_)

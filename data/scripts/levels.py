@@ -804,7 +804,7 @@ class Gymnasium(GameState):
             self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
             *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
             npc.Alex((2702, -75)),
-            npc.Cynthia((2762, -75)),
+            npc.CynthiaSchool((2782, -75)),
         ]
 
         self.exit_rects = {
@@ -892,6 +892,7 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
             self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
+            ShadowDummy(self, self.screen, ((450, 350)), self.player, hp=150, xp_drop=125)
         ]
 
         self.spawn = {

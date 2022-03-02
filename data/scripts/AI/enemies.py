@@ -54,7 +54,7 @@ class ShadowDummy(Enemy):
         self.custom_center = 250
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
-        self.damage = 10
+        self.damage = 3
 
 
 class Guardian(Enemy):

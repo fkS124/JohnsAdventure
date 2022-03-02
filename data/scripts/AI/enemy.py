@@ -453,29 +453,15 @@ class Enemy:
         """
 
         if self.current_sprite is not None:
+
             enemy_s = self.current_sprite.get_width(), self.current_sprite.get_height()
             hit_d = self.hitbox_data
 
             hit_dict = {
-                "up": pg.Rect(
-                    self.rect.midtop,
-                    hit_d['up']
-                ),
-
-                "down": pg.Rect(
-                    self.rect.midbottom,
-                    hit_d['down']
-                ),
-
-                "left": pg.Rect(
-                    self.rect.midright - vec(enemy_s[0] + enemy_s[0] // 2, 0),
-                    hit_d['left']
-                ),
-
-                "right": pg.Rect(
-                    self.rect.midright - vec(enemy_s[0] // 2, 0),
-                    hit_d['right']
-                ),
+                "left": pg.Rect(self.hitbox_rect.topleft - vec(128, 30), (128, 128)),
+                "right": pg.Rect(self.hitbox_rect.topright - vec(0, 30), (128, 128)),
+                "up": pg.Rect(self.hitbox_rect.midtop - vec(0, 30), (128, 128)),
+                "down": pg.Rect(self.hitbox_rect.midtop + vec(0, 30), (128, 128)),
             }
 
             pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
@@ -516,7 +502,7 @@ class Enemy:
         # pg.draw.rect(self.screen, (100, 200, 200), pl_rect)
 
         # ___ CHECK ENEMY TYPE ____
-        if self.enemy_type != "static":
+        if self.enemy_type != "static" and not self.attacking:
 
             enemy_speed = self.BASE_VEL
 
@@ -524,32 +510,39 @@ class Enemy:
 
             GET_DISTANCE = vec(col_rect.center).distance_to(vec(pl_rect.center))
 
-            # Enemy must not be in the attacking state to move around
-            if not self.attacking:
-                """if GET_DISTANCE >= 300 or self.enemy_type == 'boss' and GET_DISTANCE >= 1200:
-                    self.status, self.moving = "ROAMING", True
-                    if self.move_ability[self.direction]:
-                        match self.direction:
-                            case "down":
-                                self.y += enemy_speed
-                            case "up":
-                                self.y -= enemy_speed
-                            case "right":
-                                self.x += enemy_speed
-                            case "left":
-                                self.x -= enemy_speed
-                    else:
-                        self.switch_directions(self.direction)"""
+            if GET_DISTANCE > 300:
+                self.status = "STANDBY"
+            elif GET_DISTANCE > 90:  # Switch this to enemy.distance when collisions fix
+                if not self.got_stuck:
+                    self.status = "CHASING"
+            else:
+                self.status = "ATTACKING"
 
-                # CHASE THE PLAYER
-                if GET_DISTANCE > 90:  # I need to switch this up by enemy's.attack_distance
-                    self.moving, self.status = True, "CHASING"
+            match self.status:
+                case "STANDBY":
+                    self.moving = False
+                    self.attacking = False
+
+                case "ATTACKING":
+                    # self.status = "ATTACKING"
+                    self.moving, self.attacking, self.idling = False, True, False
+                    self.just_attacked = pg.time.get_ticks()
+                    self.id_anim = 0
+                    self.check_for_hit(dt, pl_rect)
+                    self.moving = True
+
+                case "CHASING":
                     try:
+                        self.moving = True
                         self.tp_V = (
                                 (
-                                        vec(self.player.rect.center) - vec(self.rect.center + self.scroll)
+                                        vec(pl_rect.center) - vec(self.hitbox_rect.center)
                                 ).normalize() * self.BASE_VEL
                         )
+
+                        pg.draw.rect(self.screen, (255, 0, 0), pl_rect)
+                        pg.draw.rect(self.screen, (255, 0, 0), self.hitbox_rect)
+
                         self.direction = "left" if self.tp_V[0] < 0 else "right"
                         self.x += self.tp_V[0] if self.move_ability[self.direction] else 0
                         self.y += self.tp_V[1] if self.move_ability[
@@ -558,31 +551,11 @@ class Enemy:
                         if not (self.move_ability[self.direction] and self.move_ability[sec_dir]):
                             self.got_stuck = True
                             self.time_got_stuck = pg.time.get_ticks()
-                            self.switch_directions(self.direction, sec_dir)
-                            match self.direction:
-                                case "down":
-                                    self.y += enemy_speed
-                                case "up":
-                                    self.y -= enemy_speed
-                                case "right":
-                                    self.x += enemy_speed
-                                case "left":
-                                    self.x -= enemy_speed
+                            self.status = "STANDBY"
+                            self.moving = False
+
                     except ValueError:
                         pass
-
-                # HIT THE PLAYER
-                else:
-                    self.status = "ATTACKING"
-                    self.moving, self.attacking, self.idling = False, True, False
-                    self.just_attacked = pg.time.get_ticks()
-                    self.id_anim = 0
-                    enemy_speed = 0
-                    # Attack John!
-                    self.check_for_hit(dt, pl_rect)
-                    self.moving = True
-            else:
-                self.moving = False
 
     def behavior(self, dt):
         self.move(dt)
