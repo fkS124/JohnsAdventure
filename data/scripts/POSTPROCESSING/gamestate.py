@@ -13,6 +13,8 @@ from ..utils import resource_path, load, l_path, flip_vertical, flip_horizontal
 from ..AI.enemy import Enemy
 from ..AI.death_animator import DeathManager
 from .lights_manager import LightManager
+from ..props import Prop, Torch
+from ..AI.npc import NPC, MovingNPC
 
 
 def get_cutscene_played(id_: str):
@@ -114,66 +116,52 @@ class GameState:
         but it's necessary sometimes, so to prevent from eventual assignement bugs
         we do it by default."""
 
-        vel = copy(moving_object.velocity)  # gets velocity of the moving object
-        obj_rect = copy(moving_object.rect)  # gets rect from the moving object
-        obj_rect.topleft -= self.scroll  # applying scroll
+        m_obj = moving_object
+        c_obj = col_obj
 
-        # apply a few modifications from the original player's rect to fit better to the collision system
-        if type(moving_object) is Player:
-            obj_rect.topleft -= vec(15, -70)
-            obj_rect.w -= 70
-            obj_rect.h -= 115
+        if isinstance(moving_object, Enemy) and isinstance(col_obj, Enemy):
+            return  # We allow overlapping of enemies
 
-        if isinstance(moving_object, Enemy):
-            obj_rect.topleft += self.scroll
-            if hasattr(moving_object, "d_collision"):
-                obj_rect.topleft += vec(*moving_object.d_collision[:2])
-                obj_rect.size = moving_object.d_collision[2:]
-            if hasattr(moving_object, "tp_V"):
-                if moving_object.tp_V[0] != 0 or moving_object.tp_V[0] != 0:
-                    vel = abs(moving_object.tp_V[0]), abs(moving_object.tp_V[1])
-                else:
-                    vel = copy(moving_object.BASE_VEL), copy(moving_object.BASE_VEL)
-            else:
-                vel = copy(moving_object.BASE_VEL), copy(moving_object.BASE_VEL)
-
-        if type(col_obj) is not pg.Rect:
-            col_rect = copy(col_obj.rect)
-            if hasattr(col_obj, "IDENTITY"):
-                if col_obj.IDENTITY in ["NPC", "PROP"]:
-                    col_rect.topleft -= self.scroll  # apply scroll to NPCs because it's not applied
-            # apply a few modifications from the original player's rect to fit better to the collision system
-            if type(col_obj) is Player:
-                col_rect.topleft -= self.scroll
-                col_rect.topleft -= pg.Vector2(15, -70)
-                col_rect.w -= 70
-                col_rect.h -= 115
+        # ----------------------------------------------- REFACTOR
+        # get the d_collision arguments
+        m_d_col = m_obj.d_collision if hasattr(moving_object, "d_collision") else [0, 0, m_obj.rect.w, m_obj.rect.h]
+        if not isinstance(col_obj, pg.Rect):
+            c_d_col = c_obj.d_collision if hasattr(col_obj, "d_collision") else [0, 0, c_obj.rect.w, c_obj.rect.h]
         else:
-            col_rect = copy(col_obj)  # if it's a rect, just copy it
-            col_rect.topleft -= self.scroll
+            c_d_col = None
 
-        if hasattr(col_obj, "d_collision"):
-            col_rect.topleft += pg.Vector2(*col_obj.d_collision[:2])
-            col_rect.size = col_obj.d_collision[2:]
+        # apply the adaptations to the different rects (for the moving object)
+        if isinstance(moving_object, Player):
+            object_rect = pg.Rect(m_obj.rect.x - 15, m_obj.rect.y + 70, m_obj.rect.w - 70, m_obj.rect.h - 115)
+            velocity = abs(m_obj.velocity[0]), abs(m_obj.velocity[1])
+        elif isinstance(moving_object, Enemy):
+            object_rect = pg.Rect(m_obj.rect.x + m_d_col[0], m_obj.rect.y + m_d_col[1], m_d_col[2], m_d_col[3])
+            velocity = m_obj.BASE_VEL, m_obj.BASE_VEL
+            if hasattr(moving_object, "tp_V"):
+                if m_obj.tp_V[0] != 0 or m_obj.tp_V[1] != 0:
+                    velocity = abs(m_obj.tp_V[0]), abs(m_obj.tp_V[1])
+        else:
+            velocity = abs(m_obj.velocity[0]), abs(m_obj.velocity[1])
+            object_rect = m_obj.rect.copy()
 
-        # pg.draw.rect(self.screen, (0, 255, 0), col_rect, 1)   ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
+        # apply the adaptations to the different rect
+        if isinstance(col_obj, Player):
+            collider_rect = pg.Rect(c_obj.rect.x - 15, c_obj.rect.y + 70, c_obj.rect.w - 70, c_obj.rect.h - 115)
+        elif isinstance(col_obj, Enemy) or isinstance(col_obj, NPC) or isinstance(col_obj, Prop) or isinstance(col_obj, Torch):
+            collider_rect = pg.Rect(c_obj.rect.x + c_d_col[0], c_obj.rect.y + c_d_col[1], *c_d_col[2:])
+        else:  # case if the collider is actually just a rect
+            collider_rect = col_obj.copy()
 
-        # colliding points
-        points = self.points_side[side](obj_rect, vel)
+        velocity_parser = {"left": pg.Vector2(-velocity[0], 0), "right": pg.Vector2(velocity[0], 0),
+                           "down": pg.Vector2(0, velocity[1]), "up": pg.Vector2(0, -velocity[1])}
 
-        for point in points:
-            #pg.draw.circle(self.screen, (0, 255, 255), point, 5)   # ------ DO NOT ERASE : USEFUL FOR DEBUGGING -----
-            if col_rect.collidepoint(point):
-                pg.draw.circle(self.screen, (255, 0, 0), point, 5)
-                moving_object.move_ability[side] = False
-                break
-            else:
-                moving_object.move_ability[side] = True  # if no change have been done, resets the value
-
-        if not moving_object.move_ability[side]:
+        moved_rect = object_rect.move(*tuple(velocity_parser[side]))
+        m_obj.move_ability[side] = not moved_rect.colliderect(collider_rect)
+        if not m_obj.move_ability[side]:
+            if isinstance(moving_object, Enemy) or isinstance(moving_object, MovingNPC):
+                if side == m_obj.direction:
+                    m_obj.switch_directions(blocked_direction=side)
             return "kill"
-
-        # -> tell the "parent script" to break the loop because a collision has already occured on this side
 
     def collision_system(self, obj_moving, objects_to_collide):
 

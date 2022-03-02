@@ -12,6 +12,7 @@ from .props import PropGetter, init_sheets, del_sheets
 from threading import Thread
 from .POSTPROCESSING.cutscene_engine import CutsceneManager
 from math import floor
+from .AI.enemy import Enemy
 
 from .PLAYER.player_sub.tools import set_camera_to
 
@@ -124,6 +125,7 @@ class GameManager:
         self.last_loaded_states: dict[str, GameState] = {}
         self.last_game_state_tag: str = first_state
         self.last_game_state: GameState | None = None
+        self.last_positions: dict[int, tuple[int, int]] = {}
 
         # ----------- GAME STATE ------------------
         self.state = first_state
@@ -287,7 +289,7 @@ class GameManager:
         pg.quit()
         raise SystemExit
 
-    def start_new_level(self, level_id, last_state="none", first_pos=None):
+    def start_new_level(self, level_id, last_state="none", first_pos=None, respawn=False):
 
         if self.game_state is not None:
             self.loaded_states[self.game_state.id] = self.game_state
@@ -295,12 +297,23 @@ class GameManager:
         # load all the sheets (to delete them afterwards)
         init_sheets()
 
-        if last_state != "none":
-            self.last_game_state_tag = last_state
-        if self.game_state is not None:
-            self.last_game_state = copy(self.game_state)
-        self.last_player_instance = copy(self.player)
-        self.last_loaded_states = copy(self.loaded_states)
+        if not respawn:
+            if last_state != "none":
+                self.last_game_state_tag = last_state
+            if self.game_state is not None:
+                self.last_game_state = copy(self.game_state)
+                self.last_positions = {}
+                for obj_ in self.game_state.objects:
+                    if not isinstance(obj_, pg.Rect):
+                        self.last_positions[id(obj_)] = copy(obj_.rect.topleft)
+                    else:
+                        self.last_positions[id(obj_)] = copy(obj_.topleft)
+                must_store_begin_pos = False
+            else:
+                must_store_begin_pos = True
+
+            self.last_player_instance = copy(self.player)
+            self.last_loaded_states = copy(self.loaded_states)
 
         #print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
         #print(self.player, self.state, self.loaded_states)
@@ -363,6 +376,17 @@ class GameManager:
         self.begin_new_level_popup = pg.time.get_ticks()
         self.showing_nl_popup = True
 
+        if not respawn:
+            if must_store_begin_pos:
+                self.last_positions = {}
+                for obj_ in self.game_state.objects:
+                    if not isinstance(obj_, pg.Rect):
+                        self.last_positions[id(obj_)] = copy(obj_.rect.topleft)
+                    else:
+                        self.last_positions[id(obj_)] = copy(obj_.topleft)
+
+        print(self.last_positions)
+
     def respawn(self):
         self.player.rect = self.last_player_instance.rect
         self.player.xp = self.last_player_instance.xp
@@ -379,7 +403,16 @@ class GameManager:
         else:
             self.player.camera_status = "follow"
             self.start_new_level(self.state, first_pos=(self.DISPLAY.get_width() // 2 - 120,
-                                                        self.DISPLAY.get_height() // 2 - 20))
+                                                        self.DISPLAY.get_height() // 2 - 20), respawn=True)
+        for obj_ in self.game_state.objects:
+            if id(obj_) in self.last_positions:
+                if isinstance(obj_, pg.Rect):
+                    obj_.topleft = self.last_positions[id(obj_)]
+                else:
+                    if isinstance(obj_, Enemy):
+                        obj_.x, obj_.y = self.last_positions[id(obj_)]
+                    else:
+                        obj_.rect.topleft = self.last_positions[id(obj_)]
         self.death_screen = False
 
     def init_death_screen(self):
@@ -520,7 +553,7 @@ class Debugging:
 
                         col_rect = copy(obj.rect)
                         if hasattr(obj, "IDENTITY"):
-                            if obj.IDENTITY in ["NPC", "PROP"]:
+                            if obj.IDENTITY in ["NPC", "PROP", "ENEMY"]:
                                 col_rect.topleft -= scroll
                             if hasattr(obj, "d_collision"):
                                 col_rect.topleft += pg.Vector2(*obj.d_collision[:2])
@@ -528,7 +561,7 @@ class Debugging:
                             pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
                             if obj.IDENTITY == "ENEMY":
-                                self.draw_text(f"STATUS: {obj.status}", (255, 255, 255), obj.rect.topleft)
+                                self.draw_text(f"STATUS: {obj.status}", (255, 255, 255), obj.rect.topleft-scroll)
 
                 exit_rects = self.game.game_state.exit_rects
                 for exit_rect in exit_rects:

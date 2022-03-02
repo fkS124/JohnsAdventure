@@ -17,7 +17,7 @@ class Dummy(Enemy):
             idle_coo=[0, 0, 34, 48, 1, 4],
             hit_coo=[0, 48, 34, 48, 4, 4]
         )
-        self.custom_center = 250
+        self.custom_center = int(self.rect.h * 4 / 5)
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
         self.damage = 10
@@ -51,7 +51,7 @@ class ShadowDummy(Enemy):
             attack_u_coo=[0, 75, 29, 24, 5, 4],
 
         )
-        self.custom_center = 250
+        self.custom_center = 24 * 3 * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
         self.damage = 3
@@ -92,7 +92,7 @@ class Guardian(Enemy):
             attack_u_coo=[0, 34, 67, 34, 5, 5],
             flip_anim=True
         )
-        self.custom_center = 250
+        self.custom_center = (45 * 2 + 25) * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
         self.damage = 5
 
@@ -130,7 +130,7 @@ class Goblin(Enemy):
         )
 
         self.damage = 2
-        self.custom_center = 250
+        self.custom_center = (25 * 2 + 10) * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
 
 
@@ -169,6 +169,6 @@ class BigShadowDummy(Enemy):
 
         self.boss_name = 'The Big D'
 
-        self.custom_center = 250
+        self.custom_center = 24 * 6 * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4

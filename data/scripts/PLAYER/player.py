@@ -191,6 +191,8 @@ class Player:
 
         self.show_notif = False
 
+        self.custom_center = self.anim["right"][0].get_height() * 4 / 5
+
     def handle_health(self, dt):
         if self.health_target > self.health:
             self.health += 1  # delta time goes here
