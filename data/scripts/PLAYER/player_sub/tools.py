@@ -267,7 +267,7 @@ def check_for_hitting(player):
 
                         knock_back["vel"] = pygame.Vector2(
                             pygame.Vector2(obj.rect.center)
-                            - pygame.Vector2(player.rect.topleft - player.camera.offset.xy + pygame.Vector2(15, 60))
+                            - pygame.Vector2(player.rect.topleft + pygame.Vector2(15, 60))
                         )
                         knock_back["vel"].scale_to_length(equipped_weapon.knock_back["vel"])
 

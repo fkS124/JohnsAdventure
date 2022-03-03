@@ -48,6 +48,7 @@ class PlayerRoom(GameState):
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
             Rect(36, 400, 77, 94),
+            ShadowDummy(self, self.screen, (600, 400), self.player)
         ]
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -891,8 +892,7 @@ class ManosHut(GameState):
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
-            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y)),
-            ShadowDummy(self, self.screen, ((450, 350)), self.player, hp=150, xp_drop=125)
+            self.prop_objects["m_hut_fireplace"]((5 * sc_x, (193 - 236) * sc_y))
         ]
 
         self.spawn = {
@@ -1608,3 +1608,56 @@ class CaveRoomPassage(GameState):
                      )
 
         return super(CaveRoomPassage, self).update(camera, dt)
+
+
+class Credits(GameState):
+    def __init__(self, DISPLAY: pg.Surface, player_instance, prop_objects):
+        super(Credits, self).__init__(
+            DISPLAY,
+            player_instance,
+            prop_objects,
+            "credits",
+            light_state="inside_clear"
+        )
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.sound_manager.play_music("credits_theme")
+        self.font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 24)
+
+        self.credits = \
+            [
+                "--- Programming ---",
+                "Marios Papazogloy | Theophile Aumont",
+                " ",
+
+                "--- Art ---",
+                "Marios Papazogloy",
+                " ",
+
+                "--- Story Telling ---",
+                "Manos Danezis",
+                " ",
+
+                "--- Music ---",
+                "Thanos Pallis",
+                " ",
+
+                "Thank you for playing!"
+            ]
+
+        self.pos = 0
+        self.dy = 50
+
+    def update(self, camera, dt):
+        pg.draw.rect(self.screen, (0, 0, 0), [0, 0, *self.screen.get_size()])
+
+        self.pos -= dt * 16
+
+        for idx, text in enumerate(self.credits):
+            text_rendered = self.font.render(text, True, (255, 255, 255))
+            self.screen.blit(
+                text_rendered,
+                text_rendered.get_rect(
+                    center=(self.screen.get_width()//2, 250 + self.screen.get_height()//2 + idx*self.dy + self.pos))
+            )
+
+        return super(Credits, self).update(camera, dt)
