@@ -44,7 +44,7 @@ class Enemy:
             "down": pg.Vector2(0, 1).normalize() * self.BASE_VEL,
             "up": pg.Vector2(0, -1).normalize() * self.BASE_VEL
         }
-
+        self.attacking_distance = 90
         self.tp_V = pg.Vector2(0, 0)
         self.enemy_type = enemy_type
 
@@ -384,8 +384,8 @@ class Enemy:
                     self.screen,
                     (0, 0, 0),
                     [
-                        self.hitbox_rect[0] - 15,
-                        self.pos[1] - 12,
+                        self.hitbox_rect[0] - 15 - self.scroll[0],
+                        self.pos[1] - 12 - self.scroll[1],
                         width, 10
                     ],
                     border_radius=25
@@ -393,8 +393,8 @@ class Enemy:
 
                 pg.draw.rect(self.screen, (255, 0, 0),
                              [
-                                 self.hitbox_rect[0] - 15,
-                                 self.pos[1] - 11,
+                                 self.hitbox_rect[0] - 15 - self.scroll[0],
+                                 self.pos[1] - 11 - self.scroll[1],
                                  int((width / self.MAX_HP) * self.show_hp) - 2, 8
                              ],
                              border_radius=25)
@@ -458,19 +458,29 @@ class Enemy:
 
         if self.current_sprite is not None:
 
-            enemy_s = self.current_sprite.get_width(), self.current_sprite.get_height()
             hit_d = self.hitbox_data
 
+            t_pl_rect = p_rect
+            t_pl_rect.topleft -= self.scroll
+
+            t_e_rect = self.hitbox_rect
+            t_e_rect.topleft -= self.scroll
+
+            le = t_e_rect.topleft - vec(hit_d['left'][0], 30)
+            re = t_e_rect.topright - vec(0, 30)
+
             hit_dict = {
-                "left": pg.Rect(self.hitbox_rect.topleft - vec(128, 30), (128, 128)),
-                "right": pg.Rect(self.hitbox_rect.topright - vec(0, 30), (128, 128)),
-                "up": pg.Rect(self.hitbox_rect.midtop - vec(0, 30), (128, 128)),
-                "down": pg.Rect(self.hitbox_rect.midtop + vec(0, 30), (128, 128)),
+                "left": pg.Rect(le, hit_d['left']),
+                "right": pg.Rect(re, hit_d['right']),
+
+                # minor
+                "up": pg.Rect(t_e_rect.midtop, hit_d['up']),
+                "down": pg.Rect(t_e_rect.midtop, hit_d['down']),
             }
 
             pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
 
-            if hit_dict[self.direction].colliderect(p_rect):
+            if hit_dict[self.direction].colliderect(t_pl_rect):
                 self.player.health_target = self.player.health - self.damage
 
     def move(self, dt):
@@ -501,9 +511,11 @@ class Enemy:
 
             GET_DISTANCE = vec(col_rect.center).distance_to(vec(pl_rect.center))
 
+            print(GET_DISTANCE)
+
             if GET_DISTANCE > 300:
                 self.status = "STANDBY"
-            elif GET_DISTANCE > 90:  # Switch this to enemy.distance when collisions fix
+            elif GET_DISTANCE > self.attacking_distance:  # Switch this to enemy.distance when collisions fix
                 if not self.got_stuck:
                     self.status = "CHASING"
             else:
@@ -528,9 +540,6 @@ class Enemy:
                         self.tp_V = (
                                 (vec(self.player.rect.center) - vec(self.rect.center)).normalize() * self.BASE_VEL
                         )
-
-                        pg.draw.rect(self.screen, (255, 0, 0), pl_rect)
-                        pg.draw.rect(self.screen, (255, 0, 0), self.hitbox_rect)
 
                         self.direction = "left" if self.tp_V[0] < 0 else "right"
                         self.x += self.tp_V[0] if self.move_ability[self.direction] else 0

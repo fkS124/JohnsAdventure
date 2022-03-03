@@ -227,7 +227,7 @@ class Player:
         )
         m = p.mouse.get_pos()
 
-        leveling(self)  # Doesnt work
+        leveling(self)
 
         self.controls(player_p)
 

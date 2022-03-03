@@ -33,7 +33,12 @@ class ShadowDummy(Enemy):
         calc_intensity = ceil(12 * hp / xp_drop)  # 12 will be re-written else where later
 
         super().__init__(level_instance, screen, pos, player, hp=100, xp_drop=210, custom_rect=[10, 25, 29 * 3, 24 * 3],
-                         enemy_type="shadow", intensiveness=calc_intensity, vel=2)
+                         enemy_type="shadow", intensiveness=calc_intensity, vel=2,
+                         up_hitbox=(128, 128),
+                         down_hitbox=(128, 128),
+                         left_hitbox=(128, 128),
+                         right_hitbox=(128, 128),
+                         )
         self.load_animation(
             resource_path("data/sprites/shadow_dummie.png"),
             idle="static",
@@ -67,10 +72,10 @@ class Guardian(Enemy):
             custom_rect=[25 * 5 + 10, 50, 29 * 2, 45 * 2 + 25],
             enemy_type="normal",
             vel=1,
-            up_hitbox=(18 * 4, 34 * 4),
-            down_hitbox=(18 * 4, 34 * 4),
-            left_hitbox=(34 * 4, 18 * 4),
-            right_hitbox=(34 * 4, 18 * 4),
+            up_hitbox=(18 * 5, 128),
+            down_hitbox=(18 * 5, 128),
+            left_hitbox=(34 * 5, 128),
+            right_hitbox=(34 * 5, 128),
         )
 
         self.health_bar_width = 45 * 2
@@ -105,10 +110,10 @@ class Goblin(Enemy):
             custom_rect=[15, 35, 17 * 2, 25 * 2 + 10],
             enemy_type="normal",
             vel=3,
-            up_hitbox=(17 * 4, 15 * 4),
-            down_hitbox=(17 * 4, 15 * 4),
-            left_hitbox=(15 * 4, 18 * 4),
-            right_hitbox=(15 * 4, 17 * 4),
+            up_hitbox=(17 * 4, 92),
+            down_hitbox=(17 * 4, 92),
+            left_hitbox=(15 * 4, 92),
+            right_hitbox=(15 * 4, 92),
         )
 
         self.load_animation(
@@ -141,13 +146,22 @@ class BigShadowDummy(Enemy):
         # calc_intensity = ceil(damage * health ) / xp_drop (this process must be automated instead of passed in
         # __init__)
 
-        self.damage = 15
+        self.boss_name = 'The Big Dummie'
+        self.attacking_distance = 180
+        self.custom_center = 24 * 6 * 4 / 5
+        self.xp_drop = self.xp_available = xp_drop
+        self.scale = 4
+        self.damage = 5
 
         calc_intensity = ceil(self.damage * hp / xp_drop)  # 12 is the damage
 
         super().__init__(level_instance, screen, pos, player, hp, xp_drop,
                          custom_rect=[50, 50, 29 * 4, 24 * 6],
                          enemy_type='boss', intensiveness=calc_intensity, vel=1,
+                         up_hitbox=(29 * 4, 24 * 7),
+                         down_hitbox=(29 * 4, 24 * 7),
+                         left_hitbox=(29 * 4, 24 * 7),
+                         right_hitbox=(29 * 4, 24 * 7),
                          )
         self.load_animation(
             resource_path("data/sprites/shadow_dummie.png"),
@@ -167,8 +181,4 @@ class BigShadowDummy(Enemy):
 
         )
 
-        self.boss_name = 'The Big D'
 
-        self.custom_center = 24 * 6 * 4 / 5
-        self.xp_drop = self.xp_available = xp_drop
-        self.scale = 4

@@ -48,7 +48,7 @@ class DeathAnim:
                 if not (surf[y][x][0] == 255 and surf[y][x][1] == 255 and surf[y][x][2] == 255):
                     self.particles.append(
                         DestructedParticle(
-                            (sprite_scale, sprite_scale), self.rect.topleft + pg.Vector2(x, y), surf[y][x], length_y*y
+                            (sprite_scale * 2, sprite_scale * 2), self.rect.topleft + pg.Vector2(x, y), surf[y][x], length_y*y
                         )
                     )
 

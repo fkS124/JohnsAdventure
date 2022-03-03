@@ -249,7 +249,9 @@ def check_for_hitting(player):
                 if obj.rect is None or player.attacking_hitbox is None:  # prevent from errors due to unassigned hitbox
                     continue
 
-                if player.attacking_hitbox.colliderect(obj.hitbox_rect):
+                t_e_rect = obj.hitbox_rect
+                t_e_rect.topleft -= obj.scroll
+                if player.attacking_hitbox.colliderect(t_e_rect):
                     equipped_weapon = player.inventory.get_equipped("Weapon")
 
                     # pygame.draw.line(player.screen, (255, 255, 255), obj.rect.topright, obj.rect.bottomleft)
