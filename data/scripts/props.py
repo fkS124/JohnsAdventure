@@ -486,7 +486,8 @@ class Torch:
 
     def update(self, screen, scroll):
         if pg.time.get_ticks() - self.new_light_time > self.delay_between_light:
-            self.level.lights_manager.lights.remove(self.cur_light)
+            if self.cur_light in self.level.lights_manager.lights:
+                self.level.lights_manager.lights.remove(self.cur_light)
             tp_list = copy(self.lights)
             tp_list.remove(self.cur_light)
             self.cur_light = choice(tp_list)

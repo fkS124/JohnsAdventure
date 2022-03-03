@@ -885,6 +885,7 @@ class ManosHut(GameState):
             Rect(1270, 134, 40, 586),  # Right borders
             Rect(0, 4 - 0, 1280, 133 + 40),  # Up borders
             Rect(0, 711, 1280, 40),  # Down borders
+            ShadowDummy(self, self.screen, (600, 600), self.player),
             npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
             npc.Candy(pg.Vector2(205, 395)),
             Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),

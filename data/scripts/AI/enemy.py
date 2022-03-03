@@ -109,6 +109,10 @@ class Enemy:
         self.got_stuck = False
         self.chase_available = True
 
+        self.delayed = False
+        self.time_begin_delaying = 0
+        self.delay_length = 1000
+
         # IMAGES & SPRITES MANAGEMENT
 
         # defines if the part is animated, useful for managing animation
@@ -481,25 +485,12 @@ class Enemy:
             self.chase_available = True
 
         # enemy rect
-        col_rect = copy(self.rect)
-        col_rect.topleft += self.scroll
-        col_rect.topleft += pg.Vector2(*self.d_collision[:2])
-        col_rect.size = self.d_collision[2:]
-
+        col_rect = pg.Rect(self.rect.x + self.d_collision[0], self.rect.y + self.d_collision[1], *self.d_collision[2:])
         # Update rect data for hit detection ( wrong practice but the damage is huge )
         self.hitbox_rect = col_rect
-        self.hitbox_rect.topleft -= self.scroll
-
-        # pg.draw.rect(self.screen, (255, 255, 255), self.hitbox_rect)
-        # pg.draw.rect(self.screen, (200, 200, 200), col_rect)
-
         # get player's rect
-        pl_rect = copy(self.player.rect)
-        pl_rect.topleft -= pg.Vector2(15, -70) + self.scroll
-        pl_rect.w -= 70
-        pl_rect.h -= 115
-
-        # pg.draw.rect(self.screen, (100, 200, 200), pl_rect)
+        pl_rect = pg.Rect(self.player.rect.x - 15, self.player.rect.y + 70, self.player.rect.w - 70,
+                          self.player.rect.h - 115)
 
         # ___ CHECK ENEMY TYPE ____
         if self.enemy_type != "static" and not self.attacking:
@@ -535,9 +526,7 @@ class Enemy:
                     try:
                         self.moving = True
                         self.tp_V = (
-                                (
-                                        vec(pl_rect.center) - vec(self.hitbox_rect.center)
-                                ).normalize() * self.BASE_VEL
+                                (vec(self.player.rect.center) - vec(self.rect.center)).normalize() * self.BASE_VEL
                         )
 
                         pg.draw.rect(self.screen, (255, 0, 0), pl_rect)
@@ -592,7 +581,7 @@ class Enemy:
         self.update_dmg_popups(scroll)
 
         # update the pos of the enemy
-        self.pos = self.x - scroll[0], self.y - scroll[1]
+        self.pos = self.x, self.y
         # apply the knock back
         if self.knocked_back and self.knockable:
 
@@ -615,6 +604,6 @@ class Enemy:
         # ___SHADOW TYPE MONSTERS GET A OUTLINE/PARTICLES__
         if self.enemy_type == "shadow":
             self.particle_scroller = self.x + 60, self.y + 40
-            self.shadow_highlight(self.screen, self.pos, self.current_sprite)
+            self.shadow_highlight(self.screen, pg.Vector2(self.pos)-self.scroll, self.current_sprite)
 
-        self.screen.blit(self.current_sprite, self.pos)
+        self.screen.blit(self.current_sprite, pg.Vector2(self.pos)-self.scroll)
