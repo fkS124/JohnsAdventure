@@ -2,6 +2,7 @@ import json
 import pygame as pg
 
 from .quest import Quest
+from ..utils import resource_path
 
 
 class QuestManager:
@@ -22,7 +23,7 @@ class QuestManager:
         self.pop_up_duration = 4000
 
     def load_quests(self):
-        with open("data/scripts/QUESTS/quests.json", "r") as quests:
+        with open(resource_path("data/scripts/QUESTS/quests.json"), "r") as quests:
             data = json.load(quests)
 
         for key in data:
