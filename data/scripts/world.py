@@ -66,12 +66,11 @@ class GameManager:
     # FONTS
 
     pg.mixer.pre_init(44100, 32, 2, 4096)  # Frequency, 32 Bit sound, channels, buffer
-    pg.display.set_caption("iBoxStudio Engine Demo")
+    pg.display.set_caption("iBoxStudio Engine")
     pg.mouse.set_visible(False)
     # CONSTS
 
-    DISPLAY = pg.display.set_mode((1280, 720),
-                                  flags=pg.SRCALPHA | pg.HWSURFACE)  # | pg.SCALED | pg.DOUBLEBUF | pg.FULLSCREEN | pg.NOFRAME
+    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.FULLSCREEN )
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
