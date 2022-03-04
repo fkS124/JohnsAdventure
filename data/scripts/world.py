@@ -472,6 +472,7 @@ class GameManager:
                     if event.type == pg.KEYDOWN:
                         if event.key == self.player.data['controls']['interact']:
                             self.respawn()
+                            self.player.health = self.player.maximum_health
 
                 self.black_layer.set_alpha(floor((200/1500)*(pg.time.get_ticks() - self.begin_end_screen)))
                 self.end_game_ui_texts[0].set_alpha(floor((255/1500) * (pg.time.get_ticks() - self.begin_end_screen)))

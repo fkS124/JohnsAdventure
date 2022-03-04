@@ -705,6 +705,12 @@ class Training_Field(GameState):
 
         # Cutscene 2 script
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
+            if not self.reset_scr:
+                reset_cutscene(self.id)
+                self.started_script = False
+                self.camera_script = self.script_2
+                self.reset_scr = True
+
             if self.started_script and not self.spawned:
                 if self.player.game_instance.cutscene_engine.index_script == 3:
                     self.spawned = True
@@ -714,12 +720,6 @@ class Training_Field(GameState):
                     self.radius_circles += 2
                     self.sound_manager.play_sound("magic_shooting")
                     self.exploded = True
-
-            if not self.reset_scr:
-                reset_cutscene(self.id)
-                self.started_script = False
-                self.camera_script = self.script_2
-                self.reset_scr = True
 
             for obj in self.objects:
                 if isinstance(obj, ShadowDummy):

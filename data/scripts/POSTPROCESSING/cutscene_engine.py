@@ -186,7 +186,7 @@ class CutsceneManager:
                 text_rendering = self.font.render(self.text[0:self.index_text], True, (255, 255, 255))
                 self.screen.blit(text_rendering, text_rendering.get_rect(center=(self.screen.get_width() // 2,
                                                                                  self.cinema_bars_dy[1] +
-                                                                                 self.cinema_bar_height//2 + 10)))
+                                                                                 self.cinema_bar_height//2)))
                 centered_text_rendering = self.font2.render(self.centered_text[0:self.index_ct_text], True, (255, 255,
                                                                                                              255))
                 self.screen.blit(centered_text_rendering, centered_text_rendering.get_rect(center=(self.W//2,
