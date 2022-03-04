@@ -511,12 +511,6 @@ class JohnsGarden(GameState):
 
         update = super().update(camera, dt)
 
-        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Go back to the house"]:
-            if not self.spawn_mh:
-                mano_pos = self.positions["manos_hut"][0]
-                mano_sc = self.get_scale("manos_hut")
-                self.spawn_mh = True
-
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
             if not self.pop_g_exit:
                 self.exit_rects.pop("gymnasium")
@@ -891,9 +885,6 @@ class ManosHut(GameState):
             Rect(1270, 134, 40, 586),  # Right borders
             Rect(0, 4 - 0, 1280, 133 + 40),  # Up borders
             Rect(0, 711, 1280, 40),  # Down borders
-            npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
-            npc.Candy(pg.Vector2(205, 395)),
-            Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
             self.prop_objects["m_hut_bed"]((381 * sc_x, 47 * sc_y)),
             self.prop_objects["m_hut_sofa"]((97 * sc_x, 88 * sc_y)),
             self.prop_objects["m_hut_table"]((163 * sc_x, 37 * sc_y)),
@@ -907,6 +898,83 @@ class ManosHut(GameState):
         self.exit_rects = {
             "johns_garden": (pg.Rect(560, 635, 150, 75), "Go back to open world ?")
         }
+
+        self.spawn_npcs = False
+
+        self.ended_script = True
+        self.spawned = False
+        self.started_script = False
+        self.camera_script = [
+            {
+                "duration": 4000,
+                "pos": (235 * sc_x, 115 * sc_y),
+                "zoom": 1.2,
+                "text": "Manos: John! did you found your sister?",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "text": "John: I was too late. We gotta get her back!",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "text": "John: What did you want to explain to me before?",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "text": "Manos: I think I know who did it John.",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "text": "Manos: This aura is no one else's but my old nemesis Alcemenos",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "text": "Manos: There is a good chance he is using his old base.",
+                "text_dt": 1500
+            },
+
+            {
+                "duration": 4000,
+                "zoom": 1,
+                "text": "Manos: We must go to Porto Rafth before the sun goes down.",
+                "text_dt": 1500
+            },
+
+        ]
+
+    def update(self, camera, dt):
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach Manos in his hut"]:
+
+            if not get_cutscene_played(self.id) and not self.started_script:
+                self.started_script = True
+                self.ended_script = False
+
+            if not self.spawn_npcs:
+                sc_x = 1280 / 453
+                sc_y = 720 / 271
+
+                self.objects.extend(
+                    [
+                        npc.Manos(pg.Vector2(235 * sc_x, 115 * sc_y), (300, 100)),
+                        npc.Candy(pg.Vector2(205, 395)),
+                        Chest((422 * sc_x, 47 * 4 * sc_y - 45), {"items": Knight_Sword(), "coins": 30}),
+                    ]
+                )
+
+                self.spawn_npcs = True
+
+        return super(ManosHut, self).update(camera, dt)
 
 
 class CaveGarden(GameState):

@@ -2,7 +2,7 @@
   "player_room": true,
   "kitchen": true,
   "johns_garden": false,
-  "manos_hut": false,
+  "manos_hut": true,
   "training_field": false,
   "gymnasium": false,
   "cave_garden": false,

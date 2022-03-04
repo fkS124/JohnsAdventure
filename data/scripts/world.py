@@ -235,8 +235,7 @@ class GameManager:
                     self.DISPLAY.blit(surface, surface.get_rect(center=(self.DISPLAY.get_width() // 2,
                                                                         self.DISPLAY.get_height() // 2)))
             self.cutscene_engine.render()
-            if self.player.inventory.show_menu or self.player.upgrade_station.show_menu:
-                self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
+            self.DISPLAY.blit(self.player.mouse_icon, pg.mouse.get_pos())
             self.quest_manager.update_quests()
 
             if self.showing_nl_popup:

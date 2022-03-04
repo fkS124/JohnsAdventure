@@ -14,7 +14,6 @@
         "Find the hidden cave entrance": "TYPE:Reach LEVEL:cave_passage",
         "Reach the main entrance": "TYPE:Reach LEVEL:cave_garden",
         "Kill the big dummie": "TARGET:BigShadowDummy TYPE:Kill LEVEL:cave_garden",
-        "Go back to the house": "TYPE:Reach LEVEL:kitchen",
         "Reach Manos in his hut": "TARGET:Manos TYPE:Interact LEVEL:manos_hut"
       },
       "completed": {
@@ -28,7 +27,6 @@
         "Find the hidden cave entrance": false,
         "Reach the main entrance": false,
         "Kill the big dummie": false,
-        "Go back to the house": false,
         "Reach Manos in his hut": false
       }
     }
