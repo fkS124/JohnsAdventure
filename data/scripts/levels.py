@@ -179,6 +179,7 @@ class Kitchen(GameState):
         super().__init__(DISPLAY, player_instance, prop_objects, "kitchen", light_state="inside_clear")
         self.world = pg.transform.scale(load(resource_path('data/sprites/world/kitchen.png')), (1280, 720))
         self.objects = [  # super().load_objects('data/database/levels/kitchen.txt')
+            Rect(-40, 0, 40, 720),
             Rect(0, 0, 1280, 133),
             Rect(1270, 134, 10, 586),
             Rect(0, 0, 1280, 133),

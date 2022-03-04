@@ -61,11 +61,11 @@ class Quest:
         """
         self.finished = True
 
-        with open("data/scripts/QUESTS/quests.json", "r") as quest:
+        with open(resource_path("data/scripts/QUESTS/quests.json"), "r") as quest:
             datas = json.load(quest)
             datas[self.name]["content"]["completed"] = self.quest_state
             datas[self.name]["finished"] = True
-            with open("data/scripts/QUESTS/quests.json", "w") as quest_:
+            with open(resource_path("data/scripts/QUESTS/quests.json"), "w") as quest_:
                 json.dump(datas, quest_, indent=2)
 
         self.player.experience += self.xp_reward
@@ -76,11 +76,11 @@ class Quest:
         """
         self.quest_state[list(self.quest_state.keys())[self.index_step]] = True
 
-        with open("data/scripts/QUESTS/quests.json", "r") as quest:
+        with open(resource_path("data/scripts/QUESTS/quests.json"), "r") as quest:
             datas = json.load(quest)
             datas[self.name]["content"]["completed"][self.steps_names[self.index_step]] = True
 
-        with open("data/scripts/QUESTS/quests.json", "w") as quest:
+        with open(resource_path("data/scripts/QUESTS/quests.json"), "w") as quest:
             json.dump(datas, quest, indent=2)
 
         self.index_step += 1
