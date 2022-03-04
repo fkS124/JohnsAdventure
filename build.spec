@@ -16,7 +16,7 @@ if host_os not in (_WINDOWS, _LINUX, _MAC):
     raise ValueError(txt)
     
 # OS of the host, if its Darwin, Change it to MacOS
-host_os = "MacOS" if platform.system() == _MAC else platform.system()
+host_os = "MacOS (x86_64)" if platform.system() == _MAC else platform.system()
 
 VERSION = "0.23"
 
@@ -75,7 +75,7 @@ exe = EXE(
 )
 
 app = BUNDLE(exe,
-         name=f"John's Adventure v{VERSION}",
+         name=f"John's Adventure Chapter 1",
          icon="data/ui/application.ico",
          bundle_identifier=None)
 
