@@ -107,7 +107,7 @@ class PlayerRoom(GameState):
             {
                 "duration": 3000,
                 "image": pg.Surface((1280, 720)),
-                "centered_text": "An alternative universe were mythical creatures exist and peacefully",
+                "centered_text": "A universe, Humans and Monsters lived peacefully.",
                 "centered_text_dt": 2000,
                 "waiting_end": 1000
             },
