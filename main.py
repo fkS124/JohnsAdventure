@@ -15,7 +15,7 @@ from data.scripts.utils import resource_path
 
 def load_game():
     global game_instance
-    game_instance = main(debug=debug, first_state=first_state, no_rect=no_rect)
+    game_instance = main()
 
 
 if __name__ == '__main__':
