@@ -58,7 +58,7 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name=f"John's Adventure Chapter 1",
+    name=f"John's Adventure Chapter 1 for {host_os}",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
