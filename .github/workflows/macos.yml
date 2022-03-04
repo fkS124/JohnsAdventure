@@ -24,6 +24,7 @@ jobs:
           
     - name: Installing Pygame 2.0.3 and compiling the game
       run: |
+          python -m pip install numpy
           python -m pip install pyinstaller pygame==2.0.3
           python -m PyInstaller build.spec
 
