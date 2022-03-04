@@ -49,7 +49,7 @@ class PlayerRoom(GameState):
             Rect(450, 40, 410, 192),
             Rect(36, 400, 77, 94),
         ]
-        self.sound_manager = SoundManager(True, False, volume=1)
+        self.sound_manager = SoundManager(False, True, volume=0.75)
         self.sound_manager.play_music("forest_theme")
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
@@ -1721,7 +1721,12 @@ class Credits(GameState):
         self.pos = 0
         self.dy = 50
 
+        self.sound_manager = SoundManager(False, True, volume=0.75)
+
     def update(self, camera, dt):
+        if self.sound_manager.playing_music != "credits":
+            self.sound_manager.play_music("credits")
+
         pg.draw.rect(self.screen, (0, 0, 0), [0, 0, *self.screen.get_size()])
 
         self.pos -= dt * 32
