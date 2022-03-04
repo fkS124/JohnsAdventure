@@ -32,7 +32,8 @@ from .levels import (
     CaveEntrance,
     CaveRoomOne,
     CaveRoomTwo,
-    CaveRoomPassage
+    CaveRoomPassage,
+    Credits
 )
 
 TITLE_TRANSLATOR = {
@@ -144,7 +145,8 @@ class GameManager:
             "cave_entrance": CaveEntrance,
             "cave_room_1": CaveRoomOne,
             "cave_room_2": CaveRoomTwo,
-            "cave_passage": CaveRoomPassage
+            "cave_passage": CaveRoomPassage,
+            "credits": Credits
         }
         self.loaded_states: dict[str, GameState] = {}
         self.game_state: GameState | None = None
@@ -218,13 +220,14 @@ class GameManager:
         self.dt = self.framerate.tick(self.FPS) / 1000
 
         if not self.menu and not self.loading and not self.death_screen:  # if the game is playing
-            user_interface(self.player, pg.mouse.get_pos(), (
-                # 52 48 are players height and width
-                self.player.rect.x - 52 - self.player.camera.offset.x,
-                self.player.rect.y - self.player.camera.offset.y - 48
-            ),
-                           self.dt  # <- is needed for the NPC interaction
-                           )
+            if self.state != "credits":
+                user_interface(self.player, pg.mouse.get_pos(), (
+                    # 52 48 are players height and width
+                    self.player.rect.x - 52 - self.player.camera.offset.x,
+                    self.player.rect.y - self.player.camera.offset.y - 48
+                ),
+                               self.dt  # <- is needed for the NPC interaction
+                               )
             self.pause()
             if hasattr(self.player.camera.method, "fov"):
                 if self.player.camera.method.fov != 1:
@@ -291,6 +294,12 @@ class GameManager:
 
     def start_new_level(self, level_id, last_state="none", first_pos=None, respawn=False):
 
+        if level_id == "credits":
+            self.player.UI_interaction_anim.clear()
+            self.state = "credits"
+            self.game_state = self.state_manager["credits"](self.DISPLAY, self.player, self.prop_objects)
+            return
+
         if self.game_state is not None:
             self.loaded_states[self.game_state.id] = self.game_state
 
@@ -315,8 +324,8 @@ class GameManager:
             self.last_player_instance = copy(self.player)
             self.last_loaded_states = copy(self.loaded_states)
 
-        #print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
-        #print(self.player, self.state, self.loaded_states)
+        # print(self.last_player_instance, self.last_game_state_tag, self.last_loaded_states)
+        # print(self.player, self.state, self.loaded_states)
 
         def load_new_level(parent, level_):
             parent.game_state = parent.state_manager[level_](parent.DISPLAY, parent.player, parent.prop_objects) \
@@ -385,8 +394,6 @@ class GameManager:
                     else:
                         self.last_positions[id(obj_)] = copy(obj_.topleft)
 
-        print(self.last_positions)
-
     def respawn(self):
         self.player.rect = self.last_player_instance.rect
         self.player.xp = self.last_player_instance.xp
@@ -437,6 +444,14 @@ class GameManager:
 
         while True:
 
+            # if the credits are playing, the player doesn't get updated, so the controls aren't checked, and
+            # the quit event must be detected
+            if self.state == "credits":
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        pg.quit()
+                        raise SystemExit
+
             if self.menu:  # menu playing
 
                 self.menu_manager.update(pg.mouse.get_pos())
@@ -474,9 +489,13 @@ class GameManager:
                     self.DISPLAY.blit(self.end_game_ui_texts[1], self.end_game_ui_rects[1])
 
             else:
+
+
                 self.DISPLAY.fill((0, 0, 0))
                 update = self.game_state.update(self.player.camera, self.dt)
                 if update is not None:  # if a change of state is detected
+                    if self.state == "manos_hut" and update == "johns_garden":
+                        update = "credits"
                     self.start_new_level(update, last_state=self.state)
 
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''

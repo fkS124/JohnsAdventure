@@ -180,6 +180,12 @@ class Enemy:
             "right": right_hitbox,
         }
 
+        self.knock_back = {  # must be reassigned in every enemy's constructor
+            "duration": 0,  # > 0
+            "vel": 0,
+            "friction": 0
+        }
+
     def load_animation(self,
                        sheet_path: str,
                        idle: str = "None",
@@ -478,10 +484,20 @@ class Enemy:
                 "down": pg.Rect(t_e_rect.midtop, hit_d['down']),
             }
 
-            pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
+            # pg.draw.rect(self.screen, (255, 0, 0), hit_dict[self.direction])
 
             if hit_dict[self.direction].colliderect(t_pl_rect):
                 self.player.health_target = self.player.health - self.damage
+                if self.knock_back["duration"] != 0:
+                    vel = (pg.Vector2(self.player.rect.topleft)-pg.Vector2(self.pos)
+                           ).normalize()*self.knock_back["vel"]
+                    self.player.knocked_back = True
+                    self.player.knock_back_vel = vel
+                    self.player.knock_back_vel_y = vel.length()
+                    self.player.knock_back_duration = self.knock_back["duration"]
+                    self.player.knock_back_friction = -vel
+                    self.player.knock_back_friction.scale_to_length(self.knock_back["friction"])
+                    self.player.start_knock_back = pg.time.get_ticks()
 
     def move(self, dt):
 
@@ -518,6 +534,9 @@ class Enemy:
             elif GET_DISTANCE > self.attacking_distance:  # Switch this to enemy.distance when collisions fix
                 if not self.got_stuck:
                     self.status = "CHASING"
+                else:
+                    if col_rect.colliderect(pl_rect):
+                        self.status = "ATTACKING"
             else:
                 self.status = "ATTACKING"
 
@@ -593,17 +612,19 @@ class Enemy:
         self.pos = self.x, self.y
         # apply the knock back
         if self.knocked_back and self.knockable:
+            side_dir_kb = "left" if self.knock_back_vel[0] < 0 else "right"
+            other_dir_kb = "up" if self.knock_back_vel[1] < 0 else "down"
 
             if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration:
                 self.knocked_back = False
 
             if pg.time.get_ticks() - self.start_knock_back > self.knock_back_duration / 2:
-                self.y += self.knock_back_vel_y * dt * 35
-            else:
-                self.y -= self.knock_back_vel_y * dt * 35  # will later be changed to player's crit damage / endurance
+                self.y += self.knock_back_vel_y * dt * 35 if self.move_ability["down"] else 0
+            else:  # will later be changed to player's crit damage / endurance
+                self.y -= self.knock_back_vel_y * dt * 35 if self.move_ability["up"] else 0
 
-            self.x += self.knock_back_vel[0] * dt * 35
-            self.y += self.knock_back_vel[1] * dt * 35
+            self.x += self.knock_back_vel[0] * dt * 35 if self.move_ability[side_dir_kb] else 0
+            self.y += self.knock_back_vel[1] * dt * 35 if self.move_ability[other_dir_kb] else 0
             self.knock_back_vel -= self.knock_back_friction
 
         # print(self.direction, self.moving, self.idling, self.move_ability)

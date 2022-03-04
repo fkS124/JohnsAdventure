@@ -60,6 +60,11 @@ class ShadowDummy(Enemy):
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
         self.damage = 3
+        self.knock_back = {
+            "duration": 150,
+            "vel": 3,
+            "friction": 2.5
+        }
 
 
 class Guardian(Enemy):

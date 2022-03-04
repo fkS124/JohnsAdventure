@@ -193,6 +193,15 @@ class Player:
 
         self.custom_center = self.anim["right"][0].get_height() * 4 / 5
 
+        # knock back
+        self.knockable = True
+        self.knocked_back = False  # true if currently affected by a knock back
+        self.knock_back_duration = 0  # duration in ms of the knock back movement
+        self.start_knock_back = 0  # time of starting the knock back
+        self.knock_back_vel = p.Vector2(0, 0)  # movement vel
+        self.knock_back_friction = p.Vector2(0, 0)  # slowing down
+        self.knock_back_vel_y = 0  # jumpy effect vel
+
     def handle_health(self, dt):
         if self.health_target > self.health:
             self.health += 1  # delta time goes here
@@ -216,6 +225,23 @@ class Player:
             # Death SIGNAL
             self.health = 0
 
+    def update_knockback(self, dt):
+        if self.knocked_back and self.knockable:
+            side_dir_kb = "left" if self.knock_back_vel[0] < 0 else "right"
+            other_dir_kb = "up" if self.knock_back_vel[1] < 0 else "down"
+
+            if p.time.get_ticks() - self.start_knock_back > self.knock_back_duration:
+                self.knocked_back = False
+
+            if p.time.get_ticks() - self.start_knock_back > self.knock_back_duration / 2:
+                self.rect.y += self.knock_back_vel_y * dt * 35 if self.move_ability["down"] else 0
+            else:   # will later be changed to player's crit damage / endurance
+                self.rect.y -= self.knock_back_vel_y * dt * 35 if self.move_ability["up"] else 0
+
+            self.rect.x += self.knock_back_vel[0] * dt * 35 if self.move_ability[side_dir_kb] else 0
+            self.rect.y += self.knock_back_vel[1] * dt * 35 if self.move_ability[other_dir_kb] else 0
+            self.knock_back_vel -= self.knock_back_friction
+
     def handler(self, dt, exit_rects):
         if not self.InteractPoint:
             self.interacting_with = None
@@ -236,6 +262,7 @@ class Player:
         animation_handing(self, dt, m, player_p)
 
         if self.camera_status != "auto":
+            self.update_knockback(dt)
             movement(self)
             self.handle_damage(dt)
             self.handle_health(dt)

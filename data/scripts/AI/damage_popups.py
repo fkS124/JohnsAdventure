@@ -38,4 +38,4 @@ class DamagePopUp:
         else:
             return "kill"
 
-        self.screen.blit(self.rendered_txt, self.rect)
+        self.screen.blit(self.rendered_txt, self.rect.topleft-scroll)

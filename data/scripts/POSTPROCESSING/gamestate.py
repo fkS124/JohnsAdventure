@@ -237,7 +237,8 @@ class GameState:
             # get all the arguments of the func in a list -> the arguments must be found inside this class (GameState)
             # for eg. : def update(self, screen, scroll)
             # self is ignored, screen and scroll are found by getattr(self, "screen") and getattr(self, "scroll")
-
+            if isinstance(obj, Player) and self.id == "credits":
+                continue
             obj.update(*[getattr(self, arg)
                          for arg in obj.update.__code__.co_varnames[1:obj.update.__code__.co_argcount]]
                        )
@@ -249,7 +250,7 @@ class GameState:
                         to_remove.append(obj)
                         scale = 1 if not hasattr(obj, "scale") else obj.scale
                         self.death_anim_manager.input_death_animation(obj.current_sprite,
-                                                                      obj.rect.topleft + self.scroll, scale)
+                                                                      obj.rect.topleft, scale)
                         if obj.enemy_type == 'boss':
                             self.kill_hp_bar = True
 
