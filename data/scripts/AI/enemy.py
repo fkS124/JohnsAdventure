@@ -527,8 +527,6 @@ class Enemy:
 
             GET_DISTANCE = vec(col_rect.center).distance_to(vec(pl_rect.center))
 
-            print(GET_DISTANCE)
-
             if GET_DISTANCE > 300:
                 self.status = "STANDBY"
             elif GET_DISTANCE > self.attacking_distance:  # Switch this to enemy.distance when collisions fix

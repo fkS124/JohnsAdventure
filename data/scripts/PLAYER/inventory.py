@@ -82,6 +82,10 @@ class Inventory:
             self.screen.blit(self.font.render(f"{item_l}/32", True, (0, 0, 0)),
                              (self.im_rect[0] + 340, self.im_rect[1] + 175))  # Show menu
 
+            self.screen.blit(self.font.render(f"HP Potions:{parent_class.health_potions}", True, (0, 0, 0)),
+                             (self.im_rect[0] + 50, self.im_rect[1] + 175))
+
+
     def reset_equippement(self, type_: str, instance: object):
 
         for item in self.items:

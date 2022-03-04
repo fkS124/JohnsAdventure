@@ -25,8 +25,13 @@ class SoundManager:
         } if not music_only else {}
 
         self.musics = {
-            "forest_theme": resource_path("data/sound/forest_theme_part1.flac"),
-            "Select_UI": resource_path("data/sound/Select_UI.wav")
+            "forest_theme": resource_path("data/sound/forest_theme.flac"),
+            "Select_UI": resource_path("data/sound/Select_UI.wav"),
+            "city_theme": resource_path("data/sound/city_theme.mp3"),
+            "credits": resource_path("data/sound/credits.mp3"),
+            "garden_theme": resource_path("data/sound/cave_garden.mp3"),
+            "main_theme": resource_path("data/sound/main_theme.mp3"),
+
         } if not sound_only else {}
 
     def play_sound(self, key: str) -> bool:  # return False if the sound couldn't be player, True otherwise
@@ -51,4 +56,4 @@ class SoundManager:
             pg.mixer.music.unload()
 
         pg.mixer.music.load(self.musics[key])
-        pg.mixer.music.play()
+        pg.mixer.music.play(-1)

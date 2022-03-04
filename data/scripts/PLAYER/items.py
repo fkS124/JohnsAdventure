@@ -25,7 +25,6 @@ class Items:
             self.rect.topleft = pos
             surf.blit(self.image, pos)
 
-
 class Weapon:
 
     def __init__(self, dmg: int, crit_chance: float, sheet: str):
@@ -91,7 +90,7 @@ class Weapon:
 
     def handle_clicks(self, pos, player):
         if self.rect.collidepoint(pos):
-            return self.set_equiped(player)   # Un/Equips clicked item
+            return self.set_equiped(player)  # Un/Equips clicked item
 
     def set_equiped(self, player):
         self.equipped = not self.equipped

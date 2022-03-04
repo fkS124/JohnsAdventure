@@ -48,8 +48,9 @@ class PlayerRoom(GameState):
             Rect(5, 500, 72, 214),
             Rect(450, 40, 410, 192),
             Rect(36, 400, 77, 94),
-            ShadowDummy(self, self.screen, (600, 400), self.player)
         ]
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.sound_manager.play_music("forest_theme")
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
             "kitchen": (pg.Rect(1008, 148, 156, 132), "Go down?")
@@ -485,13 +486,21 @@ class JohnsGarden(GameState):
             # exit_rects and spawn must have the same keys else the entire level will crash because it wont be found
             "cave_garden": (pg.Rect(5350, 6130, 200, 380), "", "mandatory"),
             "training_field": (pg.Rect(8700, 6680, 600, 800), "", "mandatory"),
-            "gymnasium": (pg.Rect(10500, 200, 300, 600), "", "mandatory")
+            "gymnasium": (pg.Rect(10500, 200, 300, 600), "", "mandatory"),
+
+            "manos_hut": (
+                pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
+                "Enter Mano's hut ?"
+            )
+
         }
         self.spawn = {
             "kitchen": self.exit_rects["kitchen"][0].bottomleft,
             "cave_garden": self.exit_rects["cave_garden"][0].midright + pg.Vector2(120, -140),
             "training_field": self.exit_rects["training_field"][0].midleft - pg.Vector2(100, 100),
-            "gymnasium": pg.Vector2(10300, 500)
+            "gymnasium": pg.Vector2(10300, 500),
+            "manos_hut": self.exit_rects["manos_hut"][0].midbottom
+
         }
 
         self.spawn_mh = False
@@ -502,18 +511,10 @@ class JohnsGarden(GameState):
 
         update = super().update(camera, dt)
 
-        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
-            pg.draw.rect(self.screen, (0, 0, 0), pg.Rect(1330 - self.scroll[0], 3290 - self.scroll[1], 95, 162))
-
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Go back to the house"]:
             if not self.spawn_mh:
-                self.spawn["manos_hut"] = self.exit_rects["manos_hut"][0].midbottom,
                 mano_pos = self.positions["manos_hut"][0]
                 mano_sc = self.get_scale("manos_hut")
-                self.exit_rects["manos_hut"] = (
-                    pg.Rect((mano_pos[0] + 124) * mano_sc, (mano_pos[1] + 337 - 43 + 12) * mano_sc, 100, 50),
-                    "Enter Mano's hut ?"
-                )
                 self.spawn_mh = True
 
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
@@ -533,6 +534,10 @@ class Training_Field(GameState):
 
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
+
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.sound_manager.play_music("main_theme")
+
         self.objects = [
 
             *self.generate_chunk("grass", -600, 600, 20, 25, 120, 150, randomize=45),
@@ -901,7 +906,6 @@ class ManosHut(GameState):
 
         self.exit_rects = {
             "johns_garden": (pg.Rect(560, 635, 150, 75), "Go back to open world ?")
-            # Or rather... 0_0
         }
 
 
@@ -976,7 +980,6 @@ class CaveGarden(GameState):
             # it will be returned once john has defeated the boss
         }
 
-        self.sound_manager = SoundManager(True, False, volume=1)
         self.ended_script = True
         self.spawned = False
         self.started_script = False
@@ -1021,7 +1024,7 @@ class CaveGarden(GameState):
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
             "Reach the main entrance"] and not self.spawn_b:
             # Just for security
-            if not self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Kill the big dummie"]:
+            if not self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach Manos in his hut"]:
 
                 self.objects.append(BigShadowDummy(self, self.screen, (3300, self.hh * 4 + 10), self.player))
 
@@ -1501,6 +1504,9 @@ class CaveRoomPassage(GameState):
             light_state="inside_dark"
         )
 
+        self.sound_manager = SoundManager(True, False, volume=1)
+        self.sound_manager.play_music("garden_theme")
+
         self.spawn = {
             "cave_room_2": (880, 2100),
             "gymnasium": (783, 730)
@@ -1650,7 +1656,7 @@ class Credits(GameState):
     def update(self, camera, dt):
         pg.draw.rect(self.screen, (0, 0, 0), [0, 0, *self.screen.get_size()])
 
-        self.pos -= dt * 16
+        self.pos -= dt * 32
 
         for idx, text in enumerate(self.credits):
             text_rendered = self.font.render(text, True, (255, 255, 255))

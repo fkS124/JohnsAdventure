@@ -494,8 +494,12 @@ class GameManager:
                 self.DISPLAY.fill((0, 0, 0))
                 update = self.game_state.update(self.player.camera, self.dt)
                 if update is not None:  # if a change of state is detected
+
                     if self.state == "manos_hut" and update == "johns_garden":
-                        update = "credits"
+                        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                            "Reach Manos in his hut"]:
+                                update = "credits"
+
                     self.start_new_level(update, last_state=self.state)
 
                 '''  RUN THE CAMERA ONLY WHEN ITS NOT IN DEBUGGING MODE  '''

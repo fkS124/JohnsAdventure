@@ -123,9 +123,12 @@ class Player:
         # The width for the UI is 180, but we need to find a way to put less health and keep the width -> width /
         # max_hp * hp
         self.level = 1
+        self.health_potions = 10
         self.health = 20
-        self.health_ratio = self.health / 200
+        self.maximum_health = self.health
+        self.health_ratio = self.maximum_health / 200
         self.health_target = self.health  # for the enemies
+
         self.health_colours = {
             "normal": (255, 0, 0),
             "health_gen": (0, 255, 0),
@@ -203,15 +206,22 @@ class Player:
         self.knock_back_vel_y = 0  # jumpy effect vel
 
     def handle_health(self, dt):
-        if self.health_target > self.health:
+
+        # Balance numbers before UI
+        if self.health_target >= self.maximum_health:
+            self.health_target = self.maximum_health
+
+        # Continue UI
+        if self.health < self.health_target:
             self.health += 1  # delta time goes here
             health_bar = p.Rect(*self.hp_box_rect.topleft + vec(10, 10), int(self.health / self.health_ratio), 40)
             difference = int((self.health_target - self.health) / self.health_ratio) - 10
             transition_bar = p.Rect(*health_bar.topright - vec(20, 0), difference, 40)
             p.draw.rect(self.screen, self.health_colours['health_gen'], transition_bar, 40)
 
-        if self.health > 20 - 1:
-            self.health = 20
+        # Balance Health numbers
+        if self.health >= self.maximum_health:
+            self.health = self.maximum_health
 
     def handle_damage(self, dt):
         if self.health_target < self.health:
@@ -302,6 +312,8 @@ class Player:
             dash = a['dash']
             inv = a['inventory']
             itr = a['interact']
+            heal = a['healing']
+
             self.velocity = p.Vector2(-self.base_vel, self.base_vel) if not self.paused else p.Vector2(0, 0)
 
             # Reset Interaction
@@ -320,13 +332,16 @@ class Player:
                 case p.KEYDOWN:
                     match e.key:
 
-                        case p.K_F1:
-                            self.health_target += 20
-
                         case p.K_F12:
                             p.display.toggle_fullscreen()
+
                         case p.K_ESCAPE:
                             self.paused = True
+
+                    if e.key == heal:
+                        if self.health_potions > 0 and self.health < self.maximum_health:
+                            self.health_target += 20
+                            self.health_potions -= 1
 
                     # Temporar until we get a smart python ver
                     if e.key == inv and self.camera_status != "auto":
@@ -344,7 +359,6 @@ class Player:
                             self.InteractPoint = 0
                             self.Interactable = self.is_interacting = False
                             self.npc_catalog.reset()
-
                             self.Left = self.Right = False
 
                         else:  # else do the usual things
@@ -375,11 +389,11 @@ class Player:
                                     attack(self, pos)
 
                             self.click = True
-                            # scroll up
+                        # scroll up
                         case 4:
                             if self.inventory.show_menu:
                                 self.inventory.scroll_up()
-                            # scroll down
+                        # scroll down
                         case 5:
                             if self.inventory.show_menu:
                                 self.inventory.scroll_down()

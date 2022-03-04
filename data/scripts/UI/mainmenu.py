@@ -140,7 +140,7 @@ class Menu:
                     rect = key.get_rect(center=(self.half_w - 120, self.half_h - 110 + group_y + 60 * i))
                     self.screen.blit(key, rect), self.screen.blit(self.settings_text[i], (rect[0] - 130, rect[1] + 10))
                 else:
-                    rect = key.get_rect(center=(self.half_w + 265, self.half_h - 330 + group_y + 60 * i))
+                    rect = key.get_rect(center=(self.half_w + 265, self.half_h - 350 + group_y + 60 * i))
                     self.screen.blit(key, rect), self.screen.blit(self.settings_text[i], (rect[0] - 220, rect[1] + 10))
 
                 self.draw_txt(bind, rect, key)  # Center text
@@ -187,12 +187,13 @@ class Menu:
                 case p.QUIT:
                     self.game_instance.quit_()
                 case p.MOUSEBUTTONDOWN:
-                    if self.btns_rects[0].collidepoint(m):
-                        self.start_game = True
-                    if self.btns_rects[1].collidepoint(m):
-                        self.show_settings = True
-                    if self.btns_rects[2].collidepoint(m):
-                        raise SystemExit
+                    if not self.show_settings:
+                        if self.btns_rects[0].collidepoint(m):
+                            self.start_game = True
+                        if self.btns_rects[1].collidepoint(m):
+                            self.show_settings = True
+                        if self.btns_rects[2].collidepoint(m):
+                            raise SystemExit
 
                 case p.KEYDOWN:
                     if self.changing:
