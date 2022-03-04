@@ -24,6 +24,7 @@ sheets_translator = {
 }
 sheets = {}
 
+
 def init_sheets():
     global sheets
     sheets = {
@@ -41,6 +42,7 @@ def init_sheets():
 
 def del_sheets():
     # If you want to delete it from memory, just clear the dict :D
+    return  # temporary bug fix
     global sheets
     del sheets
 

@@ -5,7 +5,7 @@ from .utils import resource_path
 
 class SoundManager:
 
-    def __init__(self, sound_only: bool = False, music_only: bool = False, volume: int = 0.5) -> None:
+    def __init__(self, sound_only: bool = False, music_only: bool = False, volume: float = 0.5) -> None:
         # in order to simplify the load and optimize things, we will load this class
         # several times but only part of it, for example, in the player class,
         # you will load sound_only = True because you don't need an access to the
@@ -33,6 +33,7 @@ class SoundManager:
             "main_theme": resource_path("data/sound/main_theme.mp3"),
 
         } if not sound_only else {}
+        self.playing_music = "none"
 
     def play_sound(self, key: str) -> bool:  # return False if the sound couldn't be player, True otherwise
         if key not in self.sounds:
@@ -42,7 +43,8 @@ class SoundManager:
         self.sounds[key].play()
         return True
 
-    def play_music(self, key: str) -> bool:  # return False if the music couldn't be played, True otherwise
+    def play_music(self, key: str, loops: int = -1) -> bool:
+        # return False if the music couldn't be played, True otherwise
         # start playing a song, if a song is already playing, it stops the current song and load the
         # song asked
 
@@ -56,4 +58,6 @@ class SoundManager:
             pg.mixer.music.unload()
 
         pg.mixer.music.load(self.musics[key])
-        pg.mixer.music.play(-1)
+        self.playing_music = key
+        pg.mixer.music.play(loops=loops)
+        return True
