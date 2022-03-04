@@ -1,6 +1,6 @@
 import json
 
-
+from ..utils import resource_path
 class Quest:
 
     def __init__(self,
@@ -43,7 +43,7 @@ class Quest:
         Load everything from the json
         """
 
-        with open("data/scripts/QUESTS/quests.json", "r") as quest:
+        with open(resource_path("data/scripts/QUESTS/quests.json"), "r") as quest:
             all_quests = json.load(quest)
 
         # var to track if finished yet (bool)

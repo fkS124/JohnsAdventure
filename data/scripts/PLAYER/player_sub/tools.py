@@ -1,11 +1,14 @@
 import pygame
 from random import random
 
-from ...utils import scale, get_sprite, flip_vertical
+from ...utils import scale, get_sprite, flip_vertical, resource_path
 from ...UI.UI_animation import InteractionName
 from copy import copy
 
 from .animation_handler import update_attack
+
+pygame.font.init()
+font = pygame.font.Font(resource_path("data/database/menu-font.ttf"), 35)
 
 
 def get_crit(mod_dmg, wpn):
@@ -159,7 +162,6 @@ key_translator = {
 }
 
 
-
 def movement(player):
     """ Allowing the player to move when he is not attacking or checking inventory """
     if player.inventory.show_menu or player.attacking:
@@ -217,24 +219,13 @@ def check_for_interaction(player, exit_rects):
         if exit_rect_.colliderect(itr_box):
             # draw the exit rect
             pygame.draw.rect(player.screen, (255, 255, 255), exit_rect_, 2)
-            if UI_anim is None:
-                player.UI_interaction_anim.append(  # generate new animation
-                    InteractionName(
-                        str(id(exit_rect)),  # name
-                        player.screen,  # display
-                        pygame.Vector2(exit_rect[0].topright),  # pos
-                        f"{key_translator[destination] if destination in key_translator else destination}",  # name
-                        pygame.font.Font(None, 25), pygame.Color(255, 255, 255)  # font + color
-                    ))
-            else:  # restart the dying animation if the collision with the rect happens again
-                UI_anim.restart()
         else:
             if UI_anim is not None:
                 if not UI_anim.dying:
                     UI_anim.kill()
 
     # render the name of the next animation (TODO: choose if we remove it or not)
-    render = pygame.font.Font(None, 35).render(text, True, (255, 255, 255))
+    render = font.render(text, True, (255, 255, 255))
     player.screen.blit(render, render.get_rect(center=(player.screen.get_width() // 2, 25)))
 
 

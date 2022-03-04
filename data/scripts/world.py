@@ -170,8 +170,8 @@ class GameManager:
         self.black_layer.set_alpha(200)
 
         # text + font
-        self.title_font = pg.font.Font("data/database/menu-font.ttf", 75)
-        self.subtitle_font = pg.font.Font("data/database/menu-font.ttf", 15)
+        self.title_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 75)
+        self.subtitle_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 15)
         self.end_game_ui_texts = [
             self.title_font.render("DEATH", True, (255, 0, 0)),
             self.subtitle_font.render(f"Press {pg.key.name(self.player.data['controls']['interact'])} "
@@ -185,7 +185,7 @@ class GameManager:
         self.fade_duration = 500
         self.standing_duration = 1500
         # font
-        self.new_level_font = pg.font.Font("data/database/menu-font.ttf", 30)
+        self.new_level_font = pg.font.Font(resource_path("data/database/menu-font.ttf"), 30)
         self.new_level_popup = self.new_level_font.render(TITLE_TRANSLATOR[self.state], True, (255, 255, 255))
         self.new_level_popup_rect = self.new_level_popup.get_rect(centerx=self.W // 2, bottom=0)
         self.popup_target_y = self.new_level_popup.get_height() - 10

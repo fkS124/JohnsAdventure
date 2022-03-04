@@ -291,7 +291,7 @@ class Mau(MovingNPC):
             move_anim=True,
             move_right=[3 + 39, 49, 43, 33, 2, 3],
             move_left=[3 + 39, 49, 43, 33, 2, 3, "flip"],
-            tell_story='mau'
+            tell_story='Meow meow meow'
         )
 
         self.it_re_size = (75, 100)
