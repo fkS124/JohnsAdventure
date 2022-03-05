@@ -895,7 +895,7 @@ class ManosHut(GameState):
                 "duration": 4000,
                 "pos": (235 * sc_x, 115 * sc_y),
                 "zoom": 1.2,
-                "text": "Manos: John! did you found your sister?",
+                "text": "Manos: John! did you find your sister?",
                 "text_dt": 1500
             },
 
