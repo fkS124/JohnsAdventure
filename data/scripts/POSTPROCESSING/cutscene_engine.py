@@ -23,8 +23,8 @@ class CutsceneManager:
         self.began_state_time = 0
 
         # cinema bars status
-        self.cinema_bar_height = 92
-        self.cinema_bars_dy = [-self.cinema_bar_height, self.H]
+        self.cinema_bar_height = 100
+        self.cinema_bars_dy: list[float | int] = [-self.cinema_bar_height, self.H]
         self.delay_cinema_bars = 0
         self.duration_cinema_bar_loading = 1000
         self.vel_cinema_bars = self.cinema_bar_height / (self.duration_cinema_bar_loading / 40)
@@ -82,7 +82,7 @@ class CutsceneManager:
         if "no_init" in self.current_script[0]:
             if self.current_script[0]["no_init"]:
                 self.state = "active"
-                self.cinema_bars_dy = [0, self.H-self.cinema_bar_height]
+                self.cinema_bars_dy = [0, self.H - self.cinema_bar_height]
                 self.init_phase()
 
     def end_script(self):
@@ -174,7 +174,8 @@ class CutsceneManager:
 
             if self.state in ["active", "initializing", "quiting"]:
                 if self.displayed_image is not None:
-                    self.screen.blit(self.displayed_image, self.displayed_image.get_rect(center=(self.W//2, self.H//2)))
+                    self.screen.blit(self.displayed_image,
+                                     self.displayed_image.get_rect(center=(self.W // 2, self.H // 2)))
 
             for i in range(2):  # draw cinema bars
                 pg.draw.rect(self.screen, (0, 0, 0), [0, self.cinema_bars_dy[i] + (- 15 if not i else 15),
@@ -186,11 +187,11 @@ class CutsceneManager:
                 text_rendering = self.font.render(self.text[0:self.index_text], True, (255, 255, 255))
                 self.screen.blit(text_rendering, text_rendering.get_rect(center=(self.screen.get_width() // 2,
                                                                                  self.cinema_bars_dy[1] +
-                                                                                 self.cinema_bar_height//2)))
+                                                                                 self.cinema_bar_height // 2)))
                 centered_text_rendering = self.font2.render(self.centered_text[0:self.index_ct_text], True, (255, 255,
                                                                                                              255))
-                self.screen.blit(centered_text_rendering, centered_text_rendering.get_rect(center=(self.W//2,
-                                                                                                   self.H//2)))
+                self.screen.blit(centered_text_rendering, centered_text_rendering.get_rect(center=(self.W // 2,
+                                                                                                   self.H // 2)))
 
     def update(self):
 
@@ -200,12 +201,11 @@ class CutsceneManager:
 
         if self.state != "inactive":
             if self.state == "initializing":
-                if pg.time.get_ticks() - self.delay_cinema_bars > 40 and not \
-                        (pg.time.get_ticks() - self.began_state_time > self.duration_cinema_bar_loading + 740) \
-                        and self.cinema_bars_dy[0] < 0 and self.cinema_bars_dy[1] > self.H-self.cinema_bar_height:
-                    self.cinema_bars_dy[0] += self.vel_cinema_bars
-                    self.cinema_bars_dy[1] -= self.vel_cinema_bars
-                    self.delay_cinema_bars = pg.time.get_ticks()
+                self.cinema_bars_dy[0] = -self.cinema_bar_height + (pg.time.get_ticks() - self.began_state_time) * \
+                                                                   (self.cinema_bar_height /
+                                                                    self.duration_cinema_bar_loading) / 2
+                self.cinema_bars_dy[1] = self.H - (pg.time.get_ticks() - self.began_state_time) * \
+                                                  (self.cinema_bar_height / self.duration_cinema_bar_loading) / 2
 
                 if pg.time.get_ticks() - self.began_state_time > self.duration_cinema_bar_loading + 740 and \
                         not self._world.player.camera.method.zooming_out:

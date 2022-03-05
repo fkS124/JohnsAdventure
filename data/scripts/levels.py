@@ -1,3 +1,5 @@
+import random
+
 from pygame import Rect
 import json
 
@@ -12,6 +14,7 @@ from .PLAYER.items import Training_Sword, Knight_Sword
 from .POSTPROCESSING.light_types import PolygonLight, LightSource
 from .POSTPROCESSING.gamestate import GameState
 from .sound_manager import SoundManager
+from random import randint
 
 
 def get_cutscene_played(id_: str):
@@ -49,8 +52,10 @@ class PlayerRoom(GameState):
             Rect(450, 40, 410, 192),
             Rect(36, 400, 77, 94),
         ]
-        self.sound_manager = SoundManager(False, True, volume=0.75)
-        self.sound_manager.play_music("forest_theme")
+
+        self.music_manager = SoundManager(False, True, volume=0.45)
+        self.music_manager.play_music("main_theme")
+
         self.world = pg.transform.scale(l_path('data/sprites/world/Johns_room.png'), (1280, 720))
         self.exit_rects = {
             "kitchen": (pg.Rect(1008, 148, 156, 132), "Go down?")
@@ -275,6 +280,9 @@ class JohnsGarden(GameState):
                 open(resource_path("data/database/open_world.json")) as infos:
             self.positions, self.sprite_info = json.load(pos), json.load(infos)
         self.get_scale = lambda name: self.sprite_info[name]["sc"]  # func to get the scale of a sprite
+
+        self.music_manager = SoundManager(False, True, volume=0.75)
+        self.music_manager.play_music("forest_theme")
 
         # John's house position and size
         jh_pos = self.positions["john_house"][0] - pg.Vector2(1, 30)
@@ -512,11 +520,11 @@ class JohnsGarden(GameState):
 
         update = super().update(camera, dt)
 
-        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach the main entrance"]:
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Ask alexia"]:
             if not self.pop_g_exit:
                 self.exit_rects.pop("gymnasium")
                 self.spawn.pop("gymnasium")
-                self.objects.append(pg.Rect(10000, 200, 600, 800))
+                self.objects.append(pg.Rect(9000, 100, 600, 1000))
                 self.pop_g_exit = True
 
         return update
@@ -530,8 +538,8 @@ class Training_Field(GameState):
         hills_width = self.prop_objects["hill_mid"]((0, 0)).idle[0].get_width()
         hills_height = self.prop_objects["hill_side_mid"]((0, 0)).idle[0].get_width()
 
-        self.sound_manager = SoundManager(True, False, volume=1)
-        self.sound_manager.play_music("main_theme")
+        self.music_manager = SoundManager(False, True, volume=0.75)
+        self.sound_manager = SoundManager(True, False, volume=0.75)
 
         self.objects = [
 
@@ -574,7 +582,7 @@ class Training_Field(GameState):
             "johns_garden": self.exit_rects["johns_garden"][0].topright + pg.Vector2(100, 280)
         }
 
-        self.sound_manager = SoundManager(True, False, volume=1)
+
         self.ended_script = True
         self.spawned = False
         self.started_script = False
@@ -620,63 +628,39 @@ class Training_Field(GameState):
         ]
 
         self.script_2 = [
-            # Shadow enemies pop up
-            {
-                "duration": 0,
-                "pos": (1138, 1526),
-                "zoom": 1.2
-            },
+
             {
                 "duration": 3000,
-                "text": "Manos: Well done john. now its time for movement-",
+                "text": "Manos: Well done John. now its time for movement-",
                 "text_dt": 1500
             },
+
             {
-                "duration": 1500,
+                "duration": 1500,  # move at where dummies were
                 "pos": (1660, 1682)
             },
             {
                 "duration": 2500  # at this point, the dummies appear
             },
-            {
-                "duration": 2000,
-                "pos": (1138, 1526),
-                "text": "Manos: What the heck is that !",
-                "text_dt": 1500,
-                "zoom": 1,
-                "zoom_duration": 1800
-            }
-        ]
 
-        self.script_3 = [
             {
                 "duration": 4000,
                 "pos": (1138, 1526),
-                "text": "Manos: This purple aura..",
+                "text": "Manos: This purple aura.. It couldn't be HIM.",
                 "text_dt": 1200
             },
+
             {
                 "duration": 4000,
                 "pos": (1138, 1526),
-                "text": "Manos: It couldn't be him.. No. IT IS HIM.",
+                "text": "Manos: I need to go, defeat these monsters!",
                 "text_dt": 1200
             },
+
             {
                 "duration": 4000,
                 "pos": (1138, 1526),
-                "text": "Manos: John I need you to get your sister IMMEDIATELY.",
-                "text_dt": 1200
-            },
-            {
-                "duration": 4000,
-                "pos": (1138, 1526),
-                "text": "Manos: Check the school and then your house",
-                "text_dt": 1200
-            },
-            {
-                "duration": 4000,
-                "pos": (1138, 1526),
-                "text": "Manos: Meet me to my hut after that. I will explain everything.",
+                "text": "Manos: and get back Cynthia, I will be in my Hut",
                 "text_dt": 1200
             },
         ]
@@ -691,13 +675,11 @@ class Training_Field(GameState):
         pg.draw.rect(self.screen, [60, 128, 0], [0, 0, *self.screen.get_size()])
 
         # if any mission is true start the cutscene
-        if not get_cutscene_played(self.id) and not self.started_script:
+        if not self.started_script:
             if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
                 "Talk to manos in the training field"] \
                     or self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
-                "Talk back to manos"] \
-                    or self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
-                "Talk again to manos"]:
+                "Talk back to manos"]:
                 self.started_script = True
                 self.ended_script = False
                 self.player.is_interacting = False
@@ -712,49 +694,46 @@ class Training_Field(GameState):
                 self.reset_scr = True
 
             if self.started_script and not self.spawned:
-                if self.player.game_instance.cutscene_engine.index_script == 3:
-                    self.spawned = True
-                    self.dummies = [ShadowDummy(self, self.screen, (1700, 1540), self.player, hp=150, xp_drop=125),
-                                    ShadowDummy(self, self.screen, (1700, 1720), self.player, hp=150, xp_drop=125)]
-                    self.centers = [dummy.rect.center for dummy in self.dummies]
-                    self.radius_circles += 2
-                    self.sound_manager.play_sound("magic_shooting")
-                    self.exploded = True
+                self.spawned = True
 
-            for obj in self.objects:
-                if isinstance(obj, ShadowDummy):
-                    self.killed_enemies = False
-                else:
-                    self.killed_enemies = True
+                self.dummies = [ShadowDummy(self, self.screen, (1700, 1540), self.player, hp=150, xp_drop=125),
+                                ShadowDummy(self, self.screen, (1700, 1720), self.player, hp=150, xp_drop=125)]
+                self.centers = [dummy.rect.center for dummy in self.dummies]
+                self.radius_circles += 2
+                self.sound_manager.play_sound("magic_shooting")
 
-        if self.killed_enemies and self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk again to manos"] and not self.played_3:
-            reset_cutscene(self.id)
-            self.started_script = False
-            self.camera_script = self.script_3
-            self.reset_scr = True
-            self.played_3 = True
+                if self.music_manager.playing_music != "garden_theme":
+                    self.music_manager.play_music("garden_theme")
+
+                self.exploded = True
+
 
         update = super(Training_Field, self).update(camera, dt)
 
-        if self.exploded:
-            self.shockwave_radius += 100  # vel of shockwave
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Talk back to manos"]:
 
-            # (1000, 1000) = explosion start
-            pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2((1000, 1000)) - self.scroll, self.shockwave_radius,
-                           width=10)
+            if self.exploded:
+                self.shockwave_radius += 100  # vel of shockwave
+                # (1000, 1000) = explosion start
+                pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2((1000, 1000)) - self.scroll,
+                               self.shockwave_radius,
+                               width=10)
 
-        if self.spawned and self.radius_circles < self.max_radius and self.dummies == []:
-            if pg.time.get_ticks() - self.delay_radius > 40:
-                self.radius_circles += 15
-                self.delay_radius = pg.time.get_ticks()
-            for pos in self.centers:
-                pg.draw.circle(self.screen, (128, 0, 128), pg.Vector2(pos) - self.scroll, self.radius_circles, 4)
-                pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2(pos) - self.scroll, self.radius_circles + 4, 2)
+            if self.spawned and self.radius_circles < self.max_radius and self.dummies == []:
+                if pg.time.get_ticks() - self.delay_radius > 40:
+                    self.radius_circles += 15
+                    self.player.camera.offset.x += randint(-4, 4)
+                    self.player.camera.offset.y += randint(-4, 4)
+                    self.delay_radius = pg.time.get_ticks()
 
-        # 884 = the distance between explosion start and first dummy
-        if self.shockwave_radius > 884 and self.dummies != []:
-            self.objects.extend(self.dummies)
-            self.dummies = []
+                for pos in self.centers:
+                    pg.draw.circle(self.screen, (128, 0, 128), pg.Vector2(pos) - self.scroll, self.radius_circles, 4)
+                    pg.draw.circle(self.screen, (255, 255, 255), pg.Vector2(pos) - self.scroll, self.radius_circles + 4, 2)
+
+            # 884 = the distance between explosion start and first dummy
+            if self.shockwave_radius > 884 and self.dummies != []:
+                self.objects.extend(self.dummies)
+                self.dummies = []
 
         return update
 
@@ -803,20 +782,23 @@ class Gymnasium(GameState):
             Rect(40, -900, hills_width * 8, 50),  # Up
 
             self.prop_objects["school_entrance"]((hills_width * 2 - 150, -hills_height * 2 + 30)),
-            *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
+
             npc.Alex((2702, -75)),
             npc.CynthiaSchool((2782, -75)),
         ]
 
         self.exit_rects = {
             "johns_garden": (pg.Rect(-100, -center_spawn - 121, 300, 600), "Go back to open world ?", "mandatory"),
-            "cave_passage": (pg.Rect(4970, -200, 64, 64), "Are you sure you want to get in ?")
         }
 
         self.spawn = {
-            "johns_garden": (300, 0),
+            "johns_garden": (500, 0),
             "cave_passage": (4790, -150)
         }
+
+        self.cave_stuff = [
+            *self.generate_chunk('h_ladder', x=4970, y=-200, row=1, col=1, step_x=0, step_y=0, randomize=0),
+        ]
 
         self.sound_manager = SoundManager(True, False, volume=1)
         self.ended_script = True
@@ -863,6 +845,7 @@ class Gymnasium(GameState):
             "Go find Cynthia in school"] and not self.cyn_gone:
             self.objects.pop()  # pop cynthia
             self.spawn.pop("johns_garden")
+            self.objects.append(Rect(-200, -200 - 121, 500, 600))
             self.cyn_gone = True
 
         if not get_cutscene_played(self.id) and not self.started_script:
@@ -870,6 +853,8 @@ class Gymnasium(GameState):
             if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Ask alexia"]:
                 self.started_script = True
                 self.ended_script = False
+                self.objects.extend(self.cave_stuff)
+                self.exit_rects["cave_passage"] = (pg.Rect(4970, -200, 64, 64), "Are you sure you want to get in ?")
 
         return super(Gymnasium, self).update(camera, dt)
 
@@ -955,12 +940,7 @@ class ManosHut(GameState):
 
     def update(self, camera, dt):
 
-        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach Manos in his hut"]:
-
-            if not get_cutscene_played(self.id) and not self.started_script:
-                self.started_script = True
-                self.ended_script = False
-
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Kill the big dummie"]:
             if not self.spawn_npcs:
                 sc_x = 1280 / 453
                 sc_y = 720 / 271
@@ -974,6 +954,11 @@ class ManosHut(GameState):
                 )
 
                 self.spawn_npcs = True
+
+        if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach Manos in his hut"]:
+            if not get_cutscene_played(self.id) and not self.started_script:
+                self.started_script = True
+                self.ended_script = False
 
         return super(ManosHut, self).update(camera, dt)
 
@@ -1093,7 +1078,8 @@ class CaveGarden(GameState):
         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
             "Reach the main entrance"] and not self.spawn_b:
             # Just for security
-            if not self.player.game_instance.quest_manager.quests["A new beginning"].quest_state["Reach Manos in his hut"]:
+            if not self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
+                "Reach Manos in his hut"]:
 
                 self.objects.append(BigShadowDummy(self, self.screen, (3300, self.hh * 4 + 10), self.player))
 
@@ -1573,9 +1559,6 @@ class CaveRoomPassage(GameState):
             light_state="inside_dark"
         )
 
-        self.sound_manager = SoundManager(True, False, volume=1)
-        self.sound_manager.play_music("garden_theme")
-
         self.spawn = {
             "cave_room_2": (880, 2100),
             "gymnasium": (783, 730)
@@ -1737,7 +1720,8 @@ class Credits(GameState):
             self.screen.blit(
                 text_rendered,
                 text_rendered.get_rect(
-                    center=(self.screen.get_width()//2, 250 + self.screen.get_height()//2 + idx*self.dy + self.pos))
+                    center=(
+                        self.screen.get_width() // 2, 250 + self.screen.get_height() // 2 + idx * self.dy + self.pos))
             )
 
         return super(Credits, self).update(camera, dt)

@@ -105,6 +105,10 @@ class GameState:
         self.lights_manager = LightManager(self.screen)
         self.additional_lights = []
 
+        self.step_timer = pg.time.get_ticks()
+
+        self.music_manager = SoundManager(True, False, volume=1)
+
     def check(self, moving_object, col_obj, side):
         """Given a side of the moving object,
         this function detects the collision between
@@ -147,7 +151,8 @@ class GameState:
         # apply the adaptations to the different rect
         if isinstance(col_obj, Player):
             collider_rect = pg.Rect(c_obj.rect.x - 15, c_obj.rect.y + 70, c_obj.rect.w - 70, c_obj.rect.h - 115)
-        elif isinstance(col_obj, Enemy) or isinstance(col_obj, NPC) or isinstance(col_obj, Prop) or isinstance(col_obj, Torch):
+        elif isinstance(col_obj, Enemy) or isinstance(col_obj, NPC) or isinstance(col_obj, Prop) or isinstance(col_obj,
+                                                                                                               Torch):
             collider_rect = pg.Rect(c_obj.rect.x + c_d_col[0], c_obj.rect.y + c_d_col[1], *c_d_col[2:])
         else:  # case if the collider is actually just a rect
             collider_rect = col_obj.copy()
@@ -213,8 +218,6 @@ class GameState:
                         if not obj_.sort:
                             obj_.centery = -1000000
 
-
-
                 # append the objects in the list
                 all_objects.append(obj_)
 
@@ -260,6 +263,7 @@ class GameState:
                         self.boss_data = obj
                         self.boss_name = self.font.render(obj.boss_name, True, (255, 255, 255))
                         self.boss_found = True
+                        print("found boss")
 
         # EXIT FOR LOOP
         if self.boss_found and self.spawned_boss and not self.kill_hp_bar:
@@ -320,6 +324,11 @@ class GameState:
                             max(obj_.rect.size) + max(self.player.rect.size):
                         objects.remove(obj_)
         self.collision_system(self.player, objects)
+
+        if self.player.walking and pg.time.get_ticks() - self.step_timer > 250:
+            self.player.camera.offset.x += randint(-1, 1)
+            self.player.camera.offset.y += randint(-1, 1)
+            self.step_timer = pg.time.get_ticks()
 
         # Light system updating
         self.lights_manager.update(self)

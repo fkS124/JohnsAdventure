@@ -22,8 +22,13 @@ class DeathManager:
         self.animations = []
 
     def input_death_animation(self, image, pos, sprite_scale):
-        calculating_thread = threading.Thread(target=input_d, args=(self, image, pos, sprite_scale))
-        calculating_thread.start()
+
+        # Removed the thread cause it slows down main program
+
+        #calculating_thread = threading.Thread(target=input_d, args=(self, image, pos, sprite_scale))
+        #calculating_thread.start()
+
+        input_d(self, image, pos, sprite_scale)
 
 
 class DeathAnim:

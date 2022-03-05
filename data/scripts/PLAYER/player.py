@@ -6,7 +6,7 @@ Here is john, our protagonist.
 import pygame as p
 import math
 from copy import copy
-from random import random
+from random import random, randint
 from .player_sub.tools import (
     get_crit, set_camera_to, leveling, update_camera_status, movement, update_ui_animations, check_content,
     check_for_interaction, check_for_hitting, attack, get_john
@@ -32,7 +32,7 @@ vec = p.math.Vector2
 
 
 class Player:
-    DEFAULT_VEL = 4
+    DEFAULT_VEL = 5
 
     def __init__(self, game_instance, screen, font, ux, ui, data):
         self.game_instance = game_instance
@@ -124,10 +124,12 @@ class Player:
         # max_hp * hp
         self.level = 1
         self.health_potions = 10
-        self.health = 20
+        self.health = 50
         self.maximum_health = self.health
         self.health_ratio = self.maximum_health / 200
         self.health_target = self.health  # for the enemies
+
+        self.backup_hp = self.maximum_health
 
         self.health_colours = {
             "normal": (255, 0, 0),
@@ -270,6 +272,7 @@ class Player:
         check_for_interaction(self, exit_rects)
         update_ui_animations(self, dt)  # works
         animation_handing(self, dt, m, player_p)
+
 
         if self.camera_status != "auto":
             self.update_knockback(dt)

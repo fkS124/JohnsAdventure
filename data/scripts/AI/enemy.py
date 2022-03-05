@@ -9,7 +9,7 @@ enemies.py is the enemy objects in the game
 from os import DirEntry
 from types import coroutine
 import pygame as pg
-from random import choice
+from random import choice, randint
 from copy import copy
 from ..utils import load, get_sprite, scale, resource_path, flip_vertical
 from .damage_popups import DamagePopUp
@@ -380,18 +380,20 @@ class Enemy:
         """Draw a life bar if the enemy is not at its max hp"""
         if self.MAX_HP != self.hp:
 
+            pl_rect = self.hitbox_rect
+            pl_rect.topleft -= self.scroll
+
+
             if self.enemy_type != 'boss':
                 width = self.current_sprite.get_width() if self.health_bar_width is None else self.health_bar_width
-
-                curr_x = self.pos[0] if self.health_bar_width is None else self.pos[0] + 15  # we need / 3 here
 
                 # Outline
                 pg.draw.rect(
                     self.screen,
                     (0, 0, 0),
                     [
-                        self.hitbox_rect[0] - 15 - self.scroll[0],
-                        self.pos[1] - 12 - self.scroll[1],
+                        pl_rect[0] - 15,
+                        pl_rect[1] - 46,
                         width, 10
                     ],
                     border_radius=25
@@ -399,8 +401,8 @@ class Enemy:
 
                 pg.draw.rect(self.screen, (255, 0, 0),
                              [
-                                 self.hitbox_rect[0] - 15 - self.scroll[0],
-                                 self.pos[1] - 11 - self.scroll[1],
+                                 pl_rect[0] - 15,
+                                 pl_rect[1] - 45,
                                  int((width / self.MAX_HP) * self.show_hp) - 2, 8
                              ],
                              border_radius=25)
@@ -489,8 +491,8 @@ class Enemy:
             if hit_dict[self.direction].colliderect(t_pl_rect):
                 self.player.health_target = self.player.health - self.damage
                 if self.knock_back["duration"] != 0:
-                    vel = (pg.Vector2(self.player.rect.topleft)-pg.Vector2(self.pos)
-                           ).normalize()*self.knock_back["vel"]
+                    vel = (pg.Vector2(self.player.rect.topleft) - pg.Vector2(self.pos)
+                           ).normalize() * self.knock_back["vel"]
                     self.player.knocked_back = True
                     self.player.knock_back_vel = vel
                     self.player.knock_back_vel_y = vel.length()
@@ -498,6 +500,9 @@ class Enemy:
                     self.player.knock_back_friction = -vel
                     self.player.knock_back_friction.scale_to_length(self.knock_back["friction"])
                     self.player.start_knock_back = pg.time.get_ticks()
+
+            # No matter condition, after the hit the enemy must go back to chasing
+            self.status = "CHASING"
 
     def move(self, dt):
 
@@ -521,20 +526,19 @@ class Enemy:
         # ___ CHECK ENEMY TYPE ____
         if self.enemy_type != "static" and not self.attacking:
 
-            enemy_speed = self.BASE_VEL
-
             # -------- BOUND CHECKING ------
 
             GET_DISTANCE = vec(col_rect.center).distance_to(vec(pl_rect.center))
 
             if GET_DISTANCE > 300:
                 self.status = "STANDBY"
-            elif GET_DISTANCE > self.attacking_distance:  # Switch this to enemy.distance when collisions fix
-                if not self.got_stuck:
-                    self.status = "CHASING"
-                else:
-                    if col_rect.colliderect(pl_rect):
-                        self.status = "ATTACKING"
+
+            elif GET_DISTANCE > self.attacking_distance and self.enemy_type != 'boss':
+                self.status = "CHASING"
+
+            elif GET_DISTANCE > self.attacking_distance - self.attacking_distance//3 and self.enemy_type == 'boss':
+                self.status = "CHASING"
+
             else:
                 self.status = "ATTACKING"
 
@@ -553,6 +557,7 @@ class Enemy:
 
                 case "CHASING":
                     try:
+                        self.attacking = False
                         self.moving = True
                         self.tp_V = (
                                 (vec(self.player.rect.center) - vec(self.rect.center)).normalize() * self.BASE_VEL
@@ -598,7 +603,6 @@ class Enemy:
         if self.show_life_bar:
             if self.show_hp >= self.hp:
                 self.show_hp -= dt * 16 * abs((self.show_hp - self.hp) // 3 + 1)
-                # I believe I add the scratch here
 
             # Show the UI
             self.life_bar(scroll)
@@ -632,6 +636,6 @@ class Enemy:
         # ___SHADOW TYPE MONSTERS GET A OUTLINE/PARTICLES__
         if self.enemy_type == "shadow":
             self.particle_scroller = self.x + 60, self.y + 40
-            self.shadow_highlight(self.screen, pg.Vector2(self.pos)-self.scroll, self.current_sprite)
+            self.shadow_highlight(self.screen, pg.Vector2(self.pos) - self.scroll, self.current_sprite)
 
-        self.screen.blit(self.current_sprite, pg.Vector2(self.pos)-self.scroll)
+        self.screen.blit(self.current_sprite, pg.Vector2(self.pos) - self.scroll)

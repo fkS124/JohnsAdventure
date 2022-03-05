@@ -5,7 +5,7 @@ from .utils import resource_path
 
 class SoundManager:
 
-    def __init__(self, sound_only: bool = False, music_only: bool = False, volume: float = 0.5) -> None:
+    def __init__(self, sound_only: bool = False, music_only: bool = False, volume: float = 0.3) -> None:
         # in order to simplify the load and optimize things, we will load this class
         # several times but only part of it, for example, in the player class,
         # you will load sound_only = True because you don't need an access to the
@@ -30,7 +30,7 @@ class SoundManager:
             "city_theme": resource_path("data/sound/city_theme.mp3"),
             "credits": resource_path("data/sound/credits.mp3"),
             "garden_theme": resource_path("data/sound/cave_garden.mp3"),
-            "main_theme": resource_path("data/sound/main_theme.mp3"),
+            "main_theme": resource_path("data/sound/main.flac"),
 
         } if not sound_only else {}
         self.playing_music = "none"

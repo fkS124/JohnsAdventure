@@ -25,14 +25,14 @@ class Dummy(Enemy):
 
 class ShadowDummy(Enemy):
     def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 100,
-                 xp_drop=105):
+                 xp_drop=65):
         # OC formula
         # calc_intensity = ceil(damage * health ) / xp_drop (this process must be automated instead of passed in
         # __init__)
 
         calc_intensity = ceil(12 * hp / xp_drop)  # 12 will be re-written else where later
 
-        super().__init__(level_instance, screen, pos, player, hp=100, xp_drop=210, custom_rect=[10, 25, 29 * 3, 24 * 3],
+        super().__init__(level_instance, screen, pos, player, hp=65, xp_drop=65, custom_rect=[10, 25, 29 * 3, 24 * 3],
                          enemy_type="shadow", intensiveness=calc_intensity, vel=2,
                          up_hitbox=(128, 128),
                          down_hitbox=(128, 128),
@@ -59,7 +59,7 @@ class ShadowDummy(Enemy):
         self.custom_center = 24 * 3 * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
         self.scale = 4
-        self.damage = 3
+        self.damage = 2
         self.knock_back = {
             "duration": 150,
             "vel": 3,
@@ -72,7 +72,7 @@ class Guardian(Enemy):
                  xp_drop=160):
         super().__init__(
             level_instance, screen, pos, player,
-            hp=100,
+            hp=175,
             xp_drop=210,
             custom_rect=[25 * 5 + 10, 50, 29 * 2, 45 * 2 + 25],
             enemy_type="normal",
@@ -82,8 +82,6 @@ class Guardian(Enemy):
             left_hitbox=(34 * 5, 128),
             right_hitbox=(34 * 5, 128),
         )
-
-        self.health_bar_width = 45 * 2
 
         self.load_animation(
             resource_path("data/sprites/guardian_sheet.png"),
@@ -102,16 +100,18 @@ class Guardian(Enemy):
             attack_u_coo=[0, 34, 67, 34, 5, 5],
             flip_anim=True
         )
+        self.health_bar_width = 45 * 2
         self.custom_center = (45 * 2 + 25) * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
-        self.damage = 5
+        self.damage = 4
+        self.scale = 4
 
 
 class Goblin(Enemy):
     def __init__(self, level_instance, screen: pg.Surface, pos: tuple[int, int], player: object, hp: int = 100,
-                 xp_drop=160):
+                 xp_drop=45):
         super().__init__(
-            level_instance, screen, pos, player, hp=100, xp_drop=210,
+            level_instance, screen, pos, player, hp=65, xp_drop=45,
             custom_rect=[15, 35, 17 * 2, 25 * 2 + 10],
             enemy_type="normal",
             vel=3,
@@ -142,6 +142,7 @@ class Goblin(Enemy):
         self.damage = 2
         self.custom_center = (25 * 2 + 10) * 4 / 5
         self.xp_drop = self.xp_available = xp_drop
+        self.scale = 2
 
 
 class BigShadowDummy(Enemy):
@@ -151,14 +152,7 @@ class BigShadowDummy(Enemy):
         # calc_intensity = ceil(damage * health ) / xp_drop (this process must be automated instead of passed in
         # __init__)
 
-        self.boss_name = 'The Big Dummie'
-        self.attacking_distance = 180
-        self.custom_center = 24 * 6 * 4 / 5
-        self.xp_drop = self.xp_available = xp_drop
-        self.scale = 4
-        self.damage = 5
-
-        calc_intensity = ceil(self.damage * hp / xp_drop)  # 12 is the damage
+        calc_intensity = ceil(5 * hp / xp_drop)  # 12 is the damages
 
         super().__init__(level_instance, screen, pos, player, hp, xp_drop,
                          custom_rect=[50, 50, 29 * 4, 24 * 6],
@@ -168,6 +162,14 @@ class BigShadowDummy(Enemy):
                          left_hitbox=(29 * 4, 24 * 7),
                          right_hitbox=(29 * 4, 24 * 7),
                          )
+
+        self.boss_name = 'The Big Dummie'
+        self.attacking_distance = 180
+        self.custom_center = 24 * 6 * 4 / 5
+        self.xp_drop = self.xp_available = xp_drop
+        self.scale = 4
+        self.damage = 4
+
         self.load_animation(
             resource_path("data/sprites/shadow_dummie.png"),
             idle="static",
@@ -185,5 +187,3 @@ class BigShadowDummy(Enemy):
             attack_u_coo=[0, 75, 29, 24, 5, 8],
 
         )
-
-

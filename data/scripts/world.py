@@ -70,7 +70,7 @@ class GameManager:
     pg.mouse.set_visible(False)
     # CONSTS
 
-    DISPLAY = pg.display.set_mode((1280, 720), flags= pg.SRCALPHA | pg.SCALED | pg.FULLSCREEN )
+    DISPLAY = pg.display.set_mode((1280, 720), flags=pg.SRCALPHA)
 
     pg.display.set_icon(l_path("data/ui/logo.png", True))
     W, H = DISPLAY.get_size()
@@ -106,7 +106,9 @@ class GameManager:
         self.delay_scaling = 0
 
         # ---------- GAME MANAGERS ----------------
-        self.sound_manager = SoundManager()
+        self.sound_manager = SoundManager(False, True)
+        self.sound_manager.play_music("city_theme")
+
         self.loading_screen = LoadingScreen(self.DISPLAY)
         self.menu_manager = Menu(self, self.DISPLAY, self.blacksword, self.ui)
         self.interface = Interface(self.DISPLAY, scale(self.ui.parse_sprite('interface_button.png'), 8))
@@ -242,14 +244,15 @@ class GameManager:
                 self.DISPLAY.blit(self.new_level_popup, self.new_level_popup_rect)
                 time_elapsed = pg.time.get_ticks() - self.begin_new_level_popup
                 if time_elapsed < self.falling_duration:
-                    self.new_level_popup_rect.y = (self.popup_target_y/self.falling_duration)*time_elapsed
+                    self.new_level_popup_rect.y = (self.popup_target_y / self.falling_duration) * time_elapsed
                 elif self.falling_duration < time_elapsed < self.standing_duration:
                     pass
                 elif time_elapsed > self.standing_duration + self.falling_duration + self.fade_duration:
                     self.showing_nl_popup = False
                 else:
                     self.new_level_popup.set_alpha(
-                        floor(255-255*(time_elapsed-self.falling_duration-self.standing_duration)/self.fade_duration))
+                        floor(255 - 255 * (
+                                    time_elapsed - self.falling_duration - self.standing_duration) / self.fade_duration))
 
         if self.debug:
             self.debugger.update()
@@ -449,6 +452,10 @@ class GameManager:
                     if event.type == pg.QUIT:
                         pg.quit()
                         raise SystemExit
+                    if event.type == pg.KEYDOWN:
+                        if event.key == pg.K_ESCAPE:
+                            pg.quit()
+                            raise SystemExit
 
             if self.menu:  # menu playing
 
@@ -474,8 +481,8 @@ class GameManager:
                             self.respawn()
                             self.player.health = self.player.maximum_health
 
-                self.black_layer.set_alpha(floor((200/1500)*(pg.time.get_ticks() - self.begin_end_screen)))
-                self.end_game_ui_texts[0].set_alpha(floor((255/1500) * (pg.time.get_ticks() - self.begin_end_screen)))
+                self.black_layer.set_alpha(floor((200 / 1500) * (pg.time.get_ticks() - self.begin_end_screen)))
+                self.end_game_ui_texts[0].set_alpha(floor((255 / 1500) * (pg.time.get_ticks() - self.begin_end_screen)))
                 if pg.time.get_ticks() - self.begin_end_screen > 1500:
                     self.black_layer.set_alpha(200)
                     self.end_game_ui_texts[0].set_alpha(255)
@@ -489,7 +496,6 @@ class GameManager:
 
             else:
 
-
                 self.DISPLAY.fill((0, 0, 0))
                 update = self.game_state.update(self.player.camera, self.dt)
                 if update is not None:  # if a change of state is detected
@@ -497,7 +503,7 @@ class GameManager:
                     if self.state == "manos_hut" and update == "johns_garden":
                         if self.player.game_instance.quest_manager.quests["A new beginning"].quest_state[
                             "Reach Manos in his hut"]:
-                                update = "credits"
+                            update = "credits"
 
                     self.start_new_level(update, last_state=self.state)
 
@@ -515,10 +521,11 @@ class GameManager:
                 else:
                     set_camera_to(self.player.camera, self.player.camera_mode, "follow")
 
-                if self.player.health == 0:
+                if self.player.health <= 0:
                     self.death_screen = True
                     self.end_game_bg = self.DISPLAY.copy()
                     self.init_death_screen()
+                    self.player.health = self.player.backup_hp # Return full hp
 
             self.routine()
 
@@ -583,7 +590,7 @@ class Debugging:
                             pg.draw.rect(self.screen, self.colors["collision_rect"], col_rect, 2)
 
                             if obj.IDENTITY == "ENEMY":
-                                self.draw_text(f"STATUS: {obj.status}", (255, 255, 255), obj.rect.topleft-scroll)
+                                self.draw_text(f"STATUS: {obj.status}", (255, 255, 255), obj.rect.topleft - scroll)
 
                 exit_rects = self.game.game_state.exit_rects
                 for exit_rect in exit_rects:

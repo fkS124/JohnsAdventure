@@ -45,15 +45,15 @@ def update_dash(player, dt, pos):
             player.delay_attack_animation = p.time.get_ticks()
             freq = 25  # Frequency of the dash
             if player.move_ability[player.dashing_direction]:
-                match player.dashing_direction:  # lgtm [py/syntax-error]
+                match player.dashing_direction:
                     case "up":
-                        player.rect.y -= dt * freq + 12  # 12 = players speed(2) * 2
+                        player.rect.y -= dt * freq + 8
                     case "down":
-                        player.rect.y += dt * freq + 12
+                        player.rect.y += dt * freq + 8
                     case "right":
-                        player.rect.x += dt * freq + 12
+                        player.rect.x += dt * freq + 8
                     case "left":
-                        player.rect.x -= dt * freq + 12
+                        player.rect.x -= dt * freq + 8
     else:
         #  Update the  UI
 
