@@ -21,15 +21,11 @@ This game is entirely made with python and pygame. (See [requirements](./require
 ## Usage
 To run the game, first install all the required packages using :
 ```shell
-pip install -r requirements.txt
-# or eventually :
-py -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 Then run the game using :
 ```shell
 python main.py
-# or eventually on linux
-python3 main.py
 ```
 And if you want to get directly the executable files check the [itch page]("https://ibox-studios.itch.io/johns-adventure-chapter-1").
 
