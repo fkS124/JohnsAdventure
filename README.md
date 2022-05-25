@@ -1,21 +1,47 @@
-# JohnsAdventure 
+<div align="center">
+<img src="./data/doc/header_image.png" width=400 height=390>
+<br/> 
+<p style="font-weight:bold;font-size:35px;">John's Adventures</p>
+<p>Source code for John's Adventure game, available <a href="https://ibox-studios.itch.io/johns-adventure-chapter-1">here.</a></p>
+<br/>
+<img src="https://img.shields.io/github/license/mariospapaz/JohnsAdventure.svg">
+<img src="https://img.shields.io/github/repo-size/mariospapaz/JohnsAdventure">
+
+
 [![Compile for Windows](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/windows.yml/badge.svg)](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/windows.yml) [![Compile for Linux](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/ubuntu.yml) [![Compile for MacOS](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/macos.yml/badge.svg)](https://github.com/mariospapaz/JohnsAdventure/actions/workflows/macos.yml)
 
-![Window](https://camo.githubusercontent.com/51ac3ad18da5c5e375a7d60ba112e61c5cf55c5b98d8188ffdb04404daf63fff/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f57696e646f77732d2532332e7376673f7374796c653d666c61742d737175617265266c6f676f3d77696e646f777326636f6c6f723d303037384436266c6f676f436f6c6f723d7768697465) ![MacOS](https://camo.githubusercontent.com/83b80d04c15deaec1af40f8692c3991d283b2c02a194ead61ec0f443df2a3322/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f6d61634f532d2532332e7376673f7374796c653d666c61742d737175617265266c6f676f3d6170706c6526636f6c6f723d303030303030266c6f676f436f6c6f723d7768697465) ![Linux](https://camo.githubusercontent.com/87bfb66b52f488ed6d9cbe5c8f3d8bbabc8559ebf9404507937d50ca9d0a6e71/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f4c696e75782d2532332e7376673f7374796c653d666c61742d737175617265266c6f676f3d6c696e757826636f6c6f723d464343363234266c6f676f436f6c6f723d626c61636b)
+</div>
+
+# John's Adventures : Chapter 1
+
+Welcome to John's adventures chapter 1. Here is the source code of a game project, started *seriously* at early August 2021 and 
+ended in March 2022. This game was an original idea of Marios Papazogloy, who was the main programmer, until Theophile Aumont
+joined the project.
+This game is entirely made with python and pygame. (See [requirements](./requirements.txt) for the package versions.)
 
 
-Welcome to the Chapter 1 of John's Adventure!
+## Usage
+To run the game, first install all the required packages using :
+```shell
+pip install -r requirements.txt
+# or eventually :
+py -m pip install -r requirements.txt
+```
+Then run the game using :
+```shell
+python main.py
+# or eventually on linux
+python3 main.py
+```
+And if you want to get directly the executable files check the [itch page]("https://ibox-studios.itch.io/johns-adventure-chapter-1").
 
-Project started seriously at early August and ended in 04/03/2022.
+---
+## Credits
 
-
-
-Credits:
-
- Programming: Marios Papazogloy | Theophile Aumont
+- Programming: [Marios Papazogloy](https://github.com/mariospapaz) and [Theophile Aumont](https://github.com/fkS124)
  
- Story Telling: Manos Danezis
+- Story Telling: Manos Danezis
 
- Music Designer: Thanos Pallis
+- Music Designer: Thanos Pallis
  
  
