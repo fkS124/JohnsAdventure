@@ -1,7 +1,7 @@
 <div align="center">
 <img src="./data/doc/header_image.png" width=400 height=390>
 <br/> 
-<p style="font-weight:bold;font-size:35px;">John's Adventures</p>
+<span style="font-weight:bold; font-size:35px;">John's Adventures</span>
 <p>Source code for John's Adventure game, available <a href="https://ibox-studios.itch.io/johns-adventure-chapter-1">here.</a></p>
 <br/>
 <img src="https://img.shields.io/github/license/mariospapaz/JohnsAdventure.svg">
