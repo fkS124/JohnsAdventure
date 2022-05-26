@@ -38,4 +38,8 @@ And if you want to get directly the executable files check the [itch page]("http
 
 - Music Designer: Thanos Pallis
  
- 
+---
+## Custom License
+This Project is allowed to be seen and edited by everyone, assets such as music and art are proprietary but the code is open source.
+Which means user is not allowed to sell the art and music or reproduce the game for commercial purposes and permission will not be allowed.
+
